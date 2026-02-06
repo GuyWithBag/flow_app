@@ -1,0 +1,15 @@
+[90m[main 2026-02-06T06:36:02.075Z][0m [CursorProclistService] Native module loaded successfully
+[90m[main 2026-02-06T06:36:02.604Z][0m [storage] Running database optimization (VACUUM) - last run was 68 days ago
+[90m[main 2026-02-06T06:36:02.725Z][0m updateURL https://api2.cursor.sh/updates/api/update/linux-x64/cursor/2.1.39/d36756496203c9ef2851b24fe018e11e52c066cb168d9f712b404abc13d24df4/stable
+[90m[main 2026-02-06T06:36:02.725Z][0m update#setState idle
+[90m[main 2026-02-06T06:36:03.181Z][0m [storage] Database optimization (VACUUM) completed successfully
+[34509:0206/143604.730697:ERROR:ui/gl/gl_surface_presentation_helper.cc:260] GetVSyncParametersIfAvailable() failed for 1 times!
+[34454:0206/143604.829786:ERROR:base/nix/mime_util_xdg.cc:137] Invalid mime.cache file does not contain null prior to ALIAS_LIST_OFFSET=44
+
+(cursor:34454): IBUS-WARNING **: 14:36:04.904: cursor has no capability of surrounding-text feature
+[91m[main 2026-02-06T06:36:05.068Z][0m vscode-file: Refused to load resource /tmp/.mount_cursorwMMH18/usr/share/cursor/resources/app/extensions/theme-seti/icons/seti.woff from vscode-file: protocol (original URL: vscode-file://vscode-app/tmp/.mount_cursorwMMH18/usr/share/cursor/resources/app/extensions/theme-seti/icons/seti.woff)
+[90m[main 2026-02-06T06:36:07.546Z][0m [CursorProclistService] Config enabled feature (subsample every 10s)
+[93m[main 2026-02-06T06:36:08.480Z][0m [BrowserViewMainService] Cannot execute JavaScript: browser view not created for window 1
+[34454:0206/143626.912895:ERROR:content/browser/browser_main_loop.cc:278] GLib-GObject: ../glib/gobject/gsignal.c:2700: instance '0x115c027e1840' has no handler with id '2557'
+[34509:0206/143626.923831:ERROR:ui/gl/gl_surface_presentation_helper.cc:260] GetVSyncParametersIfAvailable() failed for 2 times!
+[34509:0206/143626.931131:ERROR:ui/gl/gl_surface_presentation_helper.cc:260] GetVSyncParametersIfAvailable() failed for 3 times!
