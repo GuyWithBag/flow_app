@@ -61,23 +61,23 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // Anonymous login
-  Future<void> loginAnonymously() async {
-    _isLoading = true;
-    notifyListeners();
+  // Future<void> loginAnonymously() async {
+  //   _isLoading = true;
+  //   notifyListeners();
 
-    try {
-      await Future.delayed(const Duration(milliseconds: 500));
+  //   try {
+  //     await Future.delayed(const Duration(milliseconds: 500));
 
-      _currentUser = UserProfile(
-        id: 'anonymous_${DateTime.now().millisecondsSinceEpoch}',
-        email: 'anonymous@flow.app',
-        name: 'Guest User',
-      );
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
+  //     _currentUser = UserProfile(
+  //       id: 'anonymous_${DateTime.now().millisecondsSinceEpoch}',
+  //       email: 'anonymous@flow.app',
+  //       name: 'Guest User',
+  //     );
+  //   } finally {
+  //     _isLoading = false;
+  //     notifyListeners();
+  //   }
+  // }
 
   Future<void> logout() async {
     _currentUser = null;

@@ -12,8 +12,9 @@ class SettingsScreen extends HookWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
-      backgroundColor:
-          themeProvider.isDarkMode ? const Color(0xFF121212) : Colors.white,
+      backgroundColor: themeProvider.isDarkMode
+          ? const Color(0xFF121212)
+          : Colors.white,
       appBar: AppBar(
         title: const Text('Settings'),
         elevation: 0,
@@ -39,9 +40,7 @@ class SettingsScreen extends HookWidget {
           ),
           ListTile(
             title: const Text('Daily Goal'),
-            subtitle: Text(
-              '${themeProvider.dailyGoalMinutes} minutes per day',
-            ),
+            subtitle: Text('${themeProvider.dailyGoalMinutes} minutes per day'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _showDailyGoalDialog(context, themeProvider),
           ),
@@ -68,10 +67,7 @@ class SettingsScreen extends HookWidget {
     );
   }
 
-  void _showDailyGoalDialog(
-    BuildContext context,
-    ThemeProvider provider,
-  ) {
+  void _showDailyGoalDialog(BuildContext context, ThemeProvider provider) {
     final controller = TextEditingController(
       text: provider.dailyGoalMinutes.toString(),
     );

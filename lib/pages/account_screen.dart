@@ -14,98 +14,6 @@ class AccountScreen extends HookWidget {
     final authProvider = Provider.of<AuthProvider>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
 
-    if (!authProvider.isAuthenticated) {
-      // Guest view with login / sign up actions
-      return Scaffold(
-        backgroundColor: Colors.transparent,
-        extendBodyBehindAppBar: true,
-        appBar: AppBar(
-          title: const Text('Account'),
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          surfaceTintColor: Colors.transparent,
-          scrolledUnderElevation: 0,
-        ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16 + kToolbarHeight, 24, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.person_outline,
-                  size: 80,
-                  color: themeProvider.isDarkMode
-                      ? Colors.white70
-                      : Colors.grey.shade600,
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'You\'re browsing as a guest',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Log in or sign up to save your sessions, track your streaks, and sync across devices.',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const LoginScreen(),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text('Log in'),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const LoginScreen(),
-                        ),
-                      );
-                    },
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text('Sign up'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
@@ -119,7 +27,12 @@ class AccountScreen extends HookWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16 + kToolbarHeight, 16, 16),
         children: [
-          _buildProfileHeader(authProvider.currentUser!),
+          if (authProvider.isAuthenticated &&
+              authProvider.currentUser != null) ...[
+            _buildProfileHeader(authProvider.currentUser!),
+          ] else ...[
+            _buildGuestHeader(themeProvider),
+          ],
           const SizedBox(height: 24),
           _buildGoalsCard(),
           const SizedBox(height: 16),
@@ -142,18 +55,74 @@ class AccountScreen extends HookWidget {
             ),
           ),
           const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () => authProvider.logout(),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              minimumSize: const Size(double.infinity, 50),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+          if (authProvider.isAuthenticated) ...[
+            ElevatedButton(
+              onPressed: () => authProvider.logout(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('Logout'),
+            ),
+          ] else ...[
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                );
+              },
+              child: const Text('Log in / Sign up'),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGuestHeader(ThemeProvider themeProvider) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 35,
+              backgroundColor: themeProvider.isDarkMode
+                  ? Colors.grey.shade800
+                  : Colors.grey.shade300,
+              child: Icon(
+                Icons.person_outline,
+                size: 32,
+                color: themeProvider.isDarkMode
+                    ? Colors.white70
+                    : Colors.grey.shade700,
               ),
             ),
-            child: const Text('Logout'),
-          ),
-        ],
+            const SizedBox(width: 16),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Guest',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Not signed in',
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -92,8 +92,12 @@ class LoginScreen extends HookWidget {
               ),
               const SizedBox(height: 8),
               TextButton(
-                onPressed: () => authProvider.loginAnonymously(),
-                child: const Text('Continue as Guest'),
+                onPressed: () async {
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  }
+                },
+                child: const Text('Back'),
               ),
               if (authProvider.error != null) ...[
                 const SizedBox(height: 16),
