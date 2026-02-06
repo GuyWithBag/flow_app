@@ -13,3 +13,64 @@
 [34454:0206/143626.912895:ERROR:content/browser/browser_main_loop.cc:278] GLib-GObject: ../glib/gobject/gsignal.c:2700: instance '0x115c027e1840' has no handler with id '2557'
 [34509:0206/143626.923831:ERROR:ui/gl/gl_surface_presentation_helper.cc:260] GetVSyncParametersIfAvailable() failed for 2 times!
 [34509:0206/143626.931131:ERROR:ui/gl/gl_surface_presentation_helper.cc:260] GetVSyncParametersIfAvailable() failed for 3 times!
+[90m[main 2026-02-06T06:36:32.726Z][0m update#setState checking for updates
+[90m[main 2026-02-06T06:36:33.024Z][0m update#setState ready
+[93m[main 2026-02-06T06:36:35.393Z][0m [BrowserViewMainService] Cannot set visibility: browser view not created for window 1
+qt.qpa.services: Failed to register with host portal QDBusError("org.freedesktop.portal.Error.Failed", "Could not register app ID: App info not found for 'org.kde.'")
+[93m[main 2026-02-06T06:38:59.931Z][0m [BrowserViewMainService] Cannot set visibility: browser view not created for window 1
+[34454:0206/143907.348352:ERROR:content/common/zygote/zygote_communication_linux.cc:296] Failed to send GetTerminationStatus message to zygote
+[34454:0206/143907.397507:ERROR:content/browser/network_service_instance_impl.cc:597] Network service crashed, restarting service.
+[34454:0206/143907.471007:ERROR:content/common/zygote/zygote_communication_linux.cc:296] Failed to send GetTerminationStatus message to zygote
+[90m[main 2026-02-06T06:39:07.499Z][0m Extension host with pid 34626 exited with code: 0, signal: unknown.
+[34454:0206/143907.500240:ERROR:content/common/zygote/zygote_communication_linux.cc:296] Failed to send GetTerminationStatus message to zygote
+[91m[main 2026-02-06T06:39:07.509Z][0m CodeWindow: renderer process gone (reason: clean-exit, code: <unknown>)
+[34454:0206/143907.604314:ERROR:content/browser/gpu/gpu_process_host.cc:951] GPU process launch failed: error_code=1002
+Error sending from webFrameMain:  Error: Render frame was disposed before WebFrameMain could be accessed
+    at s.send (node:electron/js2c/browser_init:2:94265)
+    at b.send (node:electron/js2c/browser_init:2:78703)
+    at pb.send (file:///tmp/.mount_cursor6imvCI/usr/share/cursor/resources/app/out/main.js:35:28474)
+    at _m.sendBuffer (file:///tmp/.mount_cursor6imvCI/usr/share/cursor/resources/app/out/main.js:33:13410)
+    at _m.send (file:///tmp/.mount_cursor6imvCI/usr/share/cursor/resources/app/out/main.js:33:13350)
+    at _m.sendResponse (file:///tmp/.mount_cursor6imvCI/usr/share/cursor/resources/app/out/main.js:33:13201)
+    at mc.value (file:///tmp/.mount_cursor6imvCI/usr/share/cursor/resources/app/out/main.js:34:343)
+    at P._deliver (file:///tmp/.mount_cursor6imvCI/usr/share/cursor/resources/app/out/main.js:32:2937)
+    at P.fire (file:///tmp/.mount_cursor6imvCI/usr/share/cursor/resources/app/out/main.js:32:3257)
+    at file:///tmp/.mount_cursor6imvCI/usr/share/cursor/resources/app/out/main.js:30:7133
+    at mc.value (file:///tmp/.mount_cursor6imvCI/usr/share/cursor/resources/app/out/main.js:30:5906)
+    at P._deliver (file:///tmp/.mount_cursor6imvCI/usr/share/cursor/resources/app/out/main.js:32:2937)
+    at P.fire (file:///tmp/.mount_cursor6imvCI/usr/share/cursor/resources/app/out/main.js:32:3257)
+    at mc.value (file:///tmp/.mount_cursor6imvCI/usr/share/cursor/resources/app/out/main.js:30:5577)
+    at P._deliver (file:///tmp/.mount_cursor6imvCI/usr/share/cursor/resources/app/out/main.js:32:2937)
+    at P.fire (file:///tmp/.mount_cursor6imvCI/usr/share/cursor/resources/app/out/main.js:32:3257)
+    at mc.value (file:///tmp/.mount_cursor6imvCI/usr/share/cursor/resources/app/out/main.js:61:32292)
+    at P._deliver (file:///tmp/.mount_cursor6imvCI/usr/share/cursor/resources/app/out/main.js:32:2937)
+    at P._deliverQueue (file:///tmp/.mount_cursor6imvCI/usr/share/cursor/resources/app/out/main.js:32:3028)
+    at P.fire (file:///tmp/.mount_cursor6imvCI/usr/share/cursor/resources/app/out/main.js:32:3364)
+    at mc.value (file:///tmp/.mount_cursor6imvCI/usr/share/cursor/resources/app/out/main.js:57:71067)
+    at P._deliver (file:///tmp/.mount_cursor6imvCI/usr/share/cursor/resources/app/out/main.js:32:2937)
+    at P.fire (file:///tmp/.mount_cursor6imvCI/usr/share/cursor/resources/app/out/main.js:32:3257)
+    at BrowserWindow.H (file:///tmp/.mount_cursor6imvCI/usr/share/cursor/resources/app/out/main.js:30:8080)
+    at BrowserWindow.emit (node:events:531:35)
+[34454:0206/143907.649824:ERROR:content/browser/gpu/gpu_process_host.cc:951] GPU process launch failed: error_code=1002
+[34454:0206/143907.650978:ERROR:content/browser/gpu/gpu_process_host.cc:951] GPU process launch failed: error_code=1002
+[34454:0206/143907.651656:ERROR:content/browser/gpu/gpu_process_host.cc:951] GPU process launch failed: error_code=1002
+[34454:0206/143907.651942:ERROR:content/browser/gpu/gpu_process_host.cc:951] GPU process launch failed: error_code=1002
+[34454:0206/143907.652211:ERROR:content/browser/gpu/gpu_process_host.cc:951] GPU process launch failed: error_code=1002
+[34454:0206/143907.656581:ERROR:content/browser/gpu/gpu_process_host.cc:951] GPU process launch failed: error_code=1002
+[34454:0206/143907.656859:ERROR:content/browser/gpu/gpu_process_host.cc:951] GPU process launch failed: error_code=1002
+[34454:0206/143907.657079:ERROR:content/browser/gpu/gpu_process_host.cc:951] GPU process launch failed: error_code=1002
+[34454:0206/143907.657094:FATAL:content/browser/gpu/gpu_data_manager_impl_private.cc:415] GPU process isn't usable. Goodbye.
+[0206/143907.720791:ERROR:third_party/crashpad/crashpad/snapshot/elf/elf_dynamic_array_reader.h:64] tag not found
+[0206/143907.722578:ERROR:third_party/crashpad/crashpad/snapshot/elf/elf_dynamic_array_reader.h:64] tag not found
+[0206/143907.727558:ERROR:third_party/crashpad/crashpad/snapshot/elf/elf_dynamic_array_reader.h:64] tag not found
+[90m[main 2026-02-06T06:39:43.698Z][0m [CursorProclistService] Native module loaded successfully
+[90m[main 2026-02-06T06:39:45.133Z][0m updateURL https://api2.cursor.sh/updates/api/update/linux-x64/cursor/2.1.39/d36756496203c9ef2851b24fe018e11e52c066cb168d9f712b404abc13d24df4/stable
+[90m[main 2026-02-06T06:39:45.133Z][0m update#setState idle
+[37861:0206/143947.377822:ERROR:ui/gl/gl_surface_presentation_helper.cc:260] GetVSyncParametersIfAvailable() failed for 1 times!
+[37798:0206/143947.461536:ERROR:base/nix/mime_util_xdg.cc:137] Invalid mime.cache file does not contain null prior to ALIAS_LIST_OFFSET=44
+
+(cursor:37798): IBUS-WARNING **: 14:39:47.538: cursor has no capability of surrounding-text feature
+[91m[main 2026-02-06T06:39:47.658Z][0m vscode-file: Refused to load resource /tmp/.mount_cursor6imvCI/usr/share/cursor/resources/app/extensions/theme-seti/icons/seti.woff from vscode-file: protocol (original URL: vscode-file://vscode-app/tmp/.mount_cursor6imvCI/usr/share/cursor/resources/app/extensions/theme-seti/icons/seti.woff)
+[93m[main 2026-02-06T06:39:48.814Z][0m [BrowserViewMainService] Cannot set visibility: browser view not created for window 1
+[90m[main 2026-02-06T06:39:50.136Z][0m [CursorProclistService] Config enabled feature (subsample every 10s)
+[37861:0206/143952.874007:ERROR:ui/gl/gl_surface_presentation_helper.cc:260] GetVSyncParametersIfAvailable() failed for 2 times!
