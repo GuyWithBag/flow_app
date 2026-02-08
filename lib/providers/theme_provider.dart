@@ -1,4 +1,6 @@
+import 'package:flow_app/providers/providers.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flow_app/models/timer_models.dart';
@@ -93,7 +95,7 @@ class ThemeProvider extends ChangeNotifier {
   }
 
   void setAccentColor(Color color) {
-    setModeAccentColor(TimerType.focus, color);
+    _accentColor = color;
   }
 
   // Per-mode setters
@@ -117,9 +119,10 @@ class ThemeProvider extends ChangeNotifier {
     _savePreferences();
   }
 
-  void setModeAccentColor(TimerType type, Color color) {
+  void setModeAccentColor(BuildContext context, TimerType type, Color color) {
+    final timerProvider = context.read<TimerProvider>();
     _modeAccentColors[type] = color;
-    if (type == TimerType.focus) {
+    if (timerProvider.currentType == type) {
       _accentColor = color;
     }
     notifyListeners();

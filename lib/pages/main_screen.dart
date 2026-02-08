@@ -42,7 +42,7 @@ class MainScreen extends HookWidget {
           child: Theme(
             data: Theme.of(context).copyWith(canvasColor: Colors.transparent),
             child: BottomNavigationBar(
-              backgroundColor: Colors.transparent,
+              backgroundColor: const Color.fromARGB(197, 0, 0, 0),
               currentIndex: currentIndex.value,
               onTap: (index) => currentIndex.value = index,
               selectedItemColor: currentAccent,

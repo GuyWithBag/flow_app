@@ -1,6 +1,7 @@
 import 'package:flow_app/models/timer_models.dart';
 import 'package:flow_app/providers/providers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart'; // Import added
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:provider/provider.dart';
 
@@ -76,6 +77,10 @@ class ThemeSettingsScreen extends HookWidget {
               decoration: BoxDecoration(
                 color: themeProvider.getAccentColorFor(TimerType.focus),
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.grey.withOpacity(0.3),
+                  width: 1,
+                ),
               ),
             ),
             onTap: () =>
@@ -122,6 +127,10 @@ class ThemeSettingsScreen extends HookWidget {
               decoration: BoxDecoration(
                 color: themeProvider.getAccentColorFor(TimerType.breakTime),
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.grey.withOpacity(0.3),
+                  width: 1,
+                ),
               ),
             ),
             onTap: () =>
@@ -219,45 +228,46 @@ class ThemeSettingsScreen extends HookWidget {
     ThemeProvider provider,
     TimerType type,
   ) {
-    final colors = [
-      const Color(0xFF66BB6A),
-      const Color(0xFF42A5F5),
-      const Color(0xFFFF6B6B),
-      const Color(0xFFFFB74D),
-      const Color(0xFF9C27B0),
-      const Color(0xFF26A69A),
-    ];
+    // Initialize temporary color with the current saved color
+    Color pickerColor = provider.getAccentColorFor(type);
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Choose Accent Color'),
-        content: Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: colors.map((color) {
-            return GestureDetector(
-              onTap: () {
-                provider.setModeAccentColor(type, color);
-                Navigator.pop(context);
-              },
-              child: Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: color == provider.getAccentColorFor(type)
-                        ? Colors.white
-                        : Colors.transparent,
-                    width: 3,
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
+        content: SingleChildScrollView(
+          child: ColorPicker(
+            pickerColor: pickerColor,
+            onColorChanged: (Color color) {
+              pickerColor = color;
+            },
+            // UI Customization to fit the dialog better
+            pickerAreaHeightPercent: 0.7,
+            enableAlpha: false, // Usually disabled for theme accents
+            displayThumbColor: true,
+            showLabel: true,
+            paletteType: PaletteType.hsvWithHue,
+            pickerAreaBorderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(2.0),
+              topRight: Radius.circular(2.0),
+            ),
+          ),
         ),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('Cancel'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          ElevatedButton(
+            child: const Text('Select'),
+            onPressed: () {
+              provider.setModeAccentColor(context, type, pickerColor);
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
       ),
     );
   }
