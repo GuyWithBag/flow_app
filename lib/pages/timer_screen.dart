@@ -8,12 +8,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_picker_plus/flutter_picker_plus.dart';
 
-// TODO: I want the circle to display "tap to display controls" when active.
-// TODO: I also want there to be a finish functionality to indicate that the session is finished
-// TODO: I also want there to be a functionality where it automatically starts break vice versa when the timer is finished
-// TODO: There should be a configurable thing where you can loop how many focus, break there is
-// TODO: Preset config should be in this timer screen settings
-// TODO: Lastly, I want notifications with custom ring sounds.
+// --- ENUMS & CONSTANTS ---
+enum SoundType { bell, digital, bird, none }
 
 class TimerScreen extends HookWidget {
   const TimerScreen({Key? key}) : super(key: key);
@@ -23,33 +19,44 @@ class TimerScreen extends HookWidget {
     final timerProvider = Provider.of<TimerProvider>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
 
-    // --- STATE ---
+    // --- CONFIGURATION STATE (Ideally saved to Preferences in a real app) ---
     final fixedScaleDuration = useState(60 * 60);
     final useDynamicScale = useState(false);
     final waveContrast = useState(0.8);
+
+    // Cycle & Loop Settings
+    final autoStartBreak = useState(true);
+    final autoStartFocus = useState(false);
+    final targetLoops = useState(
+      4,
+    ); // How many Focus sessions before big finish
+    final currentLoop = useState(1);
+    final selectedSound = useState(SoundType.bell);
 
     // Visibility Toggles
     final showInnerLiquid = useState(true);
     final showBackgroundLiquid = useState(true);
 
+    // --- RUNTIME STATE ---
     final playbackTotalDuration = useRef(timerProvider.remainingSeconds);
     final isDragging = useState(false);
-
-    // --- IMMERSIVE MODE STATE ---
     final controlsVisible = useState(true);
     final autoHideTimer = useRef<Timer?>(null);
 
-    // Helper: Toggle Controls Logic
+    // Track previous running state to detect completion edge case
+    final wasRunning = useRef(false);
+
+    // --- LOGIC: HELPER FUNCTIONS ---
+
     void toggleControls() {
       if (controlsVisible.value) {
-        // If visible -> Hide immediately (User wants to slide them away)
         controlsVisible.value = false;
         autoHideTimer.value?.cancel();
       } else {
-        // If hidden -> Show temporarily (User wants to see them)
         controlsVisible.value = true;
         autoHideTimer.value?.cancel();
-        autoHideTimer.value = Timer(const Duration(seconds: 10), () {
+        // Auto-hide again after 3 seconds if running
+        autoHideTimer.value = Timer(const Duration(seconds: 3), () {
           if (timerProvider.isRunning) {
             controlsVisible.value = false;
           }
@@ -57,26 +64,100 @@ class TimerScreen extends HookWidget {
       }
     }
 
-    // Effect: Handle Play/Pause visibility logic
+    void _resetLoop() {
+      currentLoop.value = 1;
+      timerProvider.resetTimer();
+    }
+
+    void _handleSessionComplete(BuildContext ctx) {
+      // Play Sound (Placeholder for AudioPlayer logic)
+      print("Playing Sound: ${selectedSound.value}");
+
+      if (timerProvider.currentType == TimerType.focus) {
+        // Focus Finished
+        if (currentLoop.value >= targetLoops.value) {
+          // All Loops Done
+          showDialog(
+            context: ctx,
+            builder: (_) => AlertDialog(
+              title: const Text("Great Flow!"),
+              content: Text("You completed ${targetLoops.value} sessions."),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    _resetLoop(); // Reset loops
+                    Navigator.pop(ctx);
+                  },
+                  child: const Text("Finish"),
+                ),
+              ],
+            ),
+          );
+          currentLoop.value = 1;
+        } else {
+          // Start Break
+          timerProvider.setTimerType(TimerType.breakTime);
+          // Set color theme
+          themeProvider.setModeAccentColor(
+            ctx,
+            TimerType.breakTime,
+            themeProvider.getAccentColorFor(TimerType.breakTime),
+          );
+
+          if (autoStartBreak.value) {
+            timerProvider.startTimer();
+          }
+        }
+      } else {
+        // Break Finished
+        currentLoop.value += 1; // Increment loop count
+        timerProvider.setTimerType(TimerType.focus);
+        // Set color theme
+        themeProvider.setModeAccentColor(
+          ctx,
+          TimerType.focus,
+          themeProvider.getAccentColorFor(TimerType.focus),
+        );
+
+        if (autoStartFocus.value) {
+          timerProvider.startTimer();
+        }
+      }
+    }
+
+    // --- EFFECT: WATCH TIMER COMPLETION ---
+    useEffect(() {
+      // Check if we transitioned from running to 0 seconds
+      if (wasRunning.value &&
+          !timerProvider.isRunning &&
+          timerProvider.remainingSeconds == 0) {
+        // We need a slight delay to ensure the provider state is settled
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _handleSessionComplete(context);
+        });
+      }
+      wasRunning.value = timerProvider.isRunning;
+      return null;
+    }, [timerProvider.isRunning, timerProvider.remainingSeconds]);
+
+    // --- EFFECT: AUTO-HIDE CONTROLS ---
     useEffect(() {
       if (timerProvider.isRunning) {
-        // When play starts, hide controls
         playbackTotalDuration.value = timerProvider.remainingSeconds;
         controlsVisible.value = false;
       } else {
-        // When paused/stopped, always show controls
         controlsVisible.value = true;
         autoHideTimer.value?.cancel();
       }
       return null;
     }, [timerProvider.isRunning]);
 
-    // Wave Controller
+    // Animation Controller
     final waveController = useAnimationController(
       duration: const Duration(seconds: 2),
     )..repeat();
 
-    // --- COLORS ---
+    // Colors
     final isDark = themeProvider.isDarkMode;
     final focusColor = themeProvider.getAccentColorFor(TimerType.focus);
     final breakColor = themeProvider.getAccentColorFor(TimerType.breakTime);
@@ -86,7 +167,7 @@ class TimerScreen extends HookWidget {
     final backgroundColor = isDark ? const Color(0xFF121212) : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
 
-    // --- PROGRESS ---
+    // Progress Calculation
     int currentMaxDuration;
     if (timerProvider.isRunning && useDynamicScale.value) {
       currentMaxDuration = playbackTotalDuration.value > 0
@@ -95,15 +176,12 @@ class TimerScreen extends HookWidget {
     } else {
       currentMaxDuration = fixedScaleDuration.value;
     }
-
     double fillPercent = timerProvider.remainingSeconds / currentMaxDuration;
     fillPercent = fillPercent.clamp(0.0, 1.0);
 
-    // --- ANIMATION CONFIG ---
     final int animDuration = isDragging.value
         ? 100
         : (timerProvider.isRunning ? 1000 : 800);
-
     final Curve animCurve = isDragging.value
         ? Curves.easeOut
         : (timerProvider.isRunning ? Curves.linear : Curves.easeOutCubic);
@@ -147,7 +225,7 @@ class TimerScreen extends HookWidget {
           SafeArea(
             child: Column(
               children: [
-                // --- TOP CONTROLS (Slide Up on Hide) ---
+                // TOP CONTROLS
                 AnimatedSlide(
                   duration: const Duration(milliseconds: 500),
                   curve: Curves.easeInOutCubic,
@@ -165,13 +243,39 @@ class TimerScreen extends HookWidget {
                             horizontal: 20,
                             vertical: 12,
                           ),
-                          child: Text(
-                            'Flow',
-                            style: TextStyle(
-                              color: textColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 24,
-                            ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Flow',
+                                style: TextStyle(
+                                  color: textColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 24,
+                                ),
+                              ),
+                              // Loop Indicator
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: currentColor.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  "Loop ${currentLoop.value} / ${targetLoops.value}",
+                                  style: TextStyle(
+                                    color: isDark
+                                        ? Colors.white
+                                        : Colors.black87,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         const SizedBox(height: 10),
@@ -189,33 +293,34 @@ class TimerScreen extends HookWidget {
 
                 const SizedBox(height: 30),
 
-                // --- INTERACTIVE CIRCULAR TIMER (Scale Up on Hide) ---
+                // TIMER CIRCLE
                 Expanded(
                   child: Center(
                     child: AnimatedScale(
                       duration: const Duration(milliseconds: 500),
                       curve: Curves.easeInOutCubic,
-                      scale: controlsVisible.value ? 1.0 : 1.3,
+                      scale: controlsVisible.value ? 1.0 : 1.15,
                       child: _buildLiquidTimerCircle(
-                        context,
-                        timerProvider,
-                        currentColor,
-                        currentMaxDuration,
-                        fillPercent,
-                        waveController,
-                        isDragging,
-                        isDark,
-                        waveContrast.value,
-                        animDuration,
-                        animCurve,
-                        showInnerLiquid.value,
-                        toggleControls, // Pass the toggle function
+                        context: context,
+                        timerProvider: timerProvider,
+                        color: currentColor,
+                        maxDuration: currentMaxDuration,
+                        fillPercent: fillPercent,
+                        waveController: waveController,
+                        isDragging: isDragging,
+                        isDark: isDark,
+                        contrast: waveContrast.value,
+                        animDuration: animDuration,
+                        animCurve: animCurve,
+                        showInnerLiquid: showInnerLiquid.value,
+                        controlsVisible: controlsVisible.value,
+                        onCircleTap: toggleControls,
                       ),
                     ),
                   ),
                 ),
 
-                // --- BOTTOM CONTROLS (Slide Down on Hide) ---
+                // BOTTOM CONTROLS
                 AnimatedSlide(
                   duration: const Duration(milliseconds: 500),
                   curve: Curves.easeInOutCubic,
@@ -234,7 +339,7 @@ class TimerScreen extends HookWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           BouncingButton(
-                            onTap: timerProvider.resetTimer,
+                            onTap: _resetLoop,
                             child: CircleAvatar(
                               radius: 24,
                               backgroundColor: isDark
@@ -270,6 +375,10 @@ class TimerScreen extends HookWidget {
                               waveContrast,
                               showInnerLiquid,
                               showBackgroundLiquid,
+                              autoStartBreak,
+                              autoStartFocus,
+                              targetLoops,
+                              selectedSound,
                               isDark,
                             ),
                             child: CircleAvatar(
@@ -296,21 +405,22 @@ class TimerScreen extends HookWidget {
     );
   }
 
-  Widget _buildLiquidTimerCircle(
-    BuildContext context,
-    TimerProvider timerProvider,
-    Color color,
-    int maxDuration,
-    double fillPercent,
-    AnimationController waveController,
-    ValueNotifier<bool> isDragging,
-    bool isDark,
-    double contrast,
-    int animDuration,
-    Curve animCurve,
-    bool showInnerLiquid,
-    VoidCallback onCircleTap,
-  ) {
+  Widget _buildLiquidTimerCircle({
+    required BuildContext context,
+    required TimerProvider timerProvider,
+    required Color color,
+    required int maxDuration,
+    required double fillPercent,
+    required AnimationController waveController,
+    required ValueNotifier<bool> isDragging,
+    required bool isDark,
+    required double contrast,
+    required int animDuration,
+    required Curve animCurve,
+    required bool showInnerLiquid,
+    required bool controlsVisible,
+    required VoidCallback onCircleTap,
+  }) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = 280.0;
@@ -352,7 +462,6 @@ class TimerScreen extends HookWidget {
               onPanCancel: () => isDragging.value = false,
 
               onTapUp: (details) {
-                // If running, tapping anywhere on the circle toggles controls
                 if (timerProvider.isRunning) {
                   onCircleTap();
                   return;
@@ -431,7 +540,7 @@ class TimerScreen extends HookWidget {
                     ),
                   ),
 
-                  // 4. Text
+                  // 4. Text Content
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -445,12 +554,25 @@ class TimerScreen extends HookWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        timerProvider.isRunning ? 'Running' : 'Tap to Edit',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: isDark ? Colors.grey.shade300 : Colors.black54,
-                          fontWeight: FontWeight.w600,
+                      // Conditional Text Logic
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        child: Text(
+                          key: ValueKey(
+                            "${timerProvider.isRunning}-$controlsVisible",
+                          ),
+                          timerProvider.isRunning
+                              ? (controlsVisible
+                                    ? "Running"
+                                    : "Tap for controls")
+                              : "Tap to Edit",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isDark
+                                ? Colors.grey.shade300
+                                : Colors.black54,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
@@ -464,7 +586,7 @@ class TimerScreen extends HookWidget {
     );
   }
 
-  // --- SETTINGS SHEET (Unchanged, provided here for completeness) ---
+  // --- SETTINGS SHEET ---
   void _showSettingsSheet(
     BuildContext context,
     ValueNotifier<int> fixedScale,
@@ -472,6 +594,10 @@ class TimerScreen extends HookWidget {
     ValueNotifier<double> contrast,
     ValueNotifier<bool> showInner,
     ValueNotifier<bool> showBg,
+    ValueNotifier<bool> autoBreak,
+    ValueNotifier<bool> autoFocus,
+    ValueNotifier<int> loops,
+    ValueNotifier<SoundType> sound,
     bool isDark,
   ) {
     showModalBottomSheet(
@@ -496,59 +622,100 @@ class TimerScreen extends HookWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Center(
-                      child: Text(
-                        "Timer Settings",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
                     ),
                     const SizedBox(height: 20),
                     const Text(
-                      "Appearance",
+                      "Timer Settings",
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey,
                       ),
                     ),
+
+                    const SizedBox(height: 20),
+                    _buildSettingsSectionHeader("Cycle Configuration"),
+                    SwitchListTile(
+                      title: const Text("Auto-start Break"),
+                      subtitle: const Text("Start break when focus ends"),
+                      value: autoBreak.value,
+                      onChanged: (val) => setState(() => autoBreak.value = val),
+                      activeColor: Colors.blue,
+                    ),
+                    SwitchListTile(
+                      title: const Text("Auto-start Focus"),
+                      subtitle: const Text("Start focus when break ends"),
+                      value: autoFocus.value,
+                      onChanged: (val) => setState(() => autoFocus.value = val),
+                      activeColor: Colors.blue,
+                    ),
+                    ListTile(
+                      title: const Text("Total Loops"),
+                      subtitle: Text("${loops.value} Focus Sessions"),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle_outline),
+                            onPressed: () {
+                              if (loops.value > 1)
+                                setState(() => loops.value--);
+                            },
+                          ),
+                          Text(
+                            "${loops.value}",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add_circle_outline),
+                            onPressed: () => setState(() => loops.value++),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const Divider(),
+                    _buildSettingsSectionHeader("Sound"),
+                    DropdownButtonFormField<SoundType>(
+                      value: sound.value,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                      ),
+                      items: SoundType.values.map((s) {
+                        return DropdownMenuItem(
+                          value: s,
+                          child: Text(
+                            s.toString().split('.').last.toUpperCase(),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) setState(() => sound.value = val);
+                      },
+                    ),
+
+                    const Divider(),
+                    _buildSettingsSectionHeader("Visuals"),
                     SwitchListTile(
                       title: const Text("Show Circle Liquid"),
                       value: showInner.value,
                       contentPadding: EdgeInsets.zero,
                       onChanged: (val) => setState(() => showInner.value = val),
                     ),
-                    SwitchListTile(
-                      title: const Text("Show Background Liquid"),
-                      value: showBg.value,
-                      contentPadding: EdgeInsets.zero,
-                      onChanged: (val) => setState(() => showBg.value = val),
-                    ),
-                    const Divider(),
-                    const Text(
-                      "Behavior",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text("Scale to Set Time"),
-                      subtitle: const Text(
-                        "Circle becomes full when timer starts",
-                      ),
-                      value: useDynamic.value,
-                      onChanged: (val) {
-                        setState(() => useDynamic.value = val);
-                      },
-                    ),
                     const SizedBox(height: 10),
                     const Text(
-                      "Fixed Scale (Max Time)",
+                      "Set Max Scale of Timer",
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -561,46 +728,15 @@ class TimerScreen extends HookWidget {
                       runSpacing: 10,
                       children: [
                         _buildScaleChip(900, "15m", fixedScale, setState),
+                        _buildScaleChip(1500, "25m", fixedScale, setState),
                         _buildScaleChip(1800, "30m", fixedScale, setState),
                         _buildScaleChip(3600, "60m", fixedScale, setState),
-                        _buildScaleChip(5400, "90m", fixedScale, setState),
                         ActionChip(
-                          label: const Text("Custom"),
+                          label: const Text("Custom Scale"),
                           onPressed: () {
                             Navigator.pop(context);
                             _showCustomScalePicker(context, fixedScale, isDark);
                           },
-                        ),
-                      ],
-                    ),
-                    const Divider(),
-                    const Text(
-                      "Liquid Contrast",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        const Icon(Icons.opacity, size: 20, color: Colors.grey),
-                        Expanded(
-                          child: Slider(
-                            value: contrast.value,
-                            min: 0.1,
-                            max: 1.0,
-                            divisions: 9,
-                            label: "${(contrast.value * 100).round()}%",
-                            onChanged: (val) {
-                              setState(() => contrast.value = val);
-                            },
-                          ),
-                        ),
-                        const Icon(
-                          Icons.water_drop,
-                          size: 20,
-                          color: Colors.blue,
                         ),
                       ],
                     ),
@@ -614,6 +750,22 @@ class TimerScreen extends HookWidget {
     );
   }
 
+  Widget _buildSettingsSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10, top: 5),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: Colors.blueAccent,
+          letterSpacing: 1.1,
+        ),
+      ),
+    );
+  }
+
+  // --- TIME PICKER ---
   void _showTimePicker(
     BuildContext context,
     TimerProvider timerProvider,
