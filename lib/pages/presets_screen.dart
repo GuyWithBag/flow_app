@@ -57,7 +57,7 @@ class PresetsScreen extends HookWidget {
               subtitle: Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
-                  'Focus: ${preset.focusDuration ~/ 60}m  •  Break: ${preset.breakDuration ~/ 60}m  •  Long: ${preset.longBreakDuration ~/ 60}m',
+                  'Focus: ${preset.focusDuration ~/ 60}m  •  Break: ${preset.breakDuration ~/ 60}m  •  Long Focus: ${preset.longFocusDuration ~/ 60}m  •  Long Break: ${preset.longBreakDuration ~/ 60}m',
                   style: const TextStyle(fontSize: 13),
                 ),
               ),
@@ -80,6 +80,7 @@ class PresetsScreen extends HookWidget {
     final nameController = TextEditingController();
     final focusMinutes = ValueNotifier(25);
     final breakMinutes = ValueNotifier(5);
+    final longFocusMinutes = ValueNotifier(50);
     final longBreakMinutes = ValueNotifier(15);
 
     showDialog(
@@ -97,6 +98,7 @@ class PresetsScreen extends HookWidget {
               const SizedBox(height: 16),
               _buildMinuteSlider('Focus Duration', focusMinutes),
               _buildMinuteSlider('Break Duration', breakMinutes),
+              _buildMinuteSlider('Long Focus Duration', longFocusMinutes),
               _buildMinuteSlider('Long Break Duration', longBreakMinutes),
             ],
           ),
@@ -114,6 +116,7 @@ class PresetsScreen extends HookWidget {
                   name: nameController.text,
                   focusDuration: focusMinutes.value * 60,
                   breakDuration: breakMinutes.value * 60,
+                  longFocusDuration: longFocusMinutes.value * 60,
                   longBreakDuration: longBreakMinutes.value * 60,
                 );
                 provider.addPreset(preset);

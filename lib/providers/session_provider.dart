@@ -6,9 +6,11 @@ import '../models/models.dart';
 class SessionProvider extends ChangeNotifier {
   final List<Session> _sessions = [];
   bool _isLoading = false;
+  Session? _currentSession;
 
   List<Session> get sessions => List.unmodifiable(_sessions);
   bool get isLoading => _isLoading;
+  Session? get currentSession => _currentSession;
 
   List<Session> get todaySessions {
     final now = DateTime.now();
@@ -92,5 +94,44 @@ class SessionProvider extends ChangeNotifier {
       _sessions[index] = session;
       notifyListeners();
     }
+  }
+
+  // Start a new session (for timer_screen)
+  void startSession({
+    required String userId,
+    required TimerType type,
+    required int duration,
+    String? presetName,
+  }) {
+    _currentSession = Session(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      userId: userId,
+      type: type,
+      duration: duration,
+      startTime: DateTime.now(),
+      presetName: presetName,
+    );
+    notifyListeners();
+  }
+
+  // Complete the current session
+  void completeCurrentSession() {
+    if (_currentSession != null) {
+      _currentSession = _currentSession!.copyWith(
+        endTime: DateTime.now(),
+        completed: true,
+      );
+      // Add to sessions list
+      _sessions.insert(0, _currentSession!);
+      // Clear current session
+      _currentSession = null;
+      notifyListeners();
+    }
+  }
+
+  // Clear the current session (e.g., on reset)
+  void clearCurrentSession() {
+    _currentSession = null;
+    notifyListeners();
   }
 }

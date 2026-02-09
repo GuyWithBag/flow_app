@@ -18,6 +18,8 @@ class TimerScreen extends HookWidget {
   Widget build(BuildContext context) {
     final timerProvider = Provider.of<TimerProvider>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final sessionProvider = Provider.of<SessionProvider>(context);
+    final presetProvider = Provider.of<PresetProvider>(context);
 
     // --- CONFIGURATION STATE (Ideally saved to Preferences in a real app) ---
     final fixedScaleDuration = useState(60 * 60);
@@ -67,6 +69,7 @@ class TimerScreen extends HookWidget {
     void _resetLoop() {
       currentLoop.value = 1;
       timerProvider.resetTimer();
+      sessionProvider.clearCurrentSession();
     }
 
     void _handleSessionComplete(BuildContext ctx) {
@@ -105,6 +108,14 @@ class TimerScreen extends HookWidget {
           );
 
           if (autoStartBreak.value) {
+            // Start session for break
+            final preset = presetProvider.selectedPreset;
+            sessionProvider.startSession(
+              userId: 'current_user', // TODO: Get from AuthProvider
+              type: TimerType.breakTime,
+              duration: preset?.breakDuration ?? 300,
+              presetName: preset?.name,
+            );
             timerProvider.startTimer();
           }
         }
@@ -120,6 +131,14 @@ class TimerScreen extends HookWidget {
         );
 
         if (autoStartFocus.value) {
+          // Start session for focus
+          final preset = presetProvider.selectedPreset;
+          sessionProvider.startSession(
+            userId: 'current_user', // TODO: Get from AuthProvider
+            type: TimerType.focus,
+            duration: preset?.focusDuration ?? 1500,
+            presetName: preset?.name,
+          );
           timerProvider.startTimer();
         }
       }
@@ -131,6 +150,8 @@ class TimerScreen extends HookWidget {
       if (wasRunning.value &&
           !timerProvider.isRunning &&
           timerProvider.remainingSeconds == 0) {
+        // Complete session in SessionProvider
+        sessionProvider.completeCurrentSession();
         // We need a slight delay to ensure the provider state is settled
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _handleSessionComplete(context);
@@ -254,26 +275,58 @@ class TimerScreen extends HookWidget {
                                   fontSize: 24,
                                 ),
                               ),
-                              // Loop Indicator
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: currentColor.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  "Loop ${currentLoop.value} / ${targetLoops.value}",
-                                  style: TextStyle(
-                                    color: isDark
-                                        ? Colors.white
-                                        : Colors.black87,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
+                              // Preset Label and Loop Indicator
+                              Row(
+                                children: [
+                                  // Preset Label
+                                  if (presetProvider.selectedPreset != null)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      margin: const EdgeInsets.only(right: 8),
+                                      decoration: BoxDecoration(
+                                        color: currentColor.withOpacity(0.15),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: currentColor.withOpacity(0.3),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        presetProvider.selectedPreset!.name,
+                                        style: TextStyle(
+                                          color: isDark
+                                              ? Colors.white
+                                              : Colors.black87,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  // Loop Indicator
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: currentColor.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      "Loop ${currentLoop.value} / ${targetLoops.value}",
+                                      style: TextStyle(
+                                        color: isDark
+                                            ? Colors.white
+                                            : Colors.black87,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                ],
                               ),
                             ],
                           ),
@@ -282,8 +335,28 @@ class TimerScreen extends HookWidget {
                         _buildModeToggle(
                           context,
                           timerProvider,
+                          presetProvider,
                           focusColor,
                           breakColor,
+                          isDark,
+                        ),
+                        const SizedBox(height: 10),
+                        // Long Duration Buttons
+                        if (presetProvider.selectedPreset != null)
+                          _buildLongDurationButton(
+                            context,
+                            timerProvider,
+                            presetProvider,
+                            focusColor,
+                            breakColor,
+                            isDark,
+                          ),
+                        const SizedBox(height: 10),
+                        // Preset Selection Button
+                        _buildPresetSelector(
+                          context,
+                          presetProvider,
+                          timerProvider,
                           isDark,
                         ),
                       ],
@@ -357,6 +430,15 @@ class TimerScreen extends HookWidget {
                               if (timerProvider.isRunning) {
                                 timerProvider.pauseTimer();
                               } else {
+                                // Start session in SessionProvider
+                                final preset = presetProvider.selectedPreset;
+                                sessionProvider.startSession(
+                                  userId:
+                                      'current_user', // TODO: Get from AuthProvider
+                                  type: timerProvider.currentType,
+                                  duration: timerProvider.totalSeconds,
+                                  presetName: preset?.name,
+                                );
                                 timerProvider.startTimer();
                               }
                             },
@@ -943,6 +1025,7 @@ class TimerScreen extends HookWidget {
   Widget _buildModeToggle(
     BuildContext context,
     TimerProvider timerProvider,
+    PresetProvider presetProvider,
     Color focusColor,
     Color breakColor,
     bool isDark,
@@ -960,6 +1043,11 @@ class TimerScreen extends HookWidget {
           BouncingButton(
             onTap: () {
               timerProvider.setTimerType(TimerType.focus);
+              // Apply preset duration if available
+              final preset = presetProvider.selectedPreset;
+              if (preset != null) {
+                timerProvider.setCustomDuration(preset.focusDuration);
+              }
               themeProvider.setModeAccentColor(
                 context,
                 TimerType.focus,
@@ -976,6 +1064,11 @@ class TimerScreen extends HookWidget {
           BouncingButton(
             onTap: () {
               timerProvider.setTimerType(TimerType.breakTime);
+              // Apply preset duration if available
+              final preset = presetProvider.selectedPreset;
+              if (preset != null) {
+                timerProvider.setCustomDuration(preset.breakDuration);
+              }
               themeProvider.setModeAccentColor(
                 context,
                 TimerType.breakTime,
@@ -1017,6 +1110,503 @@ class TimerScreen extends HookWidget {
           fontWeight: FontWeight.w600,
           fontSize: 16,
         ),
+      ),
+    );
+  }
+
+  Widget _buildLongDurationButton(
+    BuildContext context,
+    TimerProvider timerProvider,
+    PresetProvider presetProvider,
+    Color focusColor,
+    Color breakColor,
+    bool isDark,
+  ) {
+    final preset = presetProvider.selectedPreset!;
+    final isFocusMode = timerProvider.currentType == TimerType.focus;
+    final longDuration = isFocusMode
+        ? preset.longFocusDuration
+        : preset.longBreakDuration;
+    final currentColor = isFocusMode ? focusColor : breakColor;
+    final buttonLabel = isFocusMode ? 'Long Focus' : 'Long Break';
+    final formattedDuration = _formatDuration(longDuration);
+
+    return BouncingButton(
+      onTap: () {
+        if (timerProvider.isRunning) return;
+        timerProvider.setCustomDuration(longDuration);
+        HapticFeedback.mediumImpact();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          color: currentColor.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: currentColor.withOpacity(0.4), width: 1.5),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.timer_outlined, size: 18, color: currentColor),
+            const SizedBox(width: 8),
+            Text(
+              '$buttonLabel ($formattedDuration)',
+              style: TextStyle(
+                color: currentColor,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDuration(int seconds) {
+    final hours = seconds ~/ 3600;
+    final minutes = (seconds % 3600) ~/ 60;
+    if (hours > 0) {
+      return '${hours}h ${minutes}m';
+    }
+    return '${minutes}m';
+  }
+
+  Widget _buildPresetSelector(
+    BuildContext context,
+    PresetProvider presetProvider,
+    TimerProvider timerProvider,
+    bool isDark,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.settings_applications,
+                size: 18,
+                color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Preset:',
+                style: TextStyle(
+                  color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                presetProvider.selectedPreset?.name ?? 'None',
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black87,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          TextButton(
+            onPressed: () => _showPresetSelector(
+              context,
+              presetProvider,
+              timerProvider,
+              isDark,
+            ),
+            child: Text(
+              presetProvider.selectedPreset != null ? 'Change' : 'Select',
+              style: TextStyle(
+                color: isDark ? Colors.blue.shade300 : Colors.blue,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPresetSelector(
+    BuildContext context,
+    PresetProvider presetProvider,
+    TimerProvider timerProvider,
+    bool isDark,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Select Preset',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                // Add Preset Button
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _showAddPresetDialog(
+                      context,
+                      presetProvider,
+                      timerProvider,
+                      isDark,
+                    );
+                  },
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add Custom Preset'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Divider(),
+                const SizedBox(height: 8),
+                const Text(
+                  'Available Presets',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: presetProvider.presets.length,
+                  itemBuilder: (context, index) {
+                    final preset = presetProvider.presets[index];
+                    final isSelected =
+                        presetProvider.selectedPreset?.id == preset.id;
+
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      elevation: isSelected ? 4 : 1,
+                      color: isSelected
+                          ? const Color(0xFF66BB6A).withOpacity(0.1)
+                          : null,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: isSelected
+                            ? const BorderSide(
+                                color: Color(0xFF66BB6A),
+                                width: 2,
+                              )
+                            : BorderSide.none,
+                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(16),
+                        title: Text(
+                          preset.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            'Focus: ${preset.focusDuration ~/ 60}m  •  Break: ${preset.breakDuration ~/ 60}m  •  Long Focus: ${preset.longFocusDuration ~/ 60}m  •  Long Break: ${preset.longBreakDuration ~/ 60}m',
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                        ),
+                        trailing: isSelected
+                            ? const Icon(
+                                Icons.check_circle,
+                                color: Color(0xFF66BB6A),
+                              )
+                            : null,
+                        onTap: () {
+                          presetProvider.selectPreset(preset);
+                          // Update timer durations based on preset
+                          if (timerProvider.currentType == TimerType.focus) {
+                            timerProvider.setCustomDuration(
+                              preset.focusDuration,
+                            );
+                          } else {
+                            timerProvider.setCustomDuration(
+                              preset.breakDuration,
+                            );
+                          }
+                          Navigator.pop(context);
+                        },
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () {
+                    presetProvider.clearPreset();
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Clear Selection'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showAddPresetDialog(
+    BuildContext context,
+    PresetProvider presetProvider,
+    TimerProvider timerProvider,
+    bool isDark,
+  ) {
+    final nameController = TextEditingController();
+    final focusMinutesController = TextEditingController(text: '25');
+    final focusSecondsController = TextEditingController(text: '0');
+    final breakMinutesController = TextEditingController(text: '5');
+    final breakSecondsController = TextEditingController(text: '0');
+    final longFocusMinutesController = TextEditingController(text: '50');
+    final longFocusSecondsController = TextEditingController(text: '0');
+    final longBreakMinutesController = TextEditingController(text: '15');
+    final longBreakSecondsController = TextEditingController(text: '0');
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Create Custom Preset'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Preset Name',
+                  hintText: 'e.g., My Custom Preset',
+                  border: OutlineInputBorder(),
+                ),
+                autofocus: true,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Focus Duration',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: focusMinutesController,
+                      decoration: const InputDecoration(
+                        labelText: 'Minutes',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: focusSecondsController,
+                      decoration: const InputDecoration(
+                        labelText: 'Seconds',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Break Duration',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: breakMinutesController,
+                      decoration: const InputDecoration(
+                        labelText: 'Minutes',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: breakSecondsController,
+                      decoration: const InputDecoration(
+                        labelText: 'Seconds',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Long Focus Duration',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: longFocusMinutesController,
+                      decoration: const InputDecoration(
+                        labelText: 'Minutes',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: longFocusSecondsController,
+                      decoration: const InputDecoration(
+                        labelText: 'Seconds',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Long Break Duration',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: longBreakMinutesController,
+                      decoration: const InputDecoration(
+                        labelText: 'Minutes',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: longBreakSecondsController,
+                      decoration: const InputDecoration(
+                        labelText: 'Seconds',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final name = nameController.text.trim();
+              if (name.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please enter a preset name')),
+                );
+                return;
+              }
+
+              // Parse durations
+              final focusMinutes =
+                  int.tryParse(focusMinutesController.text) ?? 0;
+              final focusSeconds =
+                  int.tryParse(focusSecondsController.text) ?? 0;
+              final breakMinutes =
+                  int.tryParse(breakMinutesController.text) ?? 0;
+              final breakSeconds =
+                  int.tryParse(breakSecondsController.text) ?? 0;
+              final longFocusMinutes =
+                  int.tryParse(longFocusMinutesController.text) ?? 0;
+              final longFocusSeconds =
+                  int.tryParse(longFocusSecondsController.text) ?? 0;
+              final longBreakMinutes =
+                  int.tryParse(longBreakMinutesController.text) ?? 0;
+              final longBreakSeconds =
+                  int.tryParse(longBreakSecondsController.text) ?? 0;
+
+              final focusDuration = (focusMinutes * 60) + focusSeconds;
+              final breakDuration = (breakMinutes * 60) + breakSeconds;
+              final longFocusDuration =
+                  (longFocusMinutes * 60) + longFocusSeconds;
+              final longBreakDuration =
+                  (longBreakMinutes * 60) + longBreakSeconds;
+
+              if (focusDuration <= 0 ||
+                  breakDuration <= 0 ||
+                  longFocusDuration <= 0 ||
+                  longBreakDuration <= 0) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('All durations must be greater than 0'),
+                  ),
+                );
+                return;
+              }
+
+              // Create new preset
+              final newPreset = PomodoroPreset(
+                id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
+                name: name,
+                focusDuration: focusDuration,
+                breakDuration: breakDuration,
+                longFocusDuration: longFocusDuration,
+                longBreakDuration: longBreakDuration,
+              );
+
+              presetProvider.addPreset(newPreset);
+              presetProvider.selectPreset(newPreset);
+
+              // Update timer durations based on current type
+              if (timerProvider.currentType == TimerType.focus) {
+                timerProvider.setCustomDuration(focusDuration);
+              } else {
+                timerProvider.setCustomDuration(breakDuration);
+              }
+
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Preset "$name" created and selected')),
+              );
+            },
+            child: const Text('Create'),
+          ),
+        ],
       ),
     );
   }

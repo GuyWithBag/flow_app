@@ -9,6 +9,7 @@ class PresetProvider extends ChangeNotifier {
       name: 'Classic',
       focusDuration: 1500,
       breakDuration: 300,
+      longFocusDuration: 3000,
       longBreakDuration: 900,
     ),
     PomodoroPreset(
@@ -16,6 +17,7 @@ class PresetProvider extends ChangeNotifier {
       name: 'Light Study',
       focusDuration: 900,
       breakDuration: 180,
+      longFocusDuration: 1800,
       longBreakDuration: 600,
     ),
     PomodoroPreset(
@@ -23,6 +25,7 @@ class PresetProvider extends ChangeNotifier {
       name: 'Heavy Study',
       focusDuration: 2700,
       breakDuration: 600,
+      longFocusDuration: 5400,
       longBreakDuration: 1200,
     ),
   ];
@@ -34,6 +37,11 @@ class PresetProvider extends ChangeNotifier {
 
   void selectPreset(PomodoroPreset preset) {
     _selectedPreset = preset;
+    notifyListeners();
+  }
+
+  void clearPreset() {
+    _selectedPreset = null;
     notifyListeners();
   }
 

@@ -11,7 +11,6 @@ class TimerProvider extends ChangeNotifier {
   bool _isRunning = false;
   TimerType _currentType = TimerType.focus;
   int _completedCycles = 0;
-  Session? _currentSession;
 
   final Map<TimerType, int> _defaultDurations = {
     TimerType.focus: 1500, // 25 min
@@ -27,7 +26,6 @@ class TimerProvider extends ChangeNotifier {
   double get progress => _totalSeconds > 0
       ? (_totalSeconds - _remainingSeconds) / _totalSeconds
       : 0;
-  Session? get currentSession => _currentSession;
 
   String get formattedTime {
     final hours = _remainingSeconds ~/ 3600;
@@ -61,15 +59,6 @@ class TimerProvider extends ChangeNotifier {
 
     _isRunning = true;
 
-    // Create new session
-    _currentSession = Session(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      userId: 'current_user', // TODO: Replace with actual user ID
-      type: _currentType,
-      duration: _totalSeconds,
-      startTime: DateTime.now(),
-    );
-
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_remainingSeconds > 0) {
         _remainingSeconds--;
@@ -94,7 +83,6 @@ class TimerProvider extends ChangeNotifier {
     _timer?.cancel();
     _remainingSeconds = _defaultDurations[_currentType]!;
     _totalSeconds = _remainingSeconds;
-    _currentSession = null;
     notifyListeners();
   }
 
@@ -102,17 +90,9 @@ class TimerProvider extends ChangeNotifier {
     _timer?.cancel();
     _isRunning = false;
 
-    // Mark session as completed
-    if (_currentSession != null) {
-      _currentSession = _currentSession!.copyWith(
-        endTime: DateTime.now(),
-        completed: true,
-      );
-    }
-
     // TODO: Play completion sound
     // TODO: Show notification
-    // TODO: Save session to Supabase
+    // Session completion is handled by SessionProvider
 
     if (_currentType == TimerType.focus) {
       _completedCycles++;
