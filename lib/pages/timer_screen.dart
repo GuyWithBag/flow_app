@@ -8,6 +8,9 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_picker_plus/flutter_picker_plus.dart';
 
+// TODO: Make long focus and break toggleable
+// TODO: Refactor all of the code so that you are able to separate them into their own files
+
 // --- ENUMS & CONSTANTS ---
 enum SoundType { bell, digital, bird, none }
 
