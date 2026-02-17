@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 
@@ -32,6 +31,101 @@ class SessionProvider extends ChangeNotifier {
   int get totalFocusMinutes {
     return _sessions
         .where((s) => s.type == TimerType.focus && s.completed)
+        .fold<int>(0, (sum, s) => sum + (s.duration ~/ 60));
+  }
+
+  int get todayBreakMinutes {
+    return todaySessions
+        .where((s) => s.type == TimerType.breakTime)
+        .fold<int>(0, (sum, s) => sum + (s.duration ~/ 60));
+  }
+
+  int get completedSessionCount {
+    return _sessions
+        .where((s) => s.type == TimerType.focus && s.completed)
+        .length;
+  }
+
+  double get averageSessionMinutes {
+    final focusSessions = _sessions
+        .where((s) => s.type == TimerType.focus && s.completed)
+        .toList();
+    if (focusSessions.isEmpty) return 0;
+    final totalMinutes = focusSessions.fold<int>(
+      0,
+      (sum, s) => sum + (s.duration ~/ 60),
+    );
+    return totalMinutes / focusSessions.length;
+  }
+
+  Map<DateTime, int> get weeklyFocusMinutes {
+    final now = DateTime.now();
+    final result = <DateTime, int>{};
+    for (int i = 6; i >= 0; i--) {
+      final day = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).subtract(Duration(days: i));
+      result[day] = _focusMinutesForDate(day);
+    }
+    return result;
+  }
+
+  Map<DateTime, int> get monthlyFocusMinutes {
+    final now = DateTime.now();
+    final result = <DateTime, int>{};
+    for (int i = 29; i >= 0; i--) {
+      final day = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).subtract(Duration(days: i));
+      result[day] = _focusMinutesForDate(day);
+    }
+    return result;
+  }
+
+  Map<String, int> get presetBreakdown {
+    final result = <String, int>{};
+    for (final s in _sessions.where(
+      (s) => s.type == TimerType.focus && s.completed,
+    )) {
+      final name = s.presetName ?? 'Unknown';
+      result[name] = (result[name] ?? 0) + (s.duration ~/ 60);
+    }
+    return result;
+  }
+
+  int currentStreak(int dailyGoalMinutes) {
+    final now = DateTime.now();
+    int streak = 0;
+    // Start from yesterday (today is still in progress)
+    for (int i = 1; i <= 365; i++) {
+      final day = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).subtract(Duration(days: i));
+      if (_focusMinutesForDate(day) >= dailyGoalMinutes) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }
+
+  int _focusMinutesForDate(DateTime date) {
+    final nextDay = date.add(const Duration(days: 1));
+    return _sessions
+        .where(
+          (s) =>
+              s.type == TimerType.focus &&
+              s.completed &&
+              s.startTime.isAfter(date) &&
+              s.startTime.isBefore(nextDay),
+        )
         .fold<int>(0, (sum, s) => sum + (s.duration ~/ 60));
   }
 

@@ -38,27 +38,44 @@ class LongDurationButton extends StatelessWidget {
     final longDuration = isFocusMode
         ? preset.longFocusDuration
         : preset.longBreakDuration;
+    final regularDuration = isFocusMode
+        ? preset.focusDuration * 60
+        : preset.breakDuration * 60;
     final currentColor = isFocusMode ? focusColor : breakColor;
+    final isActive = timerProvider.totalSeconds == longDuration;
     final buttonLabel = isFocusMode ? 'Long Focus' : 'Long Break';
     final formattedDuration = _formatDuration(longDuration);
 
     return BouncingButton(
       onTap: () {
         if (timerProvider.isRunning) return;
-        timerProvider.setCustomDuration(longDuration);
+        if (isActive) {
+          timerProvider.setCustomDuration(regularDuration);
+        } else {
+          timerProvider.setCustomDuration(longDuration);
+        }
         HapticFeedback.mediumImpact();
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: currentColor.withOpacity(0.15),
+          color: isActive
+              ? currentColor.withValues(alpha: 0.4)
+              : currentColor.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: currentColor.withOpacity(0.4), width: 1.5),
+          border: Border.all(
+            color: currentColor.withValues(alpha: isActive ? 0.8 : 0.4),
+            width: isActive ? 2.0 : 1.5,
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.timer_outlined, size: 18, color: currentColor),
+            Icon(
+              isActive ? Icons.timer : Icons.timer_outlined,
+              size: 18,
+              color: currentColor,
+            ),
             const SizedBox(width: 8),
             Text(
               '$buttonLabel ($formattedDuration)',

@@ -6,12 +6,10 @@ import 'package:flow_app/providers/providers.dart';
 import 'package:flow_app/shared/enums/enums.dart';
 import 'package:flow_app/widgets/widgets.barrel.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_confetti/flutter_confetti.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_picker_plus/flutter_picker_plus.dart';
-
-// TODO: Make long focus and break toggleable
-// TODO: Refactor all of the code so that you are able to separate them into their own files
 
 class TimerScreen extends HookWidget {
   const TimerScreen({Key? key}) : super(key: key);
@@ -56,6 +54,36 @@ class TimerScreen extends HookWidget {
       sessionProvider.clearCurrentSession();
     }
 
+    void _finishSession() {
+      sessionProvider.completeCurrentSession();
+      timerProvider.resetLoop();
+      timerProvider.resetTimer();
+      sessionProvider.clearCurrentSession();
+    }
+
+    void _skipCycle() {
+      sessionProvider.clearCurrentSession();
+      timerProvider.resetTimer();
+      if (timerProvider.currentType == TimerType.focus) {
+        // Skip focus → go to break
+        timerProvider.setTimerType(TimerType.breakTime);
+        themeProvider.setModeAccentColor(
+          context,
+          TimerType.breakTime,
+          themeProvider.getAccentColorFor(TimerType.breakTime),
+        );
+      } else {
+        // Skip break → go to focus, increment loop
+        timerProvider.incrementLoop();
+        timerProvider.setTimerType(TimerType.focus);
+        themeProvider.setModeAccentColor(
+          context,
+          TimerType.focus,
+          themeProvider.getAccentColorFor(TimerType.focus),
+        );
+      }
+    }
+
     void _handleSessionComplete(BuildContext ctx) {
       // Play Sound (Placeholder for AudioPlayer logic)
       log("Playing Sound: ${timerProvider.selectedSound}");
@@ -63,7 +91,15 @@ class TimerScreen extends HookWidget {
       if (timerProvider.currentType == TimerType.focus) {
         // Focus Finished
         if (timerProvider.currentLoop >= timerProvider.targetLoops) {
-          // All Loops Done
+          // All Loops Done — confetti + dialog
+          Confetti.launch(
+            ctx,
+            options: const ConfettiOptions(
+              particleCount: 100,
+              spread: 70,
+              y: 0.6,
+            ),
+          );
           showDialog(
             context: ctx,
             builder: (_) => AlertDialog(
@@ -375,21 +411,37 @@ class TimerScreen extends HookWidget {
                         vertical: 40,
                       ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
+                          // Skip button
                           BouncingButton(
-                            onTap: _resetLoop,
+                            onTap: _skipCycle,
                             child: CircleAvatar(
                               radius: 24,
                               backgroundColor: isDark
                                   ? Colors.grey.shade800
                                   : Colors.grey.shade200,
                               child: Icon(
-                                Icons.refresh,
+                                Icons.skip_next,
                                 color: isDark ? Colors.white : Colors.black87,
                               ),
                             ),
                           ),
+                          // Finish button
+                          BouncingButton(
+                            onTap: _finishSession,
+                            child: CircleAvatar(
+                              radius: 24,
+                              backgroundColor: isDark
+                                  ? Colors.grey.shade800
+                                  : Colors.grey.shade200,
+                              child: Icon(
+                                Icons.stop,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                          ),
+                          // Play/Pause button
                           BouncingButton(
                             onTap: () {
                               if (timerProvider.isRunning) {
@@ -407,6 +459,21 @@ class TimerScreen extends HookWidget {
                             },
                             child: PlayPauseButton(color: currentColor),
                           ),
+                          // Reset button
+                          BouncingButton(
+                            onTap: _resetLoop,
+                            child: CircleAvatar(
+                              radius: 24,
+                              backgroundColor: isDark
+                                  ? Colors.grey.shade800
+                                  : Colors.grey.shade200,
+                              child: Icon(
+                                Icons.refresh,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                          ),
+                          // Settings button
                           BouncingButton(
                             onTap: () => _showSettingsSheet(
                               context,
