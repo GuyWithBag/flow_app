@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../models/models.dart';
+import 'package:flow_app/models/models.barrel.dart';
 
 class PresetCard extends StatelessWidget {
   final PomodoroPreset preset;

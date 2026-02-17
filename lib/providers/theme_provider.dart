@@ -1,9 +1,9 @@
 import 'package:flow_app/providers/providers.dart';
 import 'package:flutter/material.dart';
-import 'package:hive_local_storage/hive_local_storage.dart';
+import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'package:provider/provider.dart';
 
-import 'package:flow_app/models/timer_models.dart';
+import 'package:flow_app/models/models.barrel.dart';
 
 class ThemeProvider extends ChangeNotifier {
   bool _isDarkMode = false;
@@ -129,74 +129,71 @@ class ThemeProvider extends ChangeNotifier {
     _savePreferences();
   }
 
-  Future<void> _savePreferences() async {
-    final storage = LocalStorage.i;
+  void _savePreferences() {
+    final box = Hive.box('settings');
 
-    await storage.put<bool>(key: 'dark_mode', value: _isDarkMode);
-    await storage.put<int>(key: 'daily_goal_minutes', value: _dailyGoalMinutes);
+    box.put('dark_mode', _isDarkMode);
+    box.put('daily_goal_minutes', _dailyGoalMinutes);
 
     // Legacy single-mode values (mapped from Focus mode)
-    await storage.put<String>(key: 'background_theme', value: _backgroundTheme);
-    await storage.put<String>(
-      key: 'background_image_url',
-      value: _backgroundImageUrl ?? '',
-    );
-    await storage.put<int>(key: 'accent_color', value: _accentColor.value);
+    box.put('background_theme', _backgroundTheme);
+    box.put('background_image_url', _backgroundImageUrl ?? '');
+    box.put('accent_color', _accentColor.value);
 
     // Per-mode values
-    await storage.put<String>(
-      key: 'focus_background_theme',
-      value: _modeBackgroundThemes[TimerType.focus] ?? 'default',
+    box.put(
+      'focus_background_theme',
+      _modeBackgroundThemes[TimerType.focus] ?? 'default',
     );
-    await storage.put<String>(
-      key: 'break_background_theme',
-      value: _modeBackgroundThemes[TimerType.breakTime] ?? 'default',
+    box.put(
+      'break_background_theme',
+      _modeBackgroundThemes[TimerType.breakTime] ?? 'default',
     );
-
-    await storage.put<String>(
-      key: 'focus_background_image_url',
-      value: _modeBackgroundImageUrls[TimerType.focus] ?? '',
+    box.put(
+      'focus_background_image_url',
+      _modeBackgroundImageUrls[TimerType.focus] ?? '',
     );
-    await storage.put<String>(
-      key: 'break_background_image_url',
-      value: _modeBackgroundImageUrls[TimerType.breakTime] ?? '',
+    box.put(
+      'break_background_image_url',
+      _modeBackgroundImageUrls[TimerType.breakTime] ?? '',
     );
-
-    await storage.put<int>(
-      key: 'focus_accent_color',
-      value: _modeAccentColors[TimerType.focus]?.value ?? _accentColor.value,
+    box.put(
+      'focus_accent_color',
+      _modeAccentColors[TimerType.focus]?.value ?? _accentColor.value,
     );
-    await storage.put<int>(
-      key: 'break_accent_color',
-      value:
-          _modeAccentColors[TimerType.breakTime]?.value ??
+    box.put(
+      'break_accent_color',
+      _modeAccentColors[TimerType.breakTime]?.value ??
           const Color(0xFFFFB74D).value,
     );
   }
 
-  Future<void> loadPreferences() async {
-    final storage = LocalStorage.i;
+  void loadPreferences() {
+    final box = Hive.box('settings');
 
-    _isDarkMode = storage.get<bool>(key: 'dark_mode') ?? false;
-    _dailyGoalMinutes = storage.get<int>(key: 'daily_goal_minutes') ?? 120;
+    _isDarkMode = box.get('dark_mode', defaultValue: false);
+    _dailyGoalMinutes = box.get('daily_goal_minutes', defaultValue: 120);
 
     // Legacy single-mode values
-    _backgroundTheme =
-        storage.get<String>(key: 'background_theme') ?? 'default';
-    final url = storage.get<String>(key: 'background_image_url') ?? '';
+    _backgroundTheme = box.get('background_theme', defaultValue: 'default');
+    final url = box.get('background_image_url', defaultValue: '') as String;
     _backgroundImageUrl = url.trim().isEmpty ? null : url.trim();
-    _accentColor = Color(storage.get<int>(key: 'accent_color') ?? 0xFF66BB6A);
+    _accentColor = Color(box.get('accent_color', defaultValue: 0xFF66BB6A));
 
     // Per-mode values with fallback to legacy
-    _modeBackgroundThemes[TimerType.focus] =
-        storage.get<String>(key: 'focus_background_theme') ?? _backgroundTheme;
-    _modeBackgroundThemes[TimerType.breakTime] =
-        storage.get<String>(key: 'break_background_theme') ?? _backgroundTheme;
+    _modeBackgroundThemes[TimerType.focus] = box.get(
+      'focus_background_theme',
+      defaultValue: _backgroundTheme,
+    );
+    _modeBackgroundThemes[TimerType.breakTime] = box.get(
+      'break_background_theme',
+      defaultValue: _backgroundTheme,
+    );
 
     final focusUrl =
-        storage.get<String>(key: 'focus_background_image_url') ?? '';
+        box.get('focus_background_image_url', defaultValue: '') as String;
     final breakUrl =
-        storage.get<String>(key: 'break_background_image_url') ?? '';
+        box.get('break_background_image_url', defaultValue: '') as String;
     _modeBackgroundImageUrls[TimerType.focus] = focusUrl.trim().isEmpty
         ? _backgroundImageUrl
         : focusUrl.trim();
@@ -205,11 +202,13 @@ class ThemeProvider extends ChangeNotifier {
         : breakUrl.trim();
 
     _modeAccentColors[TimerType.focus] = Color(
-      storage.get<int>(key: 'focus_accent_color') ?? _accentColor.value,
+      box.get('focus_accent_color', defaultValue: _accentColor.value),
     );
     _modeAccentColors[TimerType.breakTime] = Color(
-      storage.get<int>(key: 'break_accent_color') ??
-          const Color(0xFFFFB74D).value,
+      box.get(
+        'break_accent_color',
+        defaultValue: const Color(0xFFFFB74D).value,
+      ),
     );
 
     notifyListeners();

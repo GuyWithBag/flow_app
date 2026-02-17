@@ -1,0 +1,3 @@
+1. There should be an option to disable the background liquid
+2. The account screen, since I don't plan to enable cloud syncing or supabase yet, the login/sign up button should have a toggle that displays that "This feature is planned for the future"
+3. Separate all the models into separate files

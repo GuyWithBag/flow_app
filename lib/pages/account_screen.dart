@@ -1,4 +1,4 @@
-import 'package:flow_app/models/models.dart';
+import 'package:flow_app/models/models.barrel.dart';
 import 'package:flow_app/pages/pages.barrel.dart';
 import 'package:flow_app/providers/providers.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +12,7 @@ class AccountScreen extends HookWidget {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final showPlannedMessage = useState(false);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -69,13 +70,31 @@ class AccountScreen extends HookWidget {
           ] else ...[
             TextButton(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                );
+                showPlannedMessage.value = !showPlannedMessage.value;
               },
               child: const Text('Log in / Sign up'),
             ),
+            if (showPlannedMessage.value)
+              const Padding(
+                padding: EdgeInsets.only(top: 8),
+                child: Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline, color: Colors.grey),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Cloud sync and account features are planned for the future.',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
           ],
         ],
       ),

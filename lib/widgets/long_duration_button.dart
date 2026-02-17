@@ -1,4 +1,4 @@
-import 'package:flow_app/models/models.dart';
+import 'package:flow_app/models/models.barrel.dart';
 import 'package:flow_app/providers/providers.dart';
 import 'package:flow_app/widgets/widgets.barrel.dart';
 import 'package:flutter/material.dart';

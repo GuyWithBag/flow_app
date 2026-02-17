@@ -1,9 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:hive_local_storage/hive_local_storage.dart';
+import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 
-import '../models/models.dart';
+import '../models/models.barrel.dart';
 
 class AuthProvider extends ChangeNotifier {
   UserProfile? _currentUser;
@@ -20,7 +20,8 @@ class AuthProvider extends ChangeNotifier {
   }
 
   void _loadUser() {
-    final raw = LocalStorage.i.get<String>(key: 'auth_user');
+    final box = Hive.box('auth');
+    final raw = box.get('auth_user') as String?;
     if (raw != null && raw.isNotEmpty) {
       final json = jsonDecode(raw) as Map<String, dynamic>;
       _currentUser = UserProfile(
@@ -34,6 +35,7 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> _saveUser() async {
+    final box = Hive.box('auth');
     if (_currentUser != null) {
       final json = {
         'id': _currentUser!.id,
@@ -42,12 +44,9 @@ class AuthProvider extends ChangeNotifier {
         'daily_goal': _currentUser!.dailyGoal,
         'streak': _currentUser!.streak,
       };
-      await LocalStorage.i.put<String>(
-        key: 'auth_user',
-        value: jsonEncode(json),
-      );
+      await box.put('auth_user', jsonEncode(json));
     } else {
-      await LocalStorage.i.remove(key: 'auth_user');
+      await box.delete('auth_user');
     }
   }
 

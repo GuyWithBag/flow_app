@@ -2,10 +2,12 @@
 // Production-ready Flutter app with Supabase integration (mock), Provider + Hooks state management
 
 import 'package:barrel_annotation/barrel_annotation.dart';
+import 'package:flow_app/models/models.barrel.dart';
 import 'package:flutter/material.dart';
-import 'package:hive_local_storage/hive_local_storage.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
 
 import 'app.dart';
+import 'hive/hive_registrar.g.dart';
 import 'providers/providers.dart';
 
 // ============================================================================
@@ -15,8 +17,15 @@ import 'providers/providers.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Hive local storage
-  await LocalStorage.initialize();
+  // Initialize Hive
+  await Hive.initFlutter();
+  Hive.registerAdapters();
+
+  // Open Hive boxes
+  await Hive.openBox('settings');
+  await Hive.openBox<Session>('sessions');
+  await Hive.openBox<PomodoroPreset>('presets');
+  await Hive.openBox('auth');
 
   // TODO: Initialize Supabase
   // await Supabase.initialize(
@@ -29,13 +38,13 @@ void main() async {
 
   // Load persisted state from Hive
   final themeProvider = ThemeProvider();
-  await themeProvider.loadPreferences();
+  themeProvider.loadPreferences();
 
   final presetProvider = PresetProvider();
-  await presetProvider.loadPresets();
+  presetProvider.loadPresets();
 
   final sessionProvider = SessionProvider();
-  await sessionProvider.loadSessions();
+  sessionProvider.loadSessions();
 
   runApp(
     App(

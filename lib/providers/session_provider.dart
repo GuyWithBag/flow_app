@@ -1,10 +1,8 @@
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:hive_local_storage/hive_local_storage.dart' hide Session;
+import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 
-import '../models/models.dart';
+import '../models/models.barrel.dart';
 
 class SessionProvider extends ChangeNotifier {
   final List<Session> _sessions = [];
@@ -14,6 +12,8 @@ class SessionProvider extends ChangeNotifier {
   List<Session> get sessions => List.unmodifiable(_sessions);
   bool get isLoading => _isLoading;
   Session? get currentSession => _currentSession;
+
+  Box<Session> get _box => Hive.box<Session>('sessions');
 
   List<Session> get todaySessions {
     final now = DateTime.now();
@@ -35,51 +35,24 @@ class SessionProvider extends ChangeNotifier {
         .fold<int>(0, (sum, s) => sum + (s.duration ~/ 60));
   }
 
-  Future<void> _saveSessions() async {
-    final encoded = _sessions.map((s) => jsonEncode(s.toJson())).toList();
-    await LocalStorage.i.put<String>(
-      key: 'sessions',
-      value: jsonEncode(encoded),
-    );
-  }
-
-  // Load sessions from Hive storage
-  Future<void> loadSessions() async {
-    if (_isLoading) return;
-
-    _isLoading = true;
+  void loadSessions() {
+    _sessions.clear();
+    _sessions.addAll(_box.values);
     notifyListeners();
-
-    try {
-      final raw = LocalStorage.i.get<String>(key: 'sessions');
-      _sessions.clear();
-      if (raw != null && raw.isNotEmpty) {
-        final List<dynamic> decoded = jsonDecode(raw);
-        for (final item in decoded) {
-          final json = item is String ? jsonDecode(item) : item;
-          _sessions.add(Session.fromJson(json as Map<String, dynamic>));
-        }
-      }
-    } catch (e) {
-      debugPrint('Error loading sessions: $e');
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
   }
 
   Future<void> addSession(Session session) async {
+    await _box.put(session.id, session);
     _sessions.insert(0, session);
     notifyListeners();
-    await _saveSessions();
   }
 
   Future<void> updateSession(Session session) async {
     final index = _sessions.indexWhere((s) => s.id == session.id);
     if (index != -1) {
+      await _box.put(session.id, session);
       _sessions[index] = session;
       notifyListeners();
-      await _saveSessions();
     }
   }
 
@@ -108,12 +81,12 @@ class SessionProvider extends ChangeNotifier {
         endTime: DateTime.now(),
         completed: true,
       );
-      // Add to sessions list
+      // Add to sessions list and persist
       _sessions.insert(0, _currentSession!);
+      _box.put(_currentSession!.id, _currentSession!);
       // Clear current session
       _currentSession = null;
       notifyListeners();
-      _saveSessions();
     }
   }
 

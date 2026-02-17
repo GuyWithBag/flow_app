@@ -1,55 +1,99 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:hive_local_storage/hive_local_storage.dart';
+import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 
-import '../models/models.dart';
+import '../models/models.barrel.dart';
+import '../shared/enums/enums.dart';
 
 class TimerProvider extends ChangeNotifier {
   TimerProvider() {
     _loadFromStorage();
   }
 
+  // --- TIMER STATE ---
   Timer? _timer;
-  int _remainingSeconds = 1500; // 25 minutes default
+  int _remainingSeconds = 1500;
   int _totalSeconds = 1500;
   bool _isRunning = false;
   TimerType _currentType = TimerType.focus;
   int _completedCycles = 0;
 
   final Map<TimerType, int> _defaultDurations = {
-    TimerType.focus: 1500, // 25 min
-    TimerType.breakTime: 300, // 5 min
+    TimerType.focus: 1500,
+    TimerType.breakTime: 300,
   };
 
+  // --- CONFIG STATE (persisted via Hive) ---
+  bool _autoStartBreak = true;
+  bool _autoStartFocus = false;
+  int _targetLoops = 4;
+  int _currentLoop = 1;
+  SoundType _selectedSound = SoundType.bell;
+  int _fixedScaleDuration = 3600;
+  bool _useDynamicScale = false;
+  double _waveContrast = 0.8;
+  bool _showInnerLiquid = true;
+  bool _showBackgroundLiquid = true;
+
   void _loadFromStorage() {
-    final storage = LocalStorage.i;
-    _defaultDurations[TimerType.focus] =
-        storage.get<int>(key: 'timer_focus_duration') ?? 1500;
-    _defaultDurations[TimerType.breakTime] =
-        storage.get<int>(key: 'timer_break_duration') ?? 300;
-    _completedCycles = storage.get<int>(key: 'timer_completed_cycles') ?? 0;
+    final box = Hive.box('settings');
+
+    // Timer durations
+    _defaultDurations[TimerType.focus] = box.get(
+      'timer_focus_duration',
+      defaultValue: 1500,
+    );
+    _defaultDurations[TimerType.breakTime] = box.get(
+      'timer_break_duration',
+      defaultValue: 300,
+    );
+    _completedCycles = box.get('timer_completed_cycles', defaultValue: 0);
     _remainingSeconds = _defaultDurations[_currentType]!;
     _totalSeconds = _remainingSeconds;
+
+    // Config
+    _autoStartBreak = box.get('timer_auto_start_break', defaultValue: true);
+    _autoStartFocus = box.get('timer_auto_start_focus', defaultValue: false);
+    _targetLoops = box.get('timer_target_loops', defaultValue: 4);
+    _selectedSound = box.get(
+      'timer_selected_sound',
+      defaultValue: SoundType.bell,
+    );
+    _fixedScaleDuration = box.get(
+      'timer_fixed_scale_duration',
+      defaultValue: 3600,
+    );
+    _useDynamicScale = box.get('timer_use_dynamic_scale', defaultValue: false);
+    _waveContrast = box.get('timer_wave_contrast', defaultValue: 0.8);
+    _showInnerLiquid = box.get('timer_show_inner_liquid', defaultValue: true);
+    _showBackgroundLiquid = box.get(
+      'timer_show_background_liquid',
+      defaultValue: true,
+    );
   }
 
-  Future<void> _saveToStorage() async {
-    final storage = LocalStorage.i;
-    await storage.put<int>(
-      key: 'timer_focus_duration',
-      value: _defaultDurations[TimerType.focus]!,
-    );
-    await storage.put<int>(
-      key: 'timer_break_duration',
-      value: _defaultDurations[TimerType.breakTime]!,
-    );
-    await storage.put<int>(
-      key: 'timer_completed_cycles',
-      value: _completedCycles,
-    );
+  void _saveToStorage() {
+    final box = Hive.box('settings');
+
+    // Timer durations
+    box.put('timer_focus_duration', _defaultDurations[TimerType.focus]!);
+    box.put('timer_break_duration', _defaultDurations[TimerType.breakTime]!);
+    box.put('timer_completed_cycles', _completedCycles);
+
+    // Config
+    box.put('timer_auto_start_break', _autoStartBreak);
+    box.put('timer_auto_start_focus', _autoStartFocus);
+    box.put('timer_target_loops', _targetLoops);
+    box.put('timer_selected_sound', _selectedSound);
+    box.put('timer_fixed_scale_duration', _fixedScaleDuration);
+    box.put('timer_use_dynamic_scale', _useDynamicScale);
+    box.put('timer_wave_contrast', _waveContrast);
+    box.put('timer_show_inner_liquid', _showInnerLiquid);
+    box.put('timer_show_background_liquid', _showBackgroundLiquid);
   }
 
-  // Getters
+  // --- TIMER GETTERS ---
   int get remainingSeconds => _remainingSeconds;
   int get totalSeconds => _totalSeconds;
   bool get isRunning => _isRunning;
@@ -58,6 +102,88 @@ class TimerProvider extends ChangeNotifier {
   double get progress => _totalSeconds > 0
       ? (_totalSeconds - _remainingSeconds) / _totalSeconds
       : 0;
+
+  // --- CONFIG GETTERS ---
+  bool get autoStartBreak => _autoStartBreak;
+  bool get autoStartFocus => _autoStartFocus;
+  int get targetLoops => _targetLoops;
+  int get currentLoop => _currentLoop;
+  SoundType get selectedSound => _selectedSound;
+  int get fixedScaleDuration => _fixedScaleDuration;
+  bool get useDynamicScale => _useDynamicScale;
+  double get waveContrast => _waveContrast;
+  bool get showInnerLiquid => _showInnerLiquid;
+  bool get showBackgroundLiquid => _showBackgroundLiquid;
+
+  // --- CONFIG SETTERS ---
+  void setAutoStartBreak(bool value) {
+    _autoStartBreak = value;
+    notifyListeners();
+    _saveToStorage();
+  }
+
+  void setAutoStartFocus(bool value) {
+    _autoStartFocus = value;
+    notifyListeners();
+    _saveToStorage();
+  }
+
+  void setTargetLoops(int value) {
+    _targetLoops = value;
+    notifyListeners();
+    _saveToStorage();
+  }
+
+  void setCurrentLoop(int value) {
+    _currentLoop = value;
+    notifyListeners();
+  }
+
+  void resetLoop() {
+    _currentLoop = 1;
+    notifyListeners();
+  }
+
+  void incrementLoop() {
+    _currentLoop++;
+    notifyListeners();
+  }
+
+  void setSelectedSound(SoundType value) {
+    _selectedSound = value;
+    notifyListeners();
+    _saveToStorage();
+  }
+
+  void setFixedScaleDuration(int value) {
+    _fixedScaleDuration = value;
+    notifyListeners();
+    _saveToStorage();
+  }
+
+  void setUseDynamicScale(bool value) {
+    _useDynamicScale = value;
+    notifyListeners();
+    _saveToStorage();
+  }
+
+  void setWaveContrast(double value) {
+    _waveContrast = value;
+    notifyListeners();
+    _saveToStorage();
+  }
+
+  void setShowInnerLiquid(bool value) {
+    _showInnerLiquid = value;
+    notifyListeners();
+    _saveToStorage();
+  }
+
+  void setShowBackgroundLiquid(bool value) {
+    _showBackgroundLiquid = value;
+    notifyListeners();
+    _saveToStorage();
+  }
 
   String get formattedTime {
     final hours = _remainingSeconds ~/ 3600;

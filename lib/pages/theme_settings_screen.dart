@@ -1,4 +1,4 @@
-import 'package:flow_app/models/timer_models.dart';
+import 'package:flow_app/models/models.barrel.dart';
 import 'package:flow_app/providers/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart'; // Import added

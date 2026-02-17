@@ -1,39 +1,34 @@
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
-import 'package:hive_local_storage/hive_local_storage.dart';
+import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 
-import '../models/models.dart';
+import '../models/models.barrel.dart';
 
 class PresetProvider extends ChangeNotifier {
-  static const _defaultPresets = <Map<String, dynamic>>[
-    {
-      'id': 'classic',
-      'name': 'Classic',
-      'focus_duration': 1500,
-      'break_duration': 300,
-      'long_focus_duration': 3000,
-      'long_break_duration': 900,
-      'cycles_before_long_break': 4,
-    },
-    {
-      'id': 'light_study',
-      'name': 'Light Study',
-      'focus_duration': 900,
-      'break_duration': 180,
-      'long_focus_duration': 1800,
-      'long_break_duration': 600,
-      'cycles_before_long_break': 4,
-    },
-    {
-      'id': 'heavy_study',
-      'name': 'Heavy Study',
-      'focus_duration': 2700,
-      'break_duration': 600,
-      'long_focus_duration': 5400,
-      'long_break_duration': 1200,
-      'cycles_before_long_break': 4,
-    },
+  static final _defaultPresets = [
+    PomodoroPreset(
+      id: 'classic',
+      name: 'Classic',
+      focusDuration: 1500,
+      breakDuration: 300,
+      longFocusDuration: 3000,
+      longBreakDuration: 900,
+    ),
+    PomodoroPreset(
+      id: 'light_study',
+      name: 'Light Study',
+      focusDuration: 900,
+      breakDuration: 180,
+      longFocusDuration: 1800,
+      longBreakDuration: 600,
+    ),
+    PomodoroPreset(
+      id: 'heavy_study',
+      name: 'Heavy Study',
+      focusDuration: 2700,
+      breakDuration: 600,
+      longFocusDuration: 5400,
+      longBreakDuration: 1200,
+    ),
   ];
 
   final List<PomodoroPreset> _presets = [];
@@ -42,34 +37,23 @@ class PresetProvider extends ChangeNotifier {
   List<PomodoroPreset> get presets => List.unmodifiable(_presets);
   PomodoroPreset? get selectedPreset => _selectedPreset;
 
-  Future<void> _savePresets() async {
-    final encoded = _presets.map((p) => jsonEncode(p.toJson())).toList();
-    await LocalStorage.i.put<String>(
-      key: 'presets',
-      value: jsonEncode(encoded),
-    );
-    await LocalStorage.i.put<String>(
-      key: 'selected_preset_id',
-      value: _selectedPreset?.id ?? '',
-    );
-  }
+  Box<PomodoroPreset> get _box => Hive.box<PomodoroPreset>('presets');
+  Box get _settingsBox => Hive.box('settings');
 
-  Future<void> loadPresets() async {
+  void loadPresets() {
     _presets.clear();
-    final raw = LocalStorage.i.get<String>(key: 'presets');
-    if (raw != null && raw.isNotEmpty) {
-      final List<dynamic> decoded = jsonDecode(raw);
-      for (final item in decoded) {
-        final json = item is String ? jsonDecode(item) : item;
-        _presets.add(PomodoroPreset.fromJson(json as Map<String, dynamic>));
-      }
+    if (_box.isNotEmpty) {
+      _presets.addAll(_box.values);
     } else {
-      // First launch — use defaults
-      _presets.addAll(_defaultPresets.map((j) => PomodoroPreset.fromJson(j)));
+      // First launch — seed defaults
+      for (final preset in _defaultPresets) {
+        _box.put(preset.id, preset);
+      }
+      _presets.addAll(_defaultPresets);
     }
 
     final selectedId =
-        LocalStorage.i.get<String>(key: 'selected_preset_id') ?? '';
+        _settingsBox.get('selected_preset_id', defaultValue: '') as String;
     if (selectedId.isNotEmpty) {
       _selectedPreset = _presets.where((p) => p.id == selectedId).firstOrNull;
     }
@@ -79,28 +63,29 @@ class PresetProvider extends ChangeNotifier {
 
   void selectPreset(PomodoroPreset preset) {
     _selectedPreset = preset;
+    _settingsBox.put('selected_preset_id', preset.id);
     notifyListeners();
-    _savePresets();
   }
 
   void clearPreset() {
     _selectedPreset = null;
+    _settingsBox.put('selected_preset_id', '');
     notifyListeners();
-    _savePresets();
   }
 
   Future<void> addPreset(PomodoroPreset preset) async {
+    await _box.put(preset.id, preset);
     _presets.add(preset);
     notifyListeners();
-    await _savePresets();
   }
 
   Future<void> deletePreset(String id) async {
+    await _box.delete(id);
     _presets.removeWhere((p) => p.id == id);
     if (_selectedPreset?.id == id) {
       _selectedPreset = null;
+      _settingsBox.put('selected_preset_id', '');
     }
     notifyListeners();
-    await _savePresets();
   }
 }

@@ -1,0 +1,1 @@
+enum TimerType { focus, breakTime }
