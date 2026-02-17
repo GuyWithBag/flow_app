@@ -1,16 +1,32 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flow_app/models/models.barrel.dart';
 import 'package:flow_app/pages/pages.barrel.dart';
 import 'package:flow_app/providers/providers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends HookWidget {
   const DashboardScreen({Key? key}) : super(key: key);
+
+  static const _focusColor = Color(0xFF66BB6A);
+  static const _breakColor = Color(0xFFFFB74D);
+  static const _presetColors = [
+    Color(0xFF66BB6A),
+    Color(0xFF42A5F5),
+    Color(0xFFFFB74D),
+    Color(0xFFEF5350),
+    Color(0xFFAB47BC),
+    Color(0xFF26C6DA),
+    Color(0xFF8D6E63),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final sessionProvider = Provider.of<SessionProvider>(context);
+    final sessionProvider = context.watch<SessionProvider>();
+    final themeProvider = context.watch<ThemeProvider>();
+    final showMonthly = useState(false);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -38,9 +54,17 @@ class DashboardScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildStatsCards(sessionProvider),
+            _buildDailyProgress(sessionProvider, themeProvider),
+            const SizedBox(height: 16),
+            _buildStreakCard(sessionProvider, themeProvider),
+            const SizedBox(height: 16),
+            _buildStatsRow(sessionProvider),
             const SizedBox(height: 24),
-            _buildStreakCard(context),
+            _buildBarChartSection(sessionProvider, showMonthly),
+            const SizedBox(height: 24),
+            _buildPresetBreakdown(sessionProvider),
+            const SizedBox(height: 24),
+            _buildFocusBreakRatio(sessionProvider),
             const SizedBox(height: 24),
             _buildRecentActivity(sessionProvider),
           ],
@@ -49,67 +73,77 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatsCards(SessionProvider provider) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildStatCard(
-            'Today',
-            '${provider.todayFocusMinutes} min',
-            Icons.today,
-            const Color(0xFF66BB6A),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildStatCard(
-            'Total',
-            '${provider.totalFocusMinutes} min',
-            Icons.timer,
-            const Color(0xFF42A5F5),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatCard(
-    String label,
-    String value,
-    IconData icon,
-    Color color,
+  Widget _buildDailyProgress(
+    SessionProvider sessionProvider,
+    ThemeProvider themeProvider,
   ) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: color,
+    final goal = themeProvider.dailyGoalMinutes;
+    final current = sessionProvider.todayFocusMinutes;
+    final progress = goal > 0 ? (current / goal).clamp(0.0, 1.0) : 0.0;
+    final percent = (progress * 100).round();
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 80,
+              height: 80,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  CircularProgressIndicator(
+                    value: progress,
+                    strokeWidth: 8,
+                    backgroundColor: Colors.grey.shade200,
+                    valueColor: const AlwaysStoppedAnimation(_focusColor),
+                  ),
+                  Center(
+                    child: Text(
+                      '$percent%',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
-          ),
-        ],
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Today's Focus",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '$current / $goal minutes',
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildStreakCard(BuildContext context) {
+  Widget _buildStreakCard(
+    SessionProvider sessionProvider,
+    ThemeProvider themeProvider,
+  ) {
+    final streak = sessionProvider.currentStreak(
+      themeProvider.dailyGoalMinutes,
+    );
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -130,9 +164,9 @@ class DashboardScreen extends StatelessWidget {
             size: 32,
           ),
           const SizedBox(height: 12),
-          const Text(
-            '5 Day Streak',
-            style: TextStyle(
+          Text(
+            '$streak Day Streak',
+            style: const TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
               color: Colors.white,
@@ -140,32 +174,412 @@ class DashboardScreen extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Keep going! You\'re on fire 🔥',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white.withOpacity(0.9),
-            ),
+            streak > 0
+                ? "Keep going! You're on fire!"
+                : 'Complete your daily goal to start a streak!',
+            style: const TextStyle(fontSize: 14, color: Colors.white),
           ),
         ],
       ),
     );
   }
 
+  Widget _buildStatsRow(SessionProvider provider) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildStatCard(
+            'Total Focus',
+            '${provider.totalFocusMinutes}m',
+            Icons.timer,
+            const Color(0xFF42A5F5),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildStatCard(
+            'Sessions',
+            '${provider.completedSessionCount}',
+            Icons.check_circle_outline,
+            _focusColor,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildStatCard(
+            'Avg Length',
+            '${provider.averageSessionMinutes.round()}m',
+            Icons.trending_up,
+            const Color(0xFFAB47BC),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 22),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBarChartSection(
+    SessionProvider provider,
+    ValueNotifier<bool> showMonthly,
+  ) {
+    final data = showMonthly.value
+        ? provider.monthlyFocusMinutes
+        : provider.weeklyFocusMinutes;
+    final entries = data.entries.toList();
+    final maxY = entries.fold<int>(
+      0,
+      (max, e) => e.value > max ? e.value : max,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Focus History',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            ToggleButtons(
+              isSelected: [!showMonthly.value, showMonthly.value],
+              onPressed: (index) {
+                showMonthly.value = index == 1;
+              },
+              borderRadius: BorderRadius.circular(8),
+              constraints: const BoxConstraints(minHeight: 32, minWidth: 60),
+              textStyle: const TextStyle(fontSize: 12),
+              children: const [Text('Week'), Text('Month')],
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 200,
+          child: entries.isEmpty
+              ? const Center(child: Text('No data yet'))
+              : BarChart(
+                  BarChartData(
+                    alignment: BarChartAlignment.spaceAround,
+                    maxY: (maxY + 10).toDouble(),
+                    barTouchData: BarTouchData(
+                      touchTooltipData: BarTouchTooltipData(
+                        getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                          return BarTooltipItem(
+                            '${rod.toY.round()}m',
+                            const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    titlesData: FlTitlesData(
+                      show: true,
+                      topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 32,
+                          getTitlesWidget: (value, meta) {
+                            return Text(
+                              '${value.toInt()}',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey.shade600,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          getTitlesWidget: (value, meta) {
+                            final index = value.toInt();
+                            if (index < 0 || index >= entries.length)
+                              return const SizedBox.shrink();
+                            final date = entries[index].key;
+                            final label = showMonthly.value
+                                ? (index % 5 == 0
+                                      ? DateFormat('d').format(date)
+                                      : '')
+                                : DateFormat('E').format(date).substring(0, 2);
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                label,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    gridData: const FlGridData(show: false),
+                    borderData: FlBorderData(show: false),
+                    barGroups: entries.asMap().entries.map((entry) {
+                      return BarChartGroupData(
+                        x: entry.key,
+                        barRods: [
+                          BarChartRodData(
+                            toY: entry.value.value.toDouble(),
+                            color: _focusColor,
+                            width: showMonthly.value ? 6 : 20,
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(4),
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPresetBreakdown(SessionProvider provider) {
+    final breakdown = provider.presetBreakdown;
+    if (breakdown.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final total = breakdown.values.fold<int>(0, (sum, v) => sum + v);
+    final entries = breakdown.entries.toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Preset Breakdown',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 180,
+          child: Row(
+            children: [
+              Expanded(
+                child: PieChart(
+                  PieChartData(
+                    sectionsSpace: 2,
+                    centerSpaceRadius: 30,
+                    sections: entries.asMap().entries.map((entry) {
+                      final color =
+                          _presetColors[entry.key % _presetColors.length];
+                      final percent = total > 0
+                          ? (entry.value.value / total * 100).round()
+                          : 0;
+                      return PieChartSectionData(
+                        value: entry.value.value.toDouble(),
+                        color: color,
+                        radius: 50,
+                        title: '$percent%',
+                        titleStyle: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: entries.asMap().entries.map((entry) {
+                  final color = _presetColors[entry.key % _presetColors.length];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 3),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: color,
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${entry.value.key} (${entry.value.value}m)',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFocusBreakRatio(SessionProvider provider) {
+    final focusMin = provider.totalFocusMinutes;
+    final breakMin = provider.todayBreakMinutes;
+    final total = focusMin + breakMin;
+
+    if (total == 0) {
+      return const SizedBox.shrink();
+    }
+
+    final focusPercent = (focusMin / total * 100).round();
+    final breakPercent = 100 - focusPercent;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Focus vs Break',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 180,
+          child: Row(
+            children: [
+              Expanded(
+                child: PieChart(
+                  PieChartData(
+                    sectionsSpace: 2,
+                    centerSpaceRadius: 30,
+                    sections: [
+                      PieChartSectionData(
+                        value: focusMin.toDouble(),
+                        color: _focusColor,
+                        radius: 50,
+                        title: '$focusPercent%',
+                        titleStyle: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      PieChartSectionData(
+                        value: breakMin.toDouble(),
+                        color: _breakColor,
+                        radius: 50,
+                        title: '$breakPercent%',
+                        titleStyle: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildLegendItem('Focus', _focusColor, '${focusMin}m'),
+                  const SizedBox(height: 8),
+                  _buildLegendItem('Break', _breakColor, '${breakMin}m'),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLegendItem(String label, Color color, String value) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(3),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text('$label ($value)', style: const TextStyle(fontSize: 12)),
+      ],
+    );
+  }
+
   Widget _buildRecentActivity(SessionProvider provider) {
+    final recentSessions = provider.sessions
+        .where((s) => s.completed)
+        .take(3)
+        .toList();
+    if (recentSessions.isEmpty) return const SizedBox.shrink();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
           'Recent Activity',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        ...provider.sessions.take(3).map((session) {
+        ...recentSessions.map((session) {
           return ListTile(
             leading: CircleAvatar(
               backgroundColor: session.type == TimerType.focus
-                  ? const Color(0xFF66BB6A)
-                  : const Color(0xFFFFB74D),
+                  ? _focusColor
+                  : _breakColor,
               child: Icon(
                 session.type == TimerType.focus ? Icons.work : Icons.coffee,
                 color: Colors.white,
@@ -178,7 +592,7 @@ class DashboardScreen extends StatelessWidget {
             ),
             trailing: Text('${session.duration ~/ 60}m'),
           );
-        }).toList(),
+        }),
       ],
     );
   }

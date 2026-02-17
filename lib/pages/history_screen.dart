@@ -1,29 +1,25 @@
 import 'package:flow_app/models/models.barrel.dart';
 import 'package:flow_app/providers/providers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-class HistoryScreen extends StatefulWidget {
+class HistoryScreen extends HookWidget {
   const HistoryScreen({Key? key}) : super(key: key);
 
   @override
-  State<HistoryScreen> createState() => _HistoryScreenState();
-}
-
-class _HistoryScreenState extends State<HistoryScreen> {
-  @override
-  void initState() {
-    super.initState();
-    // Load sessions after the first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<SessionProvider>().loadSessions();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final sessionProvider = Provider.of<SessionProvider>(context);
+    final sessionProvider = context.watch<SessionProvider>();
+
+    useEffect(() {
+      sessionProvider.loadSessions();
+      return null;
+    }, const []);
+
+    final completedSessions = sessionProvider.sessions
+        .where((s) => s.completed)
+        .toList();
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -37,7 +33,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       ),
       body: sessionProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : sessionProvider.sessions.isEmpty
+          : completedSessions.isEmpty
           ? _buildEmptyState()
           : ListView.builder(
               padding: const EdgeInsets.fromLTRB(
@@ -46,9 +42,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 16,
                 16,
               ),
-              itemCount: sessionProvider.sessions.length,
+              itemCount: completedSessions.length,
               itemBuilder: (context, index) {
-                final session = sessionProvider.sessions[index];
+                final session = completedSessions[index];
                 return _buildSessionCard(context, session, sessionProvider);
               },
             ),
@@ -104,7 +100,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.2),
+                      color: color.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -116,6 +112,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       ),
                     ),
                   ),
+                  if (session.presetName != null) ...[
+                    const SizedBox(width: 8),
+                    Text(
+                      session.presetName!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
+                  ],
                   const Spacer(),
                   Text(
                     DateFormat('MMM d, h:mm a').format(session.startTime),
