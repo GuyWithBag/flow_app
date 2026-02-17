@@ -1,10 +1,9 @@
 import 'package:flow_app/models/models.dart';
+import 'package:flow_app/pages/pages.barrel.dart';
 import 'package:flow_app/providers/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-
-import 'pages.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({Key? key}) : super(key: key);

@@ -1,15 +1,8 @@
 // Flow - A Beautiful Pomodoro Timer App
 // Production-ready Flutter app with Supabase integration (mock), Provider + Hooks state management
 
-import 'package:flow_app/models/timer_models.dart';
+import 'package:barrel_annotation/barrel_annotation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:async';
-import 'dart:math' as math;
-import 'dart:ui';
 
 import 'app.dart';
 import 'providers/providers.dart';
@@ -17,7 +10,7 @@ import 'providers/providers.dart';
 // ============================================================================
 // MAIN APP ENTRY POINT
 // ============================================================================
-
+@BarrelConfig(exclude: ['lib/lib.barrel.dart', 'lib/excluded/**'])
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 

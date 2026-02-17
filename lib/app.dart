@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'pages/pages.dart';
+import 'pages/pages.barrel.dart';
 import 'providers/providers.dart';
 
 class App extends StatelessWidget {

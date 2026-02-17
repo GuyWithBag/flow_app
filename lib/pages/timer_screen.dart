@@ -1,18 +1,17 @@
 import 'dart:async';
-import 'dart:math' as math;
+import 'dart:developer';
 import 'package:flow_app/models/models.dart';
+import 'package:flow_app/painters/painters.barrel.dart';
 import 'package:flow_app/providers/providers.dart';
+import 'package:flow_app/shared/enums/enums.dart';
+import 'package:flow_app/widgets/widgets.barrel.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_picker_plus/flutter_picker_plus.dart';
 
 // TODO: Make long focus and break toggleable
 // TODO: Refactor all of the code so that you are able to separate them into their own files
-
-// --- ENUMS & CONSTANTS ---
-enum SoundType { bell, digital, bird, none }
 
 class TimerScreen extends HookWidget {
   const TimerScreen({Key? key}) : super(key: key);
@@ -32,9 +31,7 @@ class TimerScreen extends HookWidget {
     // Cycle & Loop Settings
     final autoStartBreak = useState(true);
     final autoStartFocus = useState(false);
-    final targetLoops = useState(
-      4,
-    ); // How many Focus sessions before big finish
+    final targetLoops = useState(4);
     final currentLoop = useState(1);
     final selectedSound = useState(SoundType.bell);
 
@@ -77,7 +74,7 @@ class TimerScreen extends HookWidget {
 
     void _handleSessionComplete(BuildContext ctx) {
       // Play Sound (Placeholder for AudioPlayer logic)
-      print("Playing Sound: ${selectedSound.value}");
+      log("Playing Sound: ${selectedSound.value}");
 
       if (timerProvider.currentType == TimerType.focus) {
         // Focus Finished
@@ -91,7 +88,7 @@ class TimerScreen extends HookWidget {
               actions: [
                 TextButton(
                   onPressed: () {
-                    _resetLoop(); // Reset loops
+                    _resetLoop();
                     Navigator.pop(ctx);
                   },
                   child: const Text("Finish"),
@@ -103,7 +100,6 @@ class TimerScreen extends HookWidget {
         } else {
           // Start Break
           timerProvider.setTimerType(TimerType.breakTime);
-          // Set color theme
           themeProvider.setModeAccentColor(
             ctx,
             TimerType.breakTime,
@@ -111,10 +107,9 @@ class TimerScreen extends HookWidget {
           );
 
           if (autoStartBreak.value) {
-            // Start session for break
             final preset = presetProvider.selectedPreset;
             sessionProvider.startSession(
-              userId: 'current_user', // TODO: Get from AuthProvider
+              userId: 'current_user',
               type: TimerType.breakTime,
               duration: preset?.breakDuration ?? 300,
               presetName: preset?.name,
@@ -124,9 +119,8 @@ class TimerScreen extends HookWidget {
         }
       } else {
         // Break Finished
-        currentLoop.value += 1; // Increment loop count
+        currentLoop.value += 1;
         timerProvider.setTimerType(TimerType.focus);
-        // Set color theme
         themeProvider.setModeAccentColor(
           ctx,
           TimerType.focus,
@@ -134,10 +128,9 @@ class TimerScreen extends HookWidget {
         );
 
         if (autoStartFocus.value) {
-          // Start session for focus
           final preset = presetProvider.selectedPreset;
           sessionProvider.startSession(
-            userId: 'current_user', // TODO: Get from AuthProvider
+            userId: 'current_user',
             type: TimerType.focus,
             duration: preset?.focusDuration ?? 1500,
             presetName: preset?.name,
@@ -149,13 +142,10 @@ class TimerScreen extends HookWidget {
 
     // --- EFFECT: WATCH TIMER COMPLETION ---
     useEffect(() {
-      // Check if we transitioned from running to 0 seconds
       if (wasRunning.value &&
           !timerProvider.isRunning &&
           timerProvider.remainingSeconds == 0) {
-        // Complete session in SessionProvider
         sessionProvider.completeCurrentSession();
-        // We need a slight delay to ensure the provider state is settled
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _handleSessionComplete(context);
         });
@@ -335,33 +325,22 @@ class TimerScreen extends HookWidget {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        _buildModeToggle(
-                          context,
-                          timerProvider,
-                          presetProvider,
-                          focusColor,
-                          breakColor,
-                          isDark,
+                        ModeToggle(
+                          focusColor: focusColor,
+                          breakColor: breakColor,
+                          isDark: isDark,
                         ),
                         const SizedBox(height: 10),
                         // Long Duration Buttons
                         if (presetProvider.selectedPreset != null)
-                          _buildLongDurationButton(
-                            context,
-                            timerProvider,
-                            presetProvider,
-                            focusColor,
-                            breakColor,
-                            isDark,
+                          LongDurationButton(
+                            focusColor: focusColor,
+                            breakColor: breakColor,
+                            isDark: isDark,
                           ),
                         const SizedBox(height: 10),
                         // Preset Selection Button
-                        _buildPresetSelector(
-                          context,
-                          presetProvider,
-                          timerProvider,
-                          isDark,
-                        ),
+                        PresetSelector(isDark: isDark),
                       ],
                     ),
                   ),
@@ -376,9 +355,7 @@ class TimerScreen extends HookWidget {
                       duration: const Duration(milliseconds: 500),
                       curve: Curves.easeInOutCubic,
                       scale: controlsVisible.value ? 1.0 : 1.15,
-                      child: _buildLiquidTimerCircle(
-                        context: context,
-                        timerProvider: timerProvider,
+                      child: LiquidTimerCircle(
                         color: currentColor,
                         maxDuration: currentMaxDuration,
                         fillPercent: fillPercent,
@@ -427,17 +404,14 @@ class TimerScreen extends HookWidget {
                               ),
                             ),
                           ),
-
                           BouncingButton(
                             onTap: () {
                               if (timerProvider.isRunning) {
                                 timerProvider.pauseTimer();
                               } else {
-                                // Start session in SessionProvider
                                 final preset = presetProvider.selectedPreset;
                                 sessionProvider.startSession(
-                                  userId:
-                                      'current_user', // TODO: Get from AuthProvider
+                                  userId: 'current_user',
                                   type: timerProvider.currentType,
                                   duration: timerProvider.totalSeconds,
                                   presetName: preset?.name,
@@ -445,13 +419,8 @@ class TimerScreen extends HookWidget {
                                 timerProvider.startTimer();
                               }
                             },
-                            child: _buildPlayPauseButton(
-                              context,
-                              timerProvider,
-                              currentColor,
-                            ),
+                            child: PlayPauseButton(color: currentColor),
                           ),
-
                           BouncingButton(
                             onTap: () => _showSettingsSheet(
                               context,
@@ -487,187 +456,6 @@ class TimerScreen extends HookWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildLiquidTimerCircle({
-    required BuildContext context,
-    required TimerProvider timerProvider,
-    required Color color,
-    required int maxDuration,
-    required double fillPercent,
-    required AnimationController waveController,
-    required ValueNotifier<bool> isDragging,
-    required bool isDark,
-    required double contrast,
-    required int animDuration,
-    required Curve animCurve,
-    required bool showInnerLiquid,
-    required bool controlsVisible,
-    required VoidCallback onCircleTap,
-  }) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final size = 280.0;
-        final center = Offset(size / 2, size / 2);
-        final innerZoneRadius = (size / 2) - 45.0;
-
-        return TweenAnimationBuilder<double>(
-          tween: Tween<double>(begin: 0.0, end: fillPercent),
-          duration: Duration(milliseconds: animDuration),
-          curve: animCurve,
-          builder: (context, animatedProgress, child) {
-            final double currentBlur = 10.0 + (30.0 * animatedProgress);
-
-            return GestureDetector(
-              onPanUpdate: (details) {
-                if (timerProvider.isRunning) return;
-                _updateTimeFromDrag(
-                  details.localPosition,
-                  size,
-                  timerProvider,
-                  maxDuration,
-                );
-              },
-              onPanStart: (details) {
-                if (timerProvider.isRunning) return;
-                final dist = (details.localPosition - center).distance;
-                if (dist >= innerZoneRadius) {
-                  isDragging.value = true;
-                  HapticFeedback.selectionClick();
-                  _updateTimeFromDrag(
-                    details.localPosition,
-                    size,
-                    timerProvider,
-                    maxDuration,
-                  );
-                }
-              },
-              onPanEnd: (_) => isDragging.value = false,
-              onPanCancel: () => isDragging.value = false,
-
-              onTapUp: (details) {
-                if (timerProvider.isRunning) {
-                  onCircleTap();
-                  return;
-                }
-
-                final dist = (details.localPosition - center).distance;
-                if (dist < innerZoneRadius) {
-                  _showTimePicker(context, timerProvider, isDark);
-                } else {
-                  _updateTimeFromDrag(
-                    details.localPosition,
-                    size,
-                    timerProvider,
-                    maxDuration,
-                  );
-                }
-              },
-
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // 1. Shadow
-                  Container(
-                    width: size,
-                    height: size,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isDark ? Colors.grey.shade900 : Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: color.withOpacity(isDark ? 0.2 : 0.3),
-                          blurRadius: currentBlur,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // 2. INNER LIQUID
-                  if (showInnerLiquid)
-                    ClipOval(
-                      child: Container(
-                        width: size - 10,
-                        height: size - 10,
-                        child: AnimatedBuilder(
-                          animation: waveController,
-                          builder: (context, child) {
-                            return CustomPaint(
-                              painter: LiquidWavePainter(
-                                waveValue: waveController.value,
-                                fillPercent: animatedProgress,
-                                color: color.withOpacity(contrast),
-                                waveHeight: 12.0,
-                                waveFrequency: 2.0,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-
-                  // 3. Ring
-                  SizedBox(
-                    width: size,
-                    height: size,
-                    child: CustomPaint(
-                      painter: TimerPainter(
-                        progress: animatedProgress,
-                        color: color,
-                        trackColor: isDark
-                            ? Colors.grey.shade800
-                            : Colors.grey.shade100,
-                        strokeWidth: 24.0,
-                        knobRadius: 14.0,
-                      ),
-                    ),
-                  ),
-
-                  // 4. Text Content
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        timerProvider.formattedTime,
-                        style: TextStyle(
-                          fontSize: 52,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black87,
-                          letterSpacing: -1.0,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      // Conditional Text Logic
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        child: Text(
-                          key: ValueKey(
-                            "${timerProvider.isRunning}-$controlsVisible",
-                          ),
-                          timerProvider.isRunning
-                              ? (controlsVisible
-                                    ? "Running"
-                                    : "Tap for controls")
-                              : "Tap to Edit",
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: isDark
-                                ? Colors.grey.shade300
-                                : Colors.black54,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
     );
   }
 
@@ -725,9 +513,8 @@ class TimerScreen extends HookWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-
                     const SizedBox(height: 20),
-                    _buildSettingsSectionHeader("Cycle Configuration"),
+                    const SettingsSectionHeader(title: "Cycle Configuration"),
                     SwitchListTile(
                       title: const Text("Auto-start Break"),
                       subtitle: const Text("Start break when focus ends"),
@@ -769,9 +556,8 @@ class TimerScreen extends HookWidget {
                         ],
                       ),
                     ),
-
                     const Divider(),
-                    _buildSettingsSectionHeader("Sound"),
+                    const SettingsSectionHeader(title: "Sound"),
                     DropdownButtonFormField<SoundType>(
                       value: sound.value,
                       decoration: const InputDecoration(
@@ -789,9 +575,8 @@ class TimerScreen extends HookWidget {
                         if (val != null) setState(() => sound.value = val);
                       },
                     ),
-
                     const Divider(),
-                    _buildSettingsSectionHeader("Visuals"),
+                    const SettingsSectionHeader(title: "Visuals"),
                     SwitchListTile(
                       title: const Text("Show Circle Liquid"),
                       value: showInner.value,
@@ -812,10 +597,30 @@ class TimerScreen extends HookWidget {
                       spacing: 10,
                       runSpacing: 10,
                       children: [
-                        _buildScaleChip(900, "15m", fixedScale, setState),
-                        _buildScaleChip(1500, "25m", fixedScale, setState),
-                        _buildScaleChip(1800, "30m", fixedScale, setState),
-                        _buildScaleChip(3600, "60m", fixedScale, setState),
+                        ScaleChip(
+                          seconds: 900,
+                          label: "15m",
+                          notifier: fixedScale,
+                          setState: setState,
+                        ),
+                        ScaleChip(
+                          seconds: 1500,
+                          label: "25m",
+                          notifier: fixedScale,
+                          setState: setState,
+                        ),
+                        ScaleChip(
+                          seconds: 1800,
+                          label: "30m",
+                          notifier: fixedScale,
+                          setState: setState,
+                        ),
+                        ScaleChip(
+                          seconds: 3600,
+                          label: "60m",
+                          notifier: fixedScale,
+                          setState: setState,
+                        ),
                         ActionChip(
                           label: const Text("Custom Scale"),
                           onPressed: () {
@@ -832,118 +637,6 @@ class TimerScreen extends HookWidget {
           },
         );
       },
-    );
-  }
-
-  Widget _buildSettingsSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10, top: 5),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-          color: Colors.blueAccent,
-          letterSpacing: 1.1,
-        ),
-      ),
-    );
-  }
-
-  // --- TIME PICKER ---
-  void _showTimePicker(
-    BuildContext context,
-    TimerProvider timerProvider,
-    bool isDark,
-  ) {
-    if (timerProvider.isRunning) return;
-
-    final totalSeconds = timerProvider.remainingSeconds;
-    final h = totalSeconds ~/ 3600;
-    final m = (totalSeconds % 3600) ~/ 60;
-    final s = totalSeconds % 60;
-
-    Picker(
-      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-      headerColor: isDark ? Colors.grey.shade800 : Colors.grey.shade100,
-      textStyle: TextStyle(
-        color: isDark ? Colors.white : Colors.black87,
-        fontSize: 18,
-      ),
-      confirmText: "Set Time",
-      confirmTextStyle: const TextStyle(
-        color: Colors.blue,
-        fontWeight: FontWeight.bold,
-      ),
-      cancelTextStyle: TextStyle(color: isDark ? Colors.grey : Colors.black54),
-
-      adapter: NumberPickerAdapter(
-        data: [
-          NumberPickerColumn(
-            begin: 0,
-            end: 23,
-            initValue: h,
-            suffix: const Text(" h"),
-          ),
-          NumberPickerColumn(
-            begin: 0,
-            end: 59,
-            initValue: m,
-            suffix: const Text(" m"),
-            onFormatValue: (v) => v.toString().padLeft(2, '0'),
-          ),
-          NumberPickerColumn(
-            begin: 0,
-            end: 59,
-            initValue: s,
-            suffix: const Text(" s"),
-            onFormatValue: (v) => v.toString().padLeft(2, '0'),
-          ),
-        ],
-      ),
-      delimiter: [
-        PickerDelimiter(
-          column: 1,
-          child: Container(
-            width: 30.0,
-            alignment: Alignment.center,
-            child: Text(
-              ":",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black,
-              ),
-            ),
-          ),
-        ),
-        PickerDelimiter(
-          column: 3,
-          child: Container(
-            width: 30.0,
-            alignment: Alignment.center,
-            child: Text(
-              ":",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black,
-              ),
-            ),
-          ),
-        ),
-      ],
-      title: const Text("Set Timer Duration"),
-      onConfirm: (Picker picker, List<int> values) {
-        final data = picker.getSelectedValues();
-        final hours = data[0] as int;
-        final mins = data[1] as int;
-        final secs = data[2] as int;
-
-        final newTotal = (hours * 3600) + (mins * 60) + secs;
-        timerProvider.setCustomDuration(newTotal);
-      },
-    ).showModal(
-      context,
-      builder: (context, pickerWidget) => SafeArea(child: pickerWidget),
     );
   }
 
@@ -987,818 +680,4 @@ class TimerScreen extends HookWidget {
       builder: (context, pickerWidget) => SafeArea(child: pickerWidget),
     );
   }
-
-  void _updateTimeFromDrag(
-    Offset localPosition,
-    double size,
-    TimerProvider provider,
-    int maxDuration,
-  ) {
-    final center = Offset(size / 2, size / 2);
-    final dx = localPosition.dx - center.dx;
-    final dy = localPosition.dy - center.dy;
-    double angle = math.atan2(dy, dx);
-    angle += math.pi / 2;
-    if (angle < 0) angle += 2 * math.pi;
-    double percent = angle / (2 * math.pi);
-    if (percent > 0.98) percent = 1.0;
-    if (percent < 0.01) percent = 0.0;
-    int newSeconds = (percent * maxDuration).round();
-    provider.setCustomDuration(newSeconds);
-  }
-
-  Widget _buildScaleChip(
-    int seconds,
-    String label,
-    ValueNotifier<int> notifier,
-    StateSetter setState,
-  ) {
-    final isSelected = notifier.value == seconds;
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (bool selected) {
-        if (selected) {
-          setState(() => notifier.value = seconds);
-        }
-      },
-    );
-  }
-
-  Widget _buildModeToggle(
-    BuildContext context,
-    TimerProvider timerProvider,
-    PresetProvider presetProvider,
-    Color focusColor,
-    Color breakColor,
-    bool isDark,
-  ) {
-    final themeProvider = context.read<ThemeProvider>();
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          BouncingButton(
-            onTap: () {
-              timerProvider.setTimerType(TimerType.focus);
-              // Apply preset duration if available
-              final preset = presetProvider.selectedPreset;
-              if (preset != null) {
-                timerProvider.setCustomDuration(preset.focusDuration);
-              }
-              themeProvider.setModeAccentColor(
-                context,
-                TimerType.focus,
-                focusColor,
-              );
-            },
-            child: _buildModeButtonContent(
-              'Focus',
-              timerProvider.currentType == TimerType.focus,
-              focusColor,
-              isDark,
-            ),
-          ),
-          BouncingButton(
-            onTap: () {
-              timerProvider.setTimerType(TimerType.breakTime);
-              // Apply preset duration if available
-              final preset = presetProvider.selectedPreset;
-              if (preset != null) {
-                timerProvider.setCustomDuration(preset.breakDuration);
-              }
-              themeProvider.setModeAccentColor(
-                context,
-                TimerType.breakTime,
-                breakColor,
-              );
-            },
-            child: _buildModeButtonContent(
-              'Break',
-              timerProvider.currentType == TimerType.breakTime,
-              breakColor,
-              isDark,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildModeButtonContent(
-    String label,
-    bool isSelected,
-    Color activeColor,
-    bool isDark,
-  ) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeInOut,
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-      decoration: BoxDecoration(
-        color: isSelected ? activeColor : Colors.transparent,
-        borderRadius: BorderRadius.circular(25),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: isSelected
-              ? Colors.white
-              : (isDark ? Colors.grey.shade400 : Colors.grey.shade700),
-          fontWeight: FontWeight.w600,
-          fontSize: 16,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLongDurationButton(
-    BuildContext context,
-    TimerProvider timerProvider,
-    PresetProvider presetProvider,
-    Color focusColor,
-    Color breakColor,
-    bool isDark,
-  ) {
-    final preset = presetProvider.selectedPreset!;
-    final isFocusMode = timerProvider.currentType == TimerType.focus;
-    final longDuration = isFocusMode
-        ? preset.longFocusDuration
-        : preset.longBreakDuration;
-    final currentColor = isFocusMode ? focusColor : breakColor;
-    final buttonLabel = isFocusMode ? 'Long Focus' : 'Long Break';
-    final formattedDuration = _formatDuration(longDuration);
-
-    return BouncingButton(
-      onTap: () {
-        if (timerProvider.isRunning) return;
-        timerProvider.setCustomDuration(longDuration);
-        HapticFeedback.mediumImpact();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        decoration: BoxDecoration(
-          color: currentColor.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: currentColor.withOpacity(0.4), width: 1.5),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.timer_outlined, size: 18, color: currentColor),
-            const SizedBox(width: 8),
-            Text(
-              '$buttonLabel ($formattedDuration)',
-              style: TextStyle(
-                color: currentColor,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _formatDuration(int seconds) {
-    final hours = seconds ~/ 3600;
-    final minutes = (seconds % 3600) ~/ 60;
-    if (hours > 0) {
-      return '${hours}h ${minutes}m';
-    }
-    return '${minutes}m';
-  }
-
-  Widget _buildPresetSelector(
-    BuildContext context,
-    PresetProvider presetProvider,
-    TimerProvider timerProvider,
-    bool isDark,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.settings_applications,
-                size: 18,
-                color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Preset:',
-                style: TextStyle(
-                  color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                presetProvider.selectedPreset?.name ?? 'None',
-                style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black87,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          TextButton(
-            onPressed: () => _showPresetSelector(
-              context,
-              presetProvider,
-              timerProvider,
-              isDark,
-            ),
-            child: Text(
-              presetProvider.selectedPreset != null ? 'Change' : 'Select',
-              style: TextStyle(
-                color: isDark ? Colors.blue.shade300 : Colors.blue,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showPresetSelector(
-    BuildContext context,
-    PresetProvider presetProvider,
-    TimerProvider timerProvider,
-    bool isDark,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Select Preset',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                // Add Preset Button
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _showAddPresetDialog(
-                      context,
-                      presetProvider,
-                      timerProvider,
-                      isDark,
-                    );
-                  },
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add Custom Preset'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Divider(),
-                const SizedBox(height: 8),
-                const Text(
-                  'Available Presets',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: presetProvider.presets.length,
-                  itemBuilder: (context, index) {
-                    final preset = presetProvider.presets[index];
-                    final isSelected =
-                        presetProvider.selectedPreset?.id == preset.id;
-
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      elevation: isSelected ? 4 : 1,
-                      color: isSelected
-                          ? const Color(0xFF66BB6A).withOpacity(0.1)
-                          : null,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: isSelected
-                            ? const BorderSide(
-                                color: Color(0xFF66BB6A),
-                                width: 2,
-                              )
-                            : BorderSide.none,
-                      ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(16),
-                        title: Text(
-                          preset.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text(
-                            'Focus: ${preset.focusDuration ~/ 60}m  •  Break: ${preset.breakDuration ~/ 60}m  •  Long Focus: ${preset.longFocusDuration ~/ 60}m  •  Long Break: ${preset.longBreakDuration ~/ 60}m',
-                            style: const TextStyle(fontSize: 13),
-                          ),
-                        ),
-                        trailing: isSelected
-                            ? const Icon(
-                                Icons.check_circle,
-                                color: Color(0xFF66BB6A),
-                              )
-                            : null,
-                        onTap: () {
-                          presetProvider.selectPreset(preset);
-                          // Update timer durations based on preset
-                          if (timerProvider.currentType == TimerType.focus) {
-                            timerProvider.setCustomDuration(
-                              preset.focusDuration,
-                            );
-                          } else {
-                            timerProvider.setCustomDuration(
-                              preset.breakDuration,
-                            );
-                          }
-                          Navigator.pop(context);
-                        },
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () {
-                    presetProvider.clearPreset();
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Clear Selection'),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _showAddPresetDialog(
-    BuildContext context,
-    PresetProvider presetProvider,
-    TimerProvider timerProvider,
-    bool isDark,
-  ) {
-    final nameController = TextEditingController();
-    final focusMinutesController = TextEditingController(text: '25');
-    final focusSecondsController = TextEditingController(text: '0');
-    final breakMinutesController = TextEditingController(text: '5');
-    final breakSecondsController = TextEditingController(text: '0');
-    final longFocusMinutesController = TextEditingController(text: '50');
-    final longFocusSecondsController = TextEditingController(text: '0');
-    final longBreakMinutesController = TextEditingController(text: '15');
-    final longBreakSecondsController = TextEditingController(text: '0');
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Create Custom Preset'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Preset Name',
-                  hintText: 'e.g., My Custom Preset',
-                  border: OutlineInputBorder(),
-                ),
-                autofocus: true,
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Focus Duration',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: focusMinutesController,
-                      decoration: const InputDecoration(
-                        labelText: 'Minutes',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      controller: focusSecondsController,
-                      decoration: const InputDecoration(
-                        labelText: 'Seconds',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Break Duration',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: breakMinutesController,
-                      decoration: const InputDecoration(
-                        labelText: 'Minutes',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      controller: breakSecondsController,
-                      decoration: const InputDecoration(
-                        labelText: 'Seconds',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Long Focus Duration',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: longFocusMinutesController,
-                      decoration: const InputDecoration(
-                        labelText: 'Minutes',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      controller: longFocusSecondsController,
-                      decoration: const InputDecoration(
-                        labelText: 'Seconds',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Long Break Duration',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: longBreakMinutesController,
-                      decoration: const InputDecoration(
-                        labelText: 'Minutes',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      controller: longBreakSecondsController,
-                      decoration: const InputDecoration(
-                        labelText: 'Seconds',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final name = nameController.text.trim();
-              if (name.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Please enter a preset name')),
-                );
-                return;
-              }
-
-              // Parse durations
-              final focusMinutes =
-                  int.tryParse(focusMinutesController.text) ?? 0;
-              final focusSeconds =
-                  int.tryParse(focusSecondsController.text) ?? 0;
-              final breakMinutes =
-                  int.tryParse(breakMinutesController.text) ?? 0;
-              final breakSeconds =
-                  int.tryParse(breakSecondsController.text) ?? 0;
-              final longFocusMinutes =
-                  int.tryParse(longFocusMinutesController.text) ?? 0;
-              final longFocusSeconds =
-                  int.tryParse(longFocusSecondsController.text) ?? 0;
-              final longBreakMinutes =
-                  int.tryParse(longBreakMinutesController.text) ?? 0;
-              final longBreakSeconds =
-                  int.tryParse(longBreakSecondsController.text) ?? 0;
-
-              final focusDuration = (focusMinutes * 60) + focusSeconds;
-              final breakDuration = (breakMinutes * 60) + breakSeconds;
-              final longFocusDuration =
-                  (longFocusMinutes * 60) + longFocusSeconds;
-              final longBreakDuration =
-                  (longBreakMinutes * 60) + longBreakSeconds;
-
-              if (focusDuration <= 0 ||
-                  breakDuration <= 0 ||
-                  longFocusDuration <= 0 ||
-                  longBreakDuration <= 0) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('All durations must be greater than 0'),
-                  ),
-                );
-                return;
-              }
-
-              // Create new preset
-              final newPreset = PomodoroPreset(
-                id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
-                name: name,
-                focusDuration: focusDuration,
-                breakDuration: breakDuration,
-                longFocusDuration: longFocusDuration,
-                longBreakDuration: longBreakDuration,
-              );
-
-              presetProvider.addPreset(newPreset);
-              presetProvider.selectPreset(newPreset);
-
-              // Update timer durations based on current type
-              if (timerProvider.currentType == TimerType.focus) {
-                timerProvider.setCustomDuration(focusDuration);
-              } else {
-                timerProvider.setCustomDuration(breakDuration);
-              }
-
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Preset "$name" created and selected')),
-              );
-            },
-            child: const Text('Create'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPlayPauseButton(
-    BuildContext context,
-    TimerProvider timerProvider,
-    Color color,
-  ) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      width: 80,
-      height: 80,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.4),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Icon(
-        timerProvider.isRunning ? Icons.pause : Icons.play_arrow_rounded,
-        size: 45,
-        color: Colors.white,
-      ),
-    );
-  }
-}
-
-// --- BOUNCING BUTTON ANIMATION ---
-class BouncingButton extends StatefulWidget {
-  final Widget child;
-  final VoidCallback onTap;
-
-  const BouncingButton({Key? key, required this.child, required this.onTap})
-    : super(key: key);
-
-  @override
-  State<BouncingButton> createState() => _BouncingButtonState();
-}
-
-class _BouncingButtonState extends State<BouncingButton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 100),
-      reverseDuration: const Duration(milliseconds: 100),
-    );
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.9,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => _controller.forward(),
-      onTapUp: (_) {
-        _controller.reverse();
-        widget.onTap();
-      },
-      onTapCancel: () => _controller.reverse(),
-      child: ScaleTransition(scale: _scaleAnimation, child: widget.child),
-    );
-  }
-}
-
-// Painters
-class LiquidWavePainter extends CustomPainter {
-  final double waveValue;
-  final double fillPercent;
-  final Color color;
-  final double waveHeight;
-  final double waveFrequency;
-  LiquidWavePainter({
-    required this.waveValue,
-    required this.fillPercent,
-    required this.color,
-    this.waveHeight = 15.0,
-    this.waveFrequency = 1.5,
-  });
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (fillPercent == 0) return;
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-    final path = Path();
-    final baseHeight = size.height * (1 - fillPercent);
-    path.moveTo(0, baseHeight);
-    for (double i = 0.0; i <= size.width; i++) {
-      path.lineTo(
-        i,
-        baseHeight +
-            math.sin(
-                  (i / size.width * 2 * math.pi * waveFrequency) +
-                      (waveValue * 2 * math.pi),
-                ) *
-                waveHeight,
-      );
-    }
-    path.lineTo(size.width, size.height);
-    path.lineTo(0, size.height);
-    path.close();
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant LiquidWavePainter oldDelegate) =>
-      oldDelegate.waveValue != waveValue ||
-      oldDelegate.fillPercent != fillPercent ||
-      oldDelegate.color != color;
-}
-
-class TimerPainter extends CustomPainter {
-  final double progress;
-  final Color color;
-  final Color trackColor;
-  final double strokeWidth;
-  final double knobRadius;
-  TimerPainter({
-    required this.progress,
-    required this.color,
-    required this.trackColor,
-    this.strokeWidth = 20.0,
-    this.knobRadius = 15.0,
-  });
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.width - strokeWidth) / 2;
-    canvas.drawCircle(
-      center,
-      radius,
-      Paint()
-        ..color = trackColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round,
-    );
-    if (progress > 0) {
-      final sweepAngle = 2 * math.pi * progress;
-      const startAngle = -math.pi / 2;
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
-        startAngle,
-        sweepAngle,
-        false,
-        Paint()
-          ..color = color
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = strokeWidth
-          ..strokeCap = StrokeCap.round,
-      );
-      final knobAngle = startAngle + sweepAngle;
-      final knobCenter = Offset(
-        center.dx + radius * math.cos(knobAngle),
-        center.dy + radius * math.sin(knobAngle),
-      );
-      canvas.drawCircle(
-        knobCenter,
-        knobRadius + 4,
-        Paint()..color = Colors.black.withOpacity(0.15),
-      );
-      canvas.drawCircle(knobCenter, knobRadius, Paint()..color = Colors.white);
-      canvas.drawCircle(knobCenter, knobRadius - 4, Paint()..color = color);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant TimerPainter oldDelegate) =>
-      oldDelegate.progress != progress ||
-      oldDelegate.color != color ||
-      oldDelegate.trackColor != trackColor;
 }
