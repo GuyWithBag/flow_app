@@ -1,7 +1,7 @@
 import 'package:flow_app/providers/providers.dart';
 import 'package:flutter/material.dart';
+import 'package:hive_local_storage/hive_local_storage.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flow_app/models/timer_models.dart';
 
@@ -130,66 +130,73 @@ class ThemeProvider extends ChangeNotifier {
   }
 
   Future<void> _savePreferences() async {
-    final prefs = await SharedPreferences.getInstance();
+    final storage = LocalStorage.i;
 
-    await prefs.setBool('dark_mode', _isDarkMode);
-    await prefs.setInt('daily_goal_minutes', _dailyGoalMinutes);
+    await storage.put<bool>(key: 'dark_mode', value: _isDarkMode);
+    await storage.put<int>(key: 'daily_goal_minutes', value: _dailyGoalMinutes);
 
     // Legacy single-mode values (mapped from Focus mode)
-    await prefs.setString('background_theme', _backgroundTheme);
-    await prefs.setString('background_image_url', _backgroundImageUrl ?? '');
-    await prefs.setInt('accent_color', _accentColor.value);
+    await storage.put<String>(key: 'background_theme', value: _backgroundTheme);
+    await storage.put<String>(
+      key: 'background_image_url',
+      value: _backgroundImageUrl ?? '',
+    );
+    await storage.put<int>(key: 'accent_color', value: _accentColor.value);
 
     // Per-mode values
-    await prefs.setString(
-      'focus_background_theme',
-      _modeBackgroundThemes[TimerType.focus] ?? 'default',
+    await storage.put<String>(
+      key: 'focus_background_theme',
+      value: _modeBackgroundThemes[TimerType.focus] ?? 'default',
     );
-    await prefs.setString(
-      'break_background_theme',
-      _modeBackgroundThemes[TimerType.breakTime] ?? 'default',
-    );
-
-    await prefs.setString(
-      'focus_background_image_url',
-      _modeBackgroundImageUrls[TimerType.focus] ?? '',
-    );
-    await prefs.setString(
-      'break_background_image_url',
-      _modeBackgroundImageUrls[TimerType.breakTime] ?? '',
+    await storage.put<String>(
+      key: 'break_background_theme',
+      value: _modeBackgroundThemes[TimerType.breakTime] ?? 'default',
     );
 
-    await prefs.setInt(
-      'focus_accent_color',
-      _modeAccentColors[TimerType.focus]?.value ?? _accentColor.value,
+    await storage.put<String>(
+      key: 'focus_background_image_url',
+      value: _modeBackgroundImageUrls[TimerType.focus] ?? '',
     );
-    await prefs.setInt(
-      'break_accent_color',
-      _modeAccentColors[TimerType.breakTime]?.value ??
+    await storage.put<String>(
+      key: 'break_background_image_url',
+      value: _modeBackgroundImageUrls[TimerType.breakTime] ?? '',
+    );
+
+    await storage.put<int>(
+      key: 'focus_accent_color',
+      value: _modeAccentColors[TimerType.focus]?.value ?? _accentColor.value,
+    );
+    await storage.put<int>(
+      key: 'break_accent_color',
+      value:
+          _modeAccentColors[TimerType.breakTime]?.value ??
           const Color(0xFFFFB74D).value,
     );
   }
 
   Future<void> loadPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
+    final storage = LocalStorage.i;
 
-    _isDarkMode = prefs.getBool('dark_mode') ?? false;
-    _dailyGoalMinutes = prefs.getInt('daily_goal_minutes') ?? 120;
+    _isDarkMode = storage.get<bool>(key: 'dark_mode') ?? false;
+    _dailyGoalMinutes = storage.get<int>(key: 'daily_goal_minutes') ?? 120;
 
     // Legacy single-mode values
-    _backgroundTheme = prefs.getString('background_theme') ?? 'default';
-    final url = prefs.getString('background_image_url') ?? '';
+    _backgroundTheme =
+        storage.get<String>(key: 'background_theme') ?? 'default';
+    final url = storage.get<String>(key: 'background_image_url') ?? '';
     _backgroundImageUrl = url.trim().isEmpty ? null : url.trim();
-    _accentColor = Color(prefs.getInt('accent_color') ?? 0xFF66BB6A);
+    _accentColor = Color(storage.get<int>(key: 'accent_color') ?? 0xFF66BB6A);
 
     // Per-mode values with fallback to legacy
     _modeBackgroundThemes[TimerType.focus] =
-        prefs.getString('focus_background_theme') ?? _backgroundTheme;
+        storage.get<String>(key: 'focus_background_theme') ?? _backgroundTheme;
     _modeBackgroundThemes[TimerType.breakTime] =
-        prefs.getString('break_background_theme') ?? _backgroundTheme;
+        storage.get<String>(key: 'break_background_theme') ?? _backgroundTheme;
 
-    final focusUrl = prefs.getString('focus_background_image_url') ?? '';
-    final breakUrl = prefs.getString('break_background_image_url') ?? '';
+    final focusUrl =
+        storage.get<String>(key: 'focus_background_image_url') ?? '';
+    final breakUrl =
+        storage.get<String>(key: 'break_background_image_url') ?? '';
     _modeBackgroundImageUrls[TimerType.focus] = focusUrl.trim().isEmpty
         ? _backgroundImageUrl
         : focusUrl.trim();
@@ -198,10 +205,11 @@ class ThemeProvider extends ChangeNotifier {
         : breakUrl.trim();
 
     _modeAccentColors[TimerType.focus] = Color(
-      prefs.getInt('focus_accent_color') ?? _accentColor.value,
+      storage.get<int>(key: 'focus_accent_color') ?? _accentColor.value,
     );
     _modeAccentColors[TimerType.breakTime] = Color(
-      prefs.getInt('break_accent_color') ?? const Color(0xFFFFB74D).value,
+      storage.get<int>(key: 'break_accent_color') ??
+          const Color(0xFFFFB74D).value,
     );
 
     notifyListeners();

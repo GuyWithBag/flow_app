@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
+import 'package:hive_local_storage/hive_local_storage.dart';
 
 import '../models/models.dart';
 
@@ -11,6 +14,42 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isAuthenticated => _currentUser != null;
+
+  AuthProvider() {
+    _loadUser();
+  }
+
+  void _loadUser() {
+    final raw = LocalStorage.i.get<String>(key: 'auth_user');
+    if (raw != null && raw.isNotEmpty) {
+      final json = jsonDecode(raw) as Map<String, dynamic>;
+      _currentUser = UserProfile(
+        id: json['id'] as String,
+        email: json['email'] as String,
+        name: json['name'] as String?,
+        dailyGoal: json['daily_goal'] as int? ?? 120,
+        streak: json['streak'] as int? ?? 0,
+      );
+    }
+  }
+
+  Future<void> _saveUser() async {
+    if (_currentUser != null) {
+      final json = {
+        'id': _currentUser!.id,
+        'email': _currentUser!.email,
+        'name': _currentUser!.name,
+        'daily_goal': _currentUser!.dailyGoal,
+        'streak': _currentUser!.streak,
+      };
+      await LocalStorage.i.put<String>(
+        key: 'auth_user',
+        value: jsonEncode(json),
+      );
+    } else {
+      await LocalStorage.i.remove(key: 'auth_user');
+    }
+  }
 
   // Mock login
   Future<void> login(String email, String password) async {
@@ -30,6 +69,7 @@ class AuthProvider extends ChangeNotifier {
         dailyGoal: 120,
         streak: 5,
       );
+      await _saveUser();
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -52,6 +92,7 @@ class AuthProvider extends ChangeNotifier {
         email: email,
         name: email.split('@')[0],
       );
+      await _saveUser();
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -81,6 +122,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     _currentUser = null;
+    await _saveUser();
     notifyListeners();
   }
 }

@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:hive_local_storage/hive_local_storage.dart' hide Session;
 
 import '../models/models.dart';
 
@@ -23,56 +26,40 @@ class SessionProvider extends ChangeNotifier {
   int get todayFocusMinutes {
     return todaySessions
         .where((s) => s.type == TimerType.focus)
-        .fold(0, (sum, s) => sum + (s.duration ~/ 60));
+        .fold<int>(0, (sum, s) => sum + (s.duration ~/ 60));
   }
 
   int get totalFocusMinutes {
     return _sessions
         .where((s) => s.type == TimerType.focus && s.completed)
-        .fold(0, (sum, s) => sum + (s.duration ~/ 60));
+        .fold<int>(0, (sum, s) => sum + (s.duration ~/ 60));
   }
 
-  // Mock: Load sessions from Supabase
+  Future<void> _saveSessions() async {
+    final encoded = _sessions.map((s) => jsonEncode(s.toJson())).toList();
+    await LocalStorage.i.put<String>(
+      key: 'sessions',
+      value: jsonEncode(encoded),
+    );
+  }
+
+  // Load sessions from Hive storage
   Future<void> loadSessions() async {
-    if (_isLoading) return; // Prevent multiple simultaneous loads
+    if (_isLoading) return;
 
     _isLoading = true;
     notifyListeners();
 
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      // Mock data
-      _sessions
-        ..clear()
-        ..addAll([
-          Session(
-            id: '1',
-            userId: 'mock_user_123',
-            type: TimerType.focus,
-            duration: 1500,
-            startTime: DateTime.now().subtract(const Duration(hours: 2)),
-            endTime: DateTime.now().subtract(
-              const Duration(hours: 1, minutes: 35),
-            ),
-            completed: true,
-            label: 'Studied Math',
-            progressNote: 'Completed 15 pages',
-          ),
-          Session(
-            id: '2',
-            userId: 'mock_user_123',
-            type: TimerType.focus,
-            duration: 1500,
-            startTime: DateTime.now().subtract(const Duration(hours: 4)),
-            endTime: DateTime.now().subtract(
-              const Duration(hours: 3, minutes: 35),
-            ),
-            completed: true,
-            label: 'Coding',
-            progressNote: 'Built login screen',
-          ),
-        ]);
+      final raw = LocalStorage.i.get<String>(key: 'sessions');
+      _sessions.clear();
+      if (raw != null && raw.isNotEmpty) {
+        final List<dynamic> decoded = jsonDecode(raw);
+        for (final item in decoded) {
+          final json = item is String ? jsonDecode(item) : item;
+          _sessions.add(Session.fromJson(json as Map<String, dynamic>));
+        }
+      }
     } catch (e) {
       debugPrint('Error loading sessions: $e');
     } finally {
@@ -81,18 +68,18 @@ class SessionProvider extends ChangeNotifier {
     }
   }
 
-  // Mock: Add session to Supabase
   Future<void> addSession(Session session) async {
     _sessions.insert(0, session);
     notifyListeners();
+    await _saveSessions();
   }
 
-  // Mock: Update session
   Future<void> updateSession(Session session) async {
     final index = _sessions.indexWhere((s) => s.id == session.id);
     if (index != -1) {
       _sessions[index] = session;
       notifyListeners();
+      await _saveSessions();
     }
   }
 
@@ -126,6 +113,7 @@ class SessionProvider extends ChangeNotifier {
       // Clear current session
       _currentSession = null;
       notifyListeners();
+      _saveSessions();
     }
   }
 

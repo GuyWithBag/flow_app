@@ -5,9 +5,16 @@ import 'pages/pages.barrel.dart';
 import 'providers/providers.dart';
 
 class App extends StatelessWidget {
-  const App({super.key, required this.themeProvider});
+  const App({
+    super.key,
+    required this.themeProvider,
+    required this.presetProvider,
+    required this.sessionProvider,
+  });
 
   final ThemeProvider themeProvider;
+  final PresetProvider presetProvider;
+  final SessionProvider sessionProvider;
 
   @override
   Widget build(BuildContext context) {
@@ -16,8 +23,8 @@ class App extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => TimerProvider()),
         ChangeNotifierProvider(create: (_) => themeProvider),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => SessionProvider()),
-        ChangeNotifierProvider(create: (_) => PresetProvider()),
+        ChangeNotifierProvider(create: (_) => sessionProvider),
+        ChangeNotifierProvider(create: (_) => presetProvider),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {

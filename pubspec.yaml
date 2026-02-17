@@ -41,8 +41,7 @@ dependencies:
   # Supabase Integration
   supabase_flutter: 2.0.0
 
-  # Local Storage
-  shared_preferences: 2.2.2
+  # Local Storage (hive_local_storage is used instead of shared_preferences)
 
   # Audio
   audioplayers: 5.2.1

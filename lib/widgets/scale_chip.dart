@@ -5,6 +5,7 @@ class ScaleChip extends StatelessWidget {
   final String label;
   final ValueNotifier<int> notifier;
   final StateSetter setState;
+  final VoidCallback? onChanged;
 
   const ScaleChip({
     Key? key,
@@ -12,6 +13,7 @@ class ScaleChip extends StatelessWidget {
     required this.label,
     required this.notifier,
     required this.setState,
+    this.onChanged,
   }) : super(key: key);
 
   @override
@@ -23,6 +25,7 @@ class ScaleChip extends StatelessWidget {
       onSelected: (bool selected) {
         if (selected) {
           setState(() => notifier.value = seconds);
+          onChanged?.call();
         }
       },
     );

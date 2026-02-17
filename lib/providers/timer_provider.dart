@@ -1,10 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:hive_local_storage/hive_local_storage.dart';
 
 import '../models/models.dart';
 
 class TimerProvider extends ChangeNotifier {
+  TimerProvider() {
+    _loadFromStorage();
+  }
+
   Timer? _timer;
   int _remainingSeconds = 1500; // 25 minutes default
   int _totalSeconds = 1500;
@@ -16,6 +21,33 @@ class TimerProvider extends ChangeNotifier {
     TimerType.focus: 1500, // 25 min
     TimerType.breakTime: 300, // 5 min
   };
+
+  void _loadFromStorage() {
+    final storage = LocalStorage.i;
+    _defaultDurations[TimerType.focus] =
+        storage.get<int>(key: 'timer_focus_duration') ?? 1500;
+    _defaultDurations[TimerType.breakTime] =
+        storage.get<int>(key: 'timer_break_duration') ?? 300;
+    _completedCycles = storage.get<int>(key: 'timer_completed_cycles') ?? 0;
+    _remainingSeconds = _defaultDurations[_currentType]!;
+    _totalSeconds = _remainingSeconds;
+  }
+
+  Future<void> _saveToStorage() async {
+    final storage = LocalStorage.i;
+    await storage.put<int>(
+      key: 'timer_focus_duration',
+      value: _defaultDurations[TimerType.focus]!,
+    );
+    await storage.put<int>(
+      key: 'timer_break_duration',
+      value: _defaultDurations[TimerType.breakTime]!,
+    );
+    await storage.put<int>(
+      key: 'timer_completed_cycles',
+      value: _completedCycles,
+    );
+  }
 
   // Getters
   int get remainingSeconds => _remainingSeconds;
@@ -52,6 +84,7 @@ class TimerProvider extends ChangeNotifier {
     _totalSeconds = seconds;
     _defaultDurations[_currentType] = seconds;
     notifyListeners();
+    _saveToStorage();
   }
 
   void startTimer() {
@@ -96,6 +129,7 @@ class TimerProvider extends ChangeNotifier {
 
     if (_currentType == TimerType.focus) {
       _completedCycles++;
+      _saveToStorage();
     }
 
     notifyListeners();

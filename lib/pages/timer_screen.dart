@@ -7,6 +7,7 @@ import 'package:flow_app/shared/enums/enums.dart';
 import 'package:flow_app/widgets/widgets.barrel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hive_local_storage/hive_local_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_picker_plus/flutter_picker_plus.dart';
 
@@ -23,21 +24,73 @@ class TimerScreen extends HookWidget {
     final sessionProvider = Provider.of<SessionProvider>(context);
     final presetProvider = Provider.of<PresetProvider>(context);
 
-    // --- CONFIGURATION STATE (Ideally saved to Preferences in a real app) ---
-    final fixedScaleDuration = useState(60 * 60);
-    final useDynamicScale = useState(false);
-    final waveContrast = useState(0.8);
+    // --- CONFIGURATION STATE (persisted via Hive) ---
+    final storage = LocalStorage.i;
+
+    final fixedScaleDuration = useState(
+      storage.get<int>(key: 'ts_fixed_scale_duration') ?? 60 * 60,
+    );
+    final useDynamicScale = useState(
+      storage.get<bool>(key: 'ts_use_dynamic_scale') ?? false,
+    );
+    final waveContrast = useState(
+      storage.get<double>(key: 'ts_wave_contrast') ?? 0.8,
+    );
 
     // Cycle & Loop Settings
-    final autoStartBreak = useState(true);
-    final autoStartFocus = useState(false);
-    final targetLoops = useState(4);
+    final autoStartBreak = useState(
+      storage.get<bool>(key: 'ts_auto_start_break') ?? true,
+    );
+    final autoStartFocus = useState(
+      storage.get<bool>(key: 'ts_auto_start_focus') ?? false,
+    );
+    final targetLoops = useState(storage.get<int>(key: 'ts_target_loops') ?? 4);
     final currentLoop = useState(1);
-    final selectedSound = useState(SoundType.bell);
+    final selectedSound = useState(
+      SoundType.values[storage.get<int>(key: 'ts_selected_sound') ?? 0],
+    );
 
     // Visibility Toggles
-    final showInnerLiquid = useState(true);
-    final showBackgroundLiquid = useState(true);
+    final showInnerLiquid = useState(
+      storage.get<bool>(key: 'ts_show_inner_liquid') ?? true,
+    );
+    final showBackgroundLiquid = useState(
+      storage.get<bool>(key: 'ts_show_background_liquid') ?? true,
+    );
+
+    // Persist config changes
+    void saveConfig() {
+      storage.put<int>(
+        key: 'ts_fixed_scale_duration',
+        value: fixedScaleDuration.value,
+      );
+      storage.put<bool>(
+        key: 'ts_use_dynamic_scale',
+        value: useDynamicScale.value,
+      );
+      storage.put<double>(key: 'ts_wave_contrast', value: waveContrast.value);
+      storage.put<bool>(
+        key: 'ts_auto_start_break',
+        value: autoStartBreak.value,
+      );
+      storage.put<bool>(
+        key: 'ts_auto_start_focus',
+        value: autoStartFocus.value,
+      );
+      storage.put<int>(key: 'ts_target_loops', value: targetLoops.value);
+      storage.put<int>(
+        key: 'ts_selected_sound',
+        value: selectedSound.value.index,
+      );
+      storage.put<bool>(
+        key: 'ts_show_inner_liquid',
+        value: showInnerLiquid.value,
+      );
+      storage.put<bool>(
+        key: 'ts_show_background_liquid',
+        value: showBackgroundLiquid.value,
+      );
+    }
 
     // --- RUNTIME STATE ---
     final playbackTotalDuration = useRef(timerProvider.remainingSeconds);
@@ -434,6 +487,7 @@ class TimerScreen extends HookWidget {
                               targetLoops,
                               selectedSound,
                               isDark,
+                              saveConfig,
                             ),
                             child: CircleAvatar(
                               radius: 24,
@@ -472,6 +526,7 @@ class TimerScreen extends HookWidget {
     ValueNotifier<int> loops,
     ValueNotifier<SoundType> sound,
     bool isDark,
+    VoidCallback saveConfig,
   ) {
     showModalBottomSheet(
       context: context,
@@ -519,14 +574,20 @@ class TimerScreen extends HookWidget {
                       title: const Text("Auto-start Break"),
                       subtitle: const Text("Start break when focus ends"),
                       value: autoBreak.value,
-                      onChanged: (val) => setState(() => autoBreak.value = val),
+                      onChanged: (val) {
+                        setState(() => autoBreak.value = val);
+                        saveConfig();
+                      },
                       activeColor: Colors.blue,
                     ),
                     SwitchListTile(
                       title: const Text("Auto-start Focus"),
                       subtitle: const Text("Start focus when break ends"),
                       value: autoFocus.value,
-                      onChanged: (val) => setState(() => autoFocus.value = val),
+                      onChanged: (val) {
+                        setState(() => autoFocus.value = val);
+                        saveConfig();
+                      },
                       activeColor: Colors.blue,
                     ),
                     ListTile(
@@ -538,8 +599,10 @@ class TimerScreen extends HookWidget {
                           IconButton(
                             icon: const Icon(Icons.remove_circle_outline),
                             onPressed: () {
-                              if (loops.value > 1)
+                              if (loops.value > 1) {
                                 setState(() => loops.value--);
+                                saveConfig();
+                              }
                             },
                           ),
                           Text(
@@ -551,7 +614,10 @@ class TimerScreen extends HookWidget {
                           ),
                           IconButton(
                             icon: const Icon(Icons.add_circle_outline),
-                            onPressed: () => setState(() => loops.value++),
+                            onPressed: () {
+                              setState(() => loops.value++);
+                              saveConfig();
+                            },
                           ),
                         ],
                       ),
@@ -572,7 +638,10 @@ class TimerScreen extends HookWidget {
                         );
                       }).toList(),
                       onChanged: (val) {
-                        if (val != null) setState(() => sound.value = val);
+                        if (val != null) {
+                          setState(() => sound.value = val);
+                          saveConfig();
+                        }
                       },
                     ),
                     const Divider(),
@@ -581,7 +650,10 @@ class TimerScreen extends HookWidget {
                       title: const Text("Show Circle Liquid"),
                       value: showInner.value,
                       contentPadding: EdgeInsets.zero,
-                      onChanged: (val) => setState(() => showInner.value = val),
+                      onChanged: (val) {
+                        setState(() => showInner.value = val);
+                        saveConfig();
+                      },
                     ),
                     const SizedBox(height: 10),
                     const Text(
@@ -602,30 +674,39 @@ class TimerScreen extends HookWidget {
                           label: "15m",
                           notifier: fixedScale,
                           setState: setState,
+                          onChanged: saveConfig,
                         ),
                         ScaleChip(
                           seconds: 1500,
                           label: "25m",
                           notifier: fixedScale,
                           setState: setState,
+                          onChanged: saveConfig,
                         ),
                         ScaleChip(
                           seconds: 1800,
                           label: "30m",
                           notifier: fixedScale,
                           setState: setState,
+                          onChanged: saveConfig,
                         ),
                         ScaleChip(
                           seconds: 3600,
                           label: "60m",
                           notifier: fixedScale,
                           setState: setState,
+                          onChanged: saveConfig,
                         ),
                         ActionChip(
                           label: const Text("Custom Scale"),
                           onPressed: () {
                             Navigator.pop(context);
-                            _showCustomScalePicker(context, fixedScale, isDark);
+                            _showCustomScalePicker(
+                              context,
+                              fixedScale,
+                              isDark,
+                              saveConfig,
+                            );
                           },
                         ),
                       ],
@@ -644,6 +725,7 @@ class TimerScreen extends HookWidget {
     BuildContext context,
     ValueNotifier<int> notifier,
     bool isDark,
+    VoidCallback saveConfig,
   ) {
     final currentMins = (notifier.value / 60).round();
     Picker(
@@ -674,6 +756,7 @@ class TimerScreen extends HookWidget {
         final data = picker.getSelectedValues();
         final mins = data[0] as int;
         notifier.value = mins * 60;
+        saveConfig();
       },
     ).showModal(
       context,
