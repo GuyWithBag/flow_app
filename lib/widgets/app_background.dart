@@ -1,7 +1,5 @@
-import 'package:flow_app/models/models.barrel.dart';
 import 'package:flow_app/providers/providers.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class AppBackground extends StatelessWidget {
   final ThemeProvider themeProvider;
@@ -9,10 +7,8 @@ class AppBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final timerProvider = Provider.of<TimerProvider>(context, listen: true);
-    final currentType = timerProvider.currentType;
-
-    final url = themeProvider.getBackgroundImageUrlFor(currentType);
+    final url = themeProvider.backgroundImageUrl;
+    final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
     final overlayColor = themeProvider.isDarkMode
         ? Colors.black.withOpacity(0.55)
         : Colors.white.withOpacity(0.20);
@@ -25,36 +21,30 @@ class AppBackground extends StatelessWidget {
             url,
             fit: BoxFit.cover,
             errorBuilder: (_, __, ___) =>
-                _fallbackBackground(themeProvider, currentType),
+                _fallbackBackground(context, scaffoldBg),
           ),
           DecoratedBox(decoration: BoxDecoration(color: overlayColor)),
         ],
       );
     }
 
-    return _fallbackBackground(themeProvider, currentType);
+    return _fallbackBackground(context, scaffoldBg);
   }
 
-  Widget _fallbackBackground(ThemeProvider themeProvider, TimerType type) {
-    if (themeProvider.getBackgroundThemeFor(type) == 'gradient') {
+  Widget _fallbackBackground(BuildContext context, Color scaffoldBg) {
+    if (themeProvider.backgroundTheme == 'gradient') {
       return DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: themeProvider.isDarkMode
-                ? [const Color(0xFF1A1A1A), const Color(0xFF2D2D2D)]
-                : [const Color(0xFFFAFAFA), const Color(0xFFE8E8E8)],
+                ? [scaffoldBg, const Color(0xFF2D2D2D)]
+                : [scaffoldBg, const Color(0xFFE8E8E8)],
           ),
         ),
       );
     }
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: themeProvider.isDarkMode
-            ? const Color(0xFF1A1A1A)
-            : const Color(0xFFFAFAFA),
-      ),
-    );
+    return DecoratedBox(decoration: BoxDecoration(color: scaffoldBg));
   }
 }

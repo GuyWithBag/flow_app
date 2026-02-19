@@ -3,15 +3,11 @@ import 'package:flutter/material.dart';
 class ModeButtonContent extends StatelessWidget {
   final String label;
   final bool isSelected;
-  final Color activeColor;
-  final bool isDark;
 
   const ModeButtonContent({
     Key? key,
     required this.label,
     required this.isSelected,
-    required this.activeColor,
-    required this.isDark,
   }) : super(key: key);
 
   @override
@@ -21,18 +17,16 @@ class ModeButtonContent extends StatelessWidget {
       curve: Curves.easeInOut,
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
       decoration: BoxDecoration(
-        color: isSelected ? activeColor : Colors.transparent,
+        color: isSelected
+            ? Theme.of(context).colorScheme.primary
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(25),
       ),
       child: Text(
         label,
-        style: TextStyle(
-          color: isSelected
-              ? Colors.white
-              : (isDark ? Colors.grey.shade400 : Colors.grey.shade700),
-          fontWeight: FontWeight.w600,
-          fontSize: 16,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold),
       ),
     );
   }

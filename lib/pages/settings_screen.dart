@@ -12,9 +12,6 @@ class SettingsScreen extends HookWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
-      backgroundColor: themeProvider.isDarkMode
-          ? const Color(0xFF121212)
-          : Colors.white,
       appBar: AppBar(
         title: const Text('Settings'),
         elevation: 0,

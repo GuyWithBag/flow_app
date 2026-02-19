@@ -26,8 +26,9 @@ class App extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => sessionProvider),
         ChangeNotifierProvider(create: (_) => presetProvider),
       ],
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, _) {
+      child: Consumer2<ThemeProvider, TimerProvider>(
+        builder: (context, themeProvider, timerProvider, _) {
+          themeProvider.updateTimerType(timerProvider.currentType);
           return MaterialApp(
             title: 'Flow',
             debugShowCheckedModeBanner: false,

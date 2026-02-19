@@ -14,57 +14,20 @@ class PresetSelector extends StatelessWidget {
     final presetProvider = Provider.of<PresetProvider>(context);
     final timerProvider = Provider.of<TimerProvider>(context, listen: false);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return InkWell(
+      onTap: () =>
+          _showPresetSelector(context, presetProvider, timerProvider, isDark),
+      child: Column(
         children: [
-          Row(
-            children: [
-              Icon(
-                Icons.settings_applications,
-                size: 18,
-                color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Preset:',
-                style: TextStyle(
-                  color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                presetProvider.selectedPreset?.name ?? 'None',
-                style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black87,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          TextButton(
-            onPressed: () => _showPresetSelector(
+          Text(
+            presetProvider.selectedPreset!.name,
+            style: Theme.of(
               context,
-              presetProvider,
-              timerProvider,
-              isDark,
-            ),
-            child: Text(
-              presetProvider.selectedPreset != null ? 'Change' : 'Select',
-              style: TextStyle(
-                color: isDark ? Colors.blue.shade300 : Colors.blue,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            ).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.bold),
+          ),
+          Text(
+            'Selected Preset:',
+            style: Theme.of(context).textTheme.labelSmall,
           ),
         ],
       ),

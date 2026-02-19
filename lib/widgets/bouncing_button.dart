@@ -4,9 +4,9 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 
 class BouncingButton extends HookWidget {
   final Widget child;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
-  const BouncingButton({Key? key, required this.child, required this.onTap})
+  const BouncingButton({Key? key, required this.child, this.onTap})
     : super(key: key);
 
   @override
@@ -27,7 +27,7 @@ class BouncingButton extends HookWidget {
       onTapDown: (_) => controller.forward(),
       onTapUp: (_) {
         controller.reverse();
-        onTap();
+        if (onTap != null) onTap!();
       },
       onTapCancel: () => controller.reverse(),
       child: Transform.scale(scale: scaleAnimation, child: child),

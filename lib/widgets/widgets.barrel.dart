@@ -16,3 +16,5 @@ export 'preset_selector.dart';
 export 'scale_chip.dart';
 export 'settings_section_header.dart';
 export 'timer_circle_content.dart';
+export 'timer_top_controls.dart';
+export 'timer_bottom_controls.dart';

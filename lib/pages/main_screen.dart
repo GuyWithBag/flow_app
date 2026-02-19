@@ -15,11 +15,8 @@ class MainScreen extends HookWidget {
   Widget build(BuildContext context) {
     final currentIndex = useState(1); // Start on Timer screen
     final themeProvider = Provider.of<ThemeProvider>(context);
-    final timerProvider = Provider.of<TimerProvider>(context);
 
-    final currentAccent = themeProvider.getAccentColorFor(
-      timerProvider.currentType,
-    );
+    final currentAccent = Theme.of(context).colorScheme.primary;
 
     final screens = <Widget>[
       const DashboardScreen(),
@@ -39,31 +36,27 @@ class MainScreen extends HookWidget {
       bottomNavigationBar: ClipRect(
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-          child: Theme(
-            data: Theme.of(context).copyWith(canvasColor: Colors.transparent),
-            child: BottomNavigationBar(
-              backgroundColor: const Color.fromARGB(197, 0, 0, 0),
-              currentIndex: currentIndex.value,
-              onTap: (index) => currentIndex.value = index,
-              selectedItemColor: currentAccent,
-              unselectedItemColor: Colors.grey,
-              type: BottomNavigationBarType.fixed,
-              elevation: 0,
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.dashboard_outlined),
-                  label: 'Dashboard',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.timer_outlined),
-                  label: 'Timer',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person_outline),
-                  label: 'Account',
-                ),
-              ],
-            ),
+          child: BottomNavigationBar(
+            backgroundColor: Theme.of(context).cardColor.withAlpha(100),
+            currentIndex: currentIndex.value,
+            onTap: (index) => currentIndex.value = index,
+            selectedItemColor: currentAccent,
+            type: BottomNavigationBarType.fixed,
+            elevation: 0,
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.dashboard_outlined),
+                label: 'Dashboard',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.timer_outlined),
+                label: 'Timer',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person_outline),
+                label: 'Account',
+              ),
+            ],
           ),
         ),
       ),

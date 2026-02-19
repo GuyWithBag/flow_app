@@ -263,7 +263,7 @@ class ThemeSettingsScreen extends HookWidget {
           ElevatedButton(
             child: const Text('Select'),
             onPressed: () {
-              provider.setModeAccentColor(context, type, pickerColor);
+              provider.setModeAccentColor(type, pickerColor);
               Navigator.of(context).pop();
             },
           ),

@@ -1,18 +1,13 @@
-import 'package:flow_app/providers/providers.dart';
+import 'package:flow_app/shared/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
-import 'package:provider/provider.dart';
 
 import 'package:flow_app/models/models.barrel.dart';
 
 class ThemeProvider extends ChangeNotifier {
   bool _isDarkMode = false;
   int _dailyGoalMinutes = 120;
-
-  // Legacy single-mode fields (kept for backwards compatibility / defaulting)
-  String _backgroundTheme = 'default';
-  String? _backgroundImageUrl;
-  Color _accentColor = const Color(0xFF66BB6A);
+  TimerType _currentTimerType = TimerType.focus;
 
   // Per-mode theming for Focus / Break
   final Map<TimerType, String> _modeBackgroundThemes = {
@@ -32,45 +27,46 @@ class ThemeProvider extends ChangeNotifier {
 
   bool get isDarkMode => _isDarkMode;
   int get dailyGoalMinutes => _dailyGoalMinutes;
+  TimerType get currentTimerType => _currentTimerType;
 
-  // Legacy getters (map to Focus mode for backwards compatibility)
-  String get backgroundTheme => getBackgroundThemeFor(TimerType.focus);
-  String? get backgroundImageUrl => getBackgroundImageUrlFor(TimerType.focus);
-  Color get accentColor => getAccentColorFor(TimerType.focus);
+  // Current-mode convenience getters (resolve based on active timer type)
+  Color get accentColor => _modeAccentColors[_currentTimerType]!;
+  String get backgroundTheme => _modeBackgroundThemes[_currentTimerType]!;
+  String? get backgroundImageUrl => _modeBackgroundImageUrls[_currentTimerType];
 
-  // Per-mode getters
+  // Per-mode getters (for when you need a specific mode's value)
   String getBackgroundThemeFor(TimerType type) =>
-      _modeBackgroundThemes[type] ?? _backgroundTheme;
+      _modeBackgroundThemes[type] ?? 'default';
 
   String? getBackgroundImageUrlFor(TimerType type) =>
-      _modeBackgroundImageUrls[type] ?? _backgroundImageUrl;
+      _modeBackgroundImageUrls[type];
 
   Color getAccentColorFor(TimerType type) =>
-      _modeAccentColors[type] ?? _accentColor;
+      _modeAccentColors[type] ?? const Color(0xFF66BB6A);
 
   ThemeData get currentTheme {
-    // Use the legacy accent color as the base app theme accent.
-    final baseAccent = _accentColor;
-
+    final accent = accentColor;
     if (_isDarkMode) {
-      return ThemeData.dark().copyWith(
-        primaryColor: baseAccent,
-        scaffoldBackgroundColor: const Color(0xFF1A1A1A),
+      return darkTheme.copyWith(
         colorScheme: ColorScheme.dark(
-          primary: baseAccent,
-          secondary: baseAccent,
+          primary: accent,
+          secondary: Colors.grey.shade800,
         ),
       );
     }
 
-    return ThemeData.light().copyWith(
-      primaryColor: baseAccent,
-      scaffoldBackgroundColor: const Color(0xFFFAFAFA),
+    return lightTheme.copyWith(
       colorScheme: ColorScheme.light(
-        primary: baseAccent,
-        secondary: baseAccent,
+        primary: accent,
+        secondary: Colors.grey.shade200,
       ),
     );
+  }
+
+  void updateTimerType(TimerType type) {
+    if (_currentTimerType == type) return;
+    _currentTimerType = type;
+    notifyListeners();
   }
 
   void toggleDarkMode() {
@@ -85,25 +81,9 @@ class ThemeProvider extends ChangeNotifier {
     _savePreferences();
   }
 
-  // Legacy setters (apply to Focus mode by default)
-  void setBackgroundTheme(String theme) {
-    setModeBackgroundTheme(TimerType.focus, theme);
-  }
-
-  void setBackgroundImageUrl(String? url) {
-    setModeBackgroundImageUrl(TimerType.focus, url);
-  }
-
-  void setAccentColor(Color color) {
-    _accentColor = color;
-  }
-
   // Per-mode setters
   void setModeBackgroundTheme(TimerType type, String theme) {
     _modeBackgroundThemes[type] = theme;
-    if (type == TimerType.focus) {
-      _backgroundTheme = theme;
-    }
     notifyListeners();
     _savePreferences();
   }
@@ -112,19 +92,12 @@ class ThemeProvider extends ChangeNotifier {
     final normalized = (url ?? '').trim();
     final value = normalized.isEmpty ? null : normalized;
     _modeBackgroundImageUrls[type] = value;
-    if (type == TimerType.focus) {
-      _backgroundImageUrl = value;
-    }
     notifyListeners();
     _savePreferences();
   }
 
-  void setModeAccentColor(BuildContext context, TimerType type, Color color) {
-    final timerProvider = context.read<TimerProvider>();
+  void setModeAccentColor(TimerType type, Color color) {
     _modeAccentColors[type] = color;
-    if (timerProvider.currentType == type) {
-      _accentColor = color;
-    }
     notifyListeners();
     _savePreferences();
   }
@@ -135,12 +108,6 @@ class ThemeProvider extends ChangeNotifier {
     box.put('dark_mode', _isDarkMode);
     box.put('daily_goal_minutes', _dailyGoalMinutes);
 
-    // Legacy single-mode values (mapped from Focus mode)
-    box.put('background_theme', _backgroundTheme);
-    box.put('background_image_url', _backgroundImageUrl ?? '');
-    box.put('accent_color', _accentColor.value);
-
-    // Per-mode values
     box.put(
       'focus_background_theme',
       _modeBackgroundThemes[TimerType.focus] ?? 'default',
@@ -159,7 +126,8 @@ class ThemeProvider extends ChangeNotifier {
     );
     box.put(
       'focus_accent_color',
-      _modeAccentColors[TimerType.focus]?.value ?? _accentColor.value,
+      _modeAccentColors[TimerType.focus]?.value ??
+          const Color(0xFF66BB6A).value,
     );
     box.put(
       'break_accent_color',
@@ -174,20 +142,13 @@ class ThemeProvider extends ChangeNotifier {
     _isDarkMode = box.get('dark_mode', defaultValue: false);
     _dailyGoalMinutes = box.get('daily_goal_minutes', defaultValue: 120);
 
-    // Legacy single-mode values
-    _backgroundTheme = box.get('background_theme', defaultValue: 'default');
-    final url = box.get('background_image_url', defaultValue: '') as String;
-    _backgroundImageUrl = url.trim().isEmpty ? null : url.trim();
-    _accentColor = Color(box.get('accent_color', defaultValue: 0xFF66BB6A));
-
-    // Per-mode values with fallback to legacy
     _modeBackgroundThemes[TimerType.focus] = box.get(
       'focus_background_theme',
-      defaultValue: _backgroundTheme,
+      defaultValue: 'default',
     );
     _modeBackgroundThemes[TimerType.breakTime] = box.get(
       'break_background_theme',
-      defaultValue: _backgroundTheme,
+      defaultValue: 'default',
     );
 
     final focusUrl =
@@ -195,14 +156,17 @@ class ThemeProvider extends ChangeNotifier {
     final breakUrl =
         box.get('break_background_image_url', defaultValue: '') as String;
     _modeBackgroundImageUrls[TimerType.focus] = focusUrl.trim().isEmpty
-        ? _backgroundImageUrl
+        ? null
         : focusUrl.trim();
     _modeBackgroundImageUrls[TimerType.breakTime] = breakUrl.trim().isEmpty
-        ? _backgroundImageUrl
+        ? null
         : breakUrl.trim();
 
     _modeAccentColors[TimerType.focus] = Color(
-      box.get('focus_accent_color', defaultValue: _accentColor.value),
+      box.get(
+        'focus_accent_color',
+        defaultValue: const Color(0xFF66BB6A).value,
+      ),
     );
     _modeAccentColors[TimerType.breakTime] = Color(
       box.get(
