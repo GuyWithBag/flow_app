@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:flow_app/models/models.barrel.dart';
 import 'package:flow_app/painters/painters.barrel.dart';
-import 'package:flow_app/providers/providers.dart';
+import 'package:flow_app/providers/providers.barrel.dart';
 import 'package:flow_app/widgets/widgets.barrel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_confetti/flutter_confetti.dart';

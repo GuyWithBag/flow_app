@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'pages/pages.barrel.dart';
-import 'providers/providers.dart';
+import 'providers/providers.barrel.dart';
 
 class App extends StatelessWidget {
   const App({

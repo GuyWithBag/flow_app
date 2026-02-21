@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 
 import '../models/models.barrel.dart';
-import '../shared/enums/enums.dart';
+import '../shared/enums/enums.barrel.dart';
 
 class TimerProvider extends ChangeNotifier {
   TimerProvider() {

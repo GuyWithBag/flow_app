@@ -1,4 +1,4 @@
-import 'package:flow_app/providers/providers.dart';
+import 'package:flow_app/providers/providers.barrel.dart';
 import 'package:flutter/material.dart';
 
 class AppBackground extends StatelessWidget {

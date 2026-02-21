@@ -4,11 +4,11 @@
 import 'package:barrel_annotation/barrel_annotation.dart';
 import 'package:flow_app/models/models.barrel.dart';
 import 'package:flutter/material.dart';
-import 'package:hive_ce_flutter/hive_flutter.dart';
+import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 
 import 'app.dart';
 import 'hive/hive_registrar.g.dart';
-import 'providers/providers.dart';
+import 'providers/providers.barrel.dart';
 
 // ============================================================================
 // MAIN APP ENTRY POINT

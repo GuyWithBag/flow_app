@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flow_app/painters/painters.barrel.dart';
-import 'package:flow_app/providers/providers.dart';
+import 'package:flow_app/providers/providers.barrel.dart';
 import 'package:flow_app/widgets/widgets.barrel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

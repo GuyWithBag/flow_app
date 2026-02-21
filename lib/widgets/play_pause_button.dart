@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../providers/providers.dart';
+import '../providers/providers.barrel.dart';
 
 class PlayPauseButton extends StatelessWidget {
   const PlayPauseButton({super.key});
