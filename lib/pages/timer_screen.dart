@@ -180,6 +180,9 @@ class TimerScreen extends HookWidget {
       foregroundColor: Theme.of(context).colorScheme.inverseSurface,
     );
 
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isCompact = screenHeight < 700;
+
     return Scaffold(
       backgroundColor: backgroundColor,
       resizeToAvoidBottomInset: false,
@@ -218,9 +221,9 @@ class TimerScreen extends HookWidget {
           // 2. MAIN CONTENT
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: EdgeInsets.all(isCompact ? 8.0 : 12.0),
               child: Column(
-                spacing: 10,
+                spacing: isCompact ? 4 : 10,
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   // TOP CONTROLS
@@ -354,7 +357,7 @@ class TimerScreen extends HookWidget {
                     currentColor: currentColor,
                   ),
 
-                  SizedBox(height: 10),
+                  SizedBox(height: isCompact ? 4 : 10),
                 ],
               ),
             ),

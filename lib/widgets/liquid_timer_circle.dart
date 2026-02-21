@@ -45,9 +45,10 @@ class LiquidTimerCircle extends HookWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final size = 280.0;
+        final available = math.min(constraints.maxWidth, constraints.maxHeight);
+        final size = available.clamp(180.0, 360.0);
         final center = Offset(size / 2, size / 2);
-        final innerZoneRadius = (size / 2) - 45.0;
+        final innerZoneRadius = (size / 2) - (size * 0.16);
 
         return TweenAnimationBuilder<double>(
           tween: Tween<double>(begin: 0.0, end: fillPercent),
@@ -154,8 +155,8 @@ class LiquidTimerCircle extends HookWidget {
                         trackColor: isDark
                             ? Colors.grey.shade800
                             : Colors.grey.shade100,
-                        strokeWidth: 24.0,
-                        knobRadius: 14.0,
+                        strokeWidth: size * 0.086,
+                        knobRadius: size * 0.05,
                       ),
                     ),
                   ),
