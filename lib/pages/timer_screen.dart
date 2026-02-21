@@ -174,7 +174,6 @@ class TimerScreen extends HookWidget {
     final Curve animCurve = isDragging.value
         ? Curves.easeOut
         : (timerProvider.isRunning ? Curves.linear : Curves.easeOutCubic);
-
     return Scaffold(
       backgroundColor: backgroundColor,
       resizeToAvoidBottomInset: false,
@@ -250,7 +249,35 @@ class TimerScreen extends HookWidget {
                     ),
                   ),
                   if (presetProvider.selectedPreset != null)
-                    const LongDurationButton(),
+                    Row(
+                      children: [
+                        const LongDurationButton(),
+                        // TODO: WIP
+                        IconButton(
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: Text(
+                                  'This will overwrite your current preset duration',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {},
+                                    child: Text('Continue'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {},
+                                    child: Text('Cancel'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          icon: Icon(Icons.check_rounded),
+                        ),
+                      ],
+                    ),
                   PresetSelector(isDark: isDark),
 
                   // BOTTOM CONTROLS

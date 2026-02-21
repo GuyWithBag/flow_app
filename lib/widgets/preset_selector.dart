@@ -20,7 +20,7 @@ class PresetSelector extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            presetProvider.selectedPreset!.name,
+            presetProvider.selectedPreset?.name ?? 'None',
             style: Theme.of(
               context,
             ).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.bold),
