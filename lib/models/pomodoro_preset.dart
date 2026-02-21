@@ -27,6 +27,26 @@ class PomodoroPreset {
     'cycles_before_long_break': cyclesBeforeLongBreak,
   };
 
+  PomodoroPreset copyWith({
+    String? id,
+    String? name,
+    int? focusDuration,
+    int? breakDuration,
+    int? longFocusDuration,
+    int? longBreakDuration,
+    int? cyclesBeforeLongBreak,
+  }) {
+    return PomodoroPreset(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      focusDuration: focusDuration ?? this.focusDuration,
+      breakDuration: breakDuration ?? this.breakDuration,
+      longFocusDuration: longFocusDuration ?? this.longFocusDuration,
+      longBreakDuration: longBreakDuration ?? this.longBreakDuration,
+      cyclesBeforeLongBreak: cyclesBeforeLongBreak ?? this.cyclesBeforeLongBreak,
+    );
+  }
+
   factory PomodoroPreset.fromJson(Map<String, dynamic> json) => PomodoroPreset(
     id: json['id'],
     name: json['name'],

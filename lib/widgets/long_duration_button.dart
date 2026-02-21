@@ -31,7 +31,7 @@ class LongDurationButton extends StatelessWidget {
     final regularDuration = isFocusMode
         ? preset.focusDuration
         : preset.breakDuration;
-    final isActive = timerProvider.totalSeconds == longDuration;
+    final isActive = timerProvider.isLongDuration;
     final label = isFocusMode ? 'Long Focus' : 'Long Break';
 
     return FilterChip(
@@ -40,6 +40,7 @@ class LongDurationButton extends StatelessWidget {
       onSelected: timerProvider.isRunning
           ? null
           : (selected) {
+              timerProvider.setLongDuration(selected);
               if (selected) {
                 timerProvider.setCustomDuration(longDuration);
                 if (timerProvider.fixedScaleDuration < longDuration) {

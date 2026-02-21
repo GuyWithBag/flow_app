@@ -18,6 +18,7 @@ class TimerProvider extends ChangeNotifier {
   bool _isRunning = false;
   TimerType _currentType = TimerType.focus;
   int _completedCycles = 0;
+  bool _isLongDuration = false;
 
   final Map<TimerType, int> _defaultDurations = {
     TimerType.focus: 1500,
@@ -99,6 +100,7 @@ class TimerProvider extends ChangeNotifier {
   bool get isRunning => _isRunning;
   TimerType get currentType => _currentType;
   int get completedCycles => _completedCycles;
+  bool get isLongDuration => _isLongDuration;
   double get progress => _totalSeconds > 0
       ? (_totalSeconds - _remainingSeconds) / _totalSeconds
       : 0;
@@ -185,6 +187,11 @@ class TimerProvider extends ChangeNotifier {
     _saveToStorage();
   }
 
+  void setLongDuration(bool value) {
+    _isLongDuration = value;
+    notifyListeners();
+  }
+
   String get formattedTime {
     final hours = _remainingSeconds ~/ 3600;
     final minutes = (_remainingSeconds % 3600) ~/ 60;
@@ -199,6 +206,7 @@ class TimerProvider extends ChangeNotifier {
   void setTimerType(TimerType type) {
     if (_isRunning) return;
     _currentType = type;
+    _isLongDuration = false;
     _remainingSeconds = _defaultDurations[type]!;
     _totalSeconds = _remainingSeconds;
     notifyListeners();

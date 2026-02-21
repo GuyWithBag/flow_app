@@ -79,6 +79,18 @@ class PresetProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updatePreset(PomodoroPreset updated) async {
+    await _box.put(updated.id, updated);
+    final index = _presets.indexWhere((p) => p.id == updated.id);
+    if (index != -1) {
+      _presets[index] = updated;
+    }
+    if (_selectedPreset?.id == updated.id) {
+      _selectedPreset = updated;
+    }
+    notifyListeners();
+  }
+
   Future<void> deletePreset(String id) async {
     await _box.delete(id);
     _presets.removeWhere((p) => p.id == id);

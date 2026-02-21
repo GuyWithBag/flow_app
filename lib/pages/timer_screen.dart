@@ -252,30 +252,77 @@ class TimerScreen extends HookWidget {
                     Row(
                       children: [
                         const LongDurationButton(),
-                        // TODO: WIP
-                        IconButton(
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: Text(
-                                  'This will overwrite your current preset duration',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () {},
-                                    child: Text('Continue'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {},
-                                    child: Text('Cancel'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                          icon: Icon(Icons.check_rounded),
-                        ),
+                        Builder(builder: (context) {
+                          final preset = presetProvider.selectedPreset!;
+                          final isFocus =
+                              timerProvider.currentType == TimerType.focus;
+                          final isLongActive = timerProvider.isLongDuration;
+                          final currentDuration = timerProvider.totalSeconds;
+
+                          // Determine which preset duration to compare against
+                          final presetDuration = isFocus
+                              ? (isLongActive
+                                  ? preset.longFocusDuration
+                                  : preset.focusDuration)
+                              : (isLongActive
+                                  ? preset.longBreakDuration
+                                  : preset.breakDuration);
+
+                          final hasChanged = currentDuration != presetDuration;
+
+                          if (!hasChanged) return const SizedBox.shrink();
+
+                          final durationLabel = isFocus
+                              ? (isLongActive ? 'long focus' : 'focus')
+                              : (isLongActive ? 'long break' : 'break');
+
+                          return IconButton(
+                            onPressed: timerProvider.isRunning
+                                ? null
+                                : () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: const Text('Update Preset'),
+                                        content: Text(
+                                          'Save the current duration as the $durationLabel duration for "${preset.name}"?',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(ctx),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              final updated = isFocus
+                                                  ? (isLongActive
+                                                      ? preset.copyWith(
+                                                          longFocusDuration:
+                                                              currentDuration)
+                                                      : preset.copyWith(
+                                                          focusDuration:
+                                                              currentDuration))
+                                                  : (isLongActive
+                                                      ? preset.copyWith(
+                                                          longBreakDuration:
+                                                              currentDuration)
+                                                      : preset.copyWith(
+                                                          breakDuration:
+                                                              currentDuration));
+                                              presetProvider
+                                                  .updatePreset(updated);
+                                              Navigator.pop(ctx);
+                                            },
+                                            child: const Text('Save'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                            icon: const Icon(Icons.check_rounded),
+                          );
+                        }),
                       ],
                     ),
                   PresetSelector(isDark: isDark),
