@@ -31,6 +31,11 @@ class PlayPauseButton extends StatelessWidget {
     //     color: Colors.white,
     //   ),
     // );
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isCompact = screenHeight < 700;
+    final buttonSize = isCompact ? 72.0 : 100.0;
+    final iconSize = isCompact ? 38.0 : 52.0;
+
     return IconButton.filled(
       onPressed: () {
         if (timerProvider.isRunning) {
@@ -46,10 +51,10 @@ class PlayPauseButton extends StatelessWidget {
           timerProvider.startTimer();
         }
       },
-      constraints: BoxConstraints.expand(width: 100, height: 100),
+      constraints: BoxConstraints.expand(width: buttonSize, height: buttonSize),
       icon: Icon(
         timerProvider.isRunning ? Icons.pause : Icons.play_arrow_rounded,
-        size: 52,
+        size: iconSize,
         color: Colors.white,
       ),
     );

@@ -51,9 +51,17 @@ class TimerBottomControls extends StatelessWidget {
       }
     }
 
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isCompact = screenHeight < 700;
+    final btnSize = isCompact ? 36.0 : 48.0;
+    final iconSize = isCompact ? 20.0 : 24.0;
+
     final filledFlatButton = IconButton.styleFrom(
       backgroundColor: Theme.of(context).colorScheme.secondary,
       foregroundColor: Theme.of(context).colorScheme.inverseSurface,
+      minimumSize: Size(btnSize, btnSize),
+      maximumSize: Size(btnSize, btnSize),
+      iconSize: iconSize,
     );
 
     return AnimatedSlide(
