@@ -51,7 +51,7 @@ class TimerBottomControls extends StatelessWidget {
       }
     }
 
-    final flatButton = IconButton.styleFrom(
+    final filledFlatButton = IconButton.styleFrom(
       backgroundColor: Theme.of(context).colorScheme.secondary,
       foregroundColor: Theme.of(context).colorScheme.inverseSurface,
     );
@@ -64,42 +64,37 @@ class TimerBottomControls extends StatelessWidget {
         duration: const Duration(milliseconds: 400),
         opacity: controlsVisible.value ? 1.0 : 0.0,
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             // Reset button
             BouncingButton(
               child: IconButton(
                 onPressed: _resetLoop,
                 icon: const Icon(Icons.refresh),
-                style: flatButton,
+                style: filledFlatButton,
               ),
             ),
+            const Spacer(flex: 3),
             // Finish button
-            Expanded(
-              child: Row(
-                spacing: 100,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  BouncingButton(
-                    child: IconButton.filled(
-                      onPressed: _finishSession,
-                      icon: const Icon(Icons.stop),
-                      style: flatButton,
-                    ),
-                  ),
-                  // Play/Pause button
-                  BouncingButton(child: PlayPauseButton()),
-                  // Skip button
-                  BouncingButton(
-                    child: IconButton(
-                      onPressed: _skipCycle,
-                      icon: const Icon(Icons.skip_next),
-                      style: flatButton,
-                    ),
-                  ),
-                ],
+            BouncingButton(
+              child: IconButton.filled(
+                onPressed: _finishSession,
+                icon: const Icon(Icons.stop),
+                style: filledFlatButton,
               ),
             ),
+            const Spacer(flex: 1),
+            // Play/Pause button
+            BouncingButton(child: PlayPauseButton()),
+            const Spacer(flex: 1),
+            // Skip button
+            BouncingButton(
+              child: IconButton(
+                onPressed: _skipCycle,
+                icon: const Icon(Icons.skip_next),
+                style: filledFlatButton,
+              ),
+            ),
+            const Spacer(flex: 3),
             // Settings button
             BouncingButton(
               child: IconButton(
@@ -107,7 +102,7 @@ class TimerBottomControls extends StatelessWidget {
                   _showSettingsSheet(context, timerProvider, isDark);
                 },
                 icon: const Icon(Icons.tune),
-                style: flatButton,
+                style: filledFlatButton,
               ),
             ),
           ],
