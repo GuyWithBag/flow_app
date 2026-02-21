@@ -14,22 +14,34 @@ class PresetSelector extends StatelessWidget {
     final presetProvider = Provider.of<PresetProvider>(context);
     final timerProvider = Provider.of<TimerProvider>(context, listen: false);
 
-    return InkWell(
-      onTap: () =>
-          _showPresetSelector(context, presetProvider, timerProvider, isDark),
-      child: Column(
-        children: [
-          Text(
-            presetProvider.selectedPreset?.name ?? 'None',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.bold),
+    return Center(
+      child: InkWell(
+        onTap: () =>
+            _showPresetSelector(context, presetProvider, timerProvider, isDark),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Column(
+                children: [
+                  Text(
+                    presetProvider.selectedPreset?.name ?? 'None',
+                    style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    'Selected Preset:',
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                ],
+              ),
+              Icon(Icons.arrow_drop_up, size: 30),
+            ],
           ),
-          Text(
-            'Selected Preset:',
-            style: Theme.of(context).textTheme.labelSmall,
-          ),
-        ],
+        ),
       ),
     );
   }
