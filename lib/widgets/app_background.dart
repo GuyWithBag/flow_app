@@ -10,8 +10,8 @@ class AppBackground extends StatelessWidget {
     final url = themeProvider.backgroundImageUrl;
     final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
     final overlayColor = themeProvider.isDarkMode
-        ? Colors.black.withOpacity(0.55)
-        : Colors.white.withOpacity(0.20);
+        ? Colors.black.withValues(alpha: 0.55)
+        : Colors.white.withValues(alpha: 0.20);
 
     if (url != null) {
       return Stack(
