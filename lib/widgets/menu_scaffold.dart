@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class FlowMenuBar extends StatelessWidget {
-  const FlowMenuBar({
+class MenuScaffold extends StatelessWidget {
+  const MenuScaffold({
     super.key,
     required this.title,
     required this.body,

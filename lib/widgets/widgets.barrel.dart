@@ -9,7 +9,7 @@ export 'circular_progress_painter.dart';
 export 'duration_input_section.dart';
 export 'liquid_timer_circle.dart';
 export 'long_duration_button.dart';
-export 'menu_bar.dart';
+export 'menu_scaffold.dart';
 export 'menu_sub_section_title.dart';
 export 'mode_button_content.dart';
 export 'mode_toggle.dart';
