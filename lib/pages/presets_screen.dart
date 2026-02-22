@@ -21,7 +21,7 @@ class PresetsScreen extends HookWidget {
       );
     }
 
-    return FlowMenuBar(
+    return MenuScaffold(
       title: 'Presets',
       actions: [
         IconButton(

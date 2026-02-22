@@ -15,7 +15,7 @@ class AccountScreen extends HookWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final showPlannedMessage = useState(false);
 
-    return FlowMenuBar(
+    return MenuScaffold(
       title: 'Account',
       body: ListView(
         children: [

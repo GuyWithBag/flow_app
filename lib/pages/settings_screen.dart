@@ -12,7 +12,7 @@ class SettingsScreen extends HookWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
-    return FlowMenuBar(
+    return MenuScaffold(
       title: 'Settings',
       body: ListView(
         children: [

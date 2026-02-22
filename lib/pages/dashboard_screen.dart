@@ -31,7 +31,7 @@ class DashboardScreen extends HookWidget {
     final focusColor = themeProvider.getAccentColorFor(TimerType.focus);
     final breakColor = themeProvider.getAccentColorFor(TimerType.breakTime);
 
-    return FlowMenuBar(
+    return MenuScaffold(
       title: 'Dashboard',
       actions: [
         IconButton(

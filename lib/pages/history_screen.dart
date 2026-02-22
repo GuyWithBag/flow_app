@@ -23,7 +23,7 @@ class HistoryScreen extends HookWidget {
         .where((s) => s.completed)
         .toList();
 
-    return FlowMenuBar(
+    return MenuScaffold(
       title: 'History',
       body: sessionProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
