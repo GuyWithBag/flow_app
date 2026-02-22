@@ -13,9 +13,7 @@ class ModeToggle extends StatelessWidget {
     final presetProvider = Provider.of<PresetProvider>(context);
 
     return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(double.infinity),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
 
       child: Row(
         mainAxisSize: MainAxisSize.min,
