@@ -16,24 +16,30 @@ class MainScreen extends HookWidget {
     final currentIndex = useState(1); // Start on Timer screen
     final pageController = usePageController(initialPage: 1);
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
-    final currentAccent = Theme.of(context).colorScheme.primary;
 
-    final screens = <Widget>[
-      const DashboardScreen(),
-      const TimerScreen(),
-      const AccountScreen(),
-    ];
+    final currentAccent = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
       extendBody: true,
       body: Stack(
         children: [
           Positioned.fill(child: AppBackground(themeProvider: themeProvider)),
-          PageView(
+          PageView.builder(
             controller: pageController,
             onPageChanged: (index) => currentIndex.value = index,
-            children: screens,
+            itemCount: 3,
+            itemBuilder: (context, index) {
+              switch (index) {
+                case 0:
+                  return const DashboardScreen();
+                case 1:
+                  return const TimerScreen();
+                case 2:
+                  return const AccountScreen();
+                default:
+                  return const SizedBox.shrink();
+              }
+            },
           ),
         ],
       ),
