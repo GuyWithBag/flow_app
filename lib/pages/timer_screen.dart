@@ -220,160 +220,151 @@ class TimerScreen extends HookWidget {
 
           // 2. MAIN CONTENT
           SafeArea(
-            child: Column(
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.all(isCompact ? 8.0 : 12.0),
-                    child: Column(
-                      spacing: isCompact ? 4 : 10,
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        // TOP CONTROLS
-                        TimerTopControls(
-                          controlsVisible: controlsVisible,
-                          timerProvider: timerProvider,
-                          isDark: isDark,
-                        ),
-
-                        // TIMER CIRCLE
-                        Expanded(
-                          child: Center(
-                            child: AnimatedScale(
-                              duration: const Duration(milliseconds: 500),
-                              curve: Curves.easeInOutCubic,
-                              scale: controlsVisible.value ? 1.0 : 1.15,
-                              child: LiquidTimerCircle(
-                                color: currentColor,
-                                maxDuration: currentMaxDuration,
-                                fillPercent: fillPercent,
-                                waveController: waveController,
-                                isDragging: isDragging,
-                                isDark: isDark,
-                                contrast: timerProvider.waveContrast,
-                                animDuration: animDuration,
-                                animCurve: animCurve,
-                                showInnerLiquid: timerProvider.showInnerLiquid,
-                                controlsVisible: controlsVisible.value,
-                                onCircleTap: toggleControls,
-                              ),
-                            ),
-                          ),
-                        ),
-                        if (presetProvider.selectedPreset != null)
-                          Row(
-                            spacing: 10,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const LongDurationButton(),
-                              Builder(
-                                builder: (context) {
-                                  final preset = presetProvider.selectedPreset!;
-                                  final isFocus =
-                                      timerProvider.currentType ==
-                                      TimerType.focus;
-                                  final isLongActive =
-                                      timerProvider.isLongDuration;
-                                  final currentDuration =
-                                      timerProvider.totalSeconds;
-
-                                  // Determine which preset duration to compare against
-                                  final presetDuration = isFocus
-                                      ? (isLongActive
-                                            ? preset.longFocusDuration
-                                            : preset.focusDuration)
-                                      : (isLongActive
-                                            ? preset.longBreakDuration
-                                            : preset.breakDuration);
-
-                                  final hasChanged =
-                                      currentDuration != presetDuration;
-
-                                  if (!hasChanged) {
-                                    return const SizedBox.shrink();
-                                  }
-
-                                  final durationLabel = isFocus
-                                      ? (isLongActive ? 'long focus' : 'focus')
-                                      : (isLongActive ? 'long break' : 'break');
-
-                                  return IconButton.filled(
-                                    style: filledFlatButton,
-                                    onPressed: timerProvider.isRunning
-                                        ? null
-                                        : () {
-                                            showDialog(
-                                              context: context,
-                                              builder: (ctx) => AlertDialog(
-                                                title: const Text(
-                                                  'Update Preset',
-                                                ),
-                                                content: Text(
-                                                  'Save the current duration as the $durationLabel duration for "${preset.name}"?',
-                                                ),
-                                                actions: [
-                                                  TextButton(
-                                                    onPressed: () =>
-                                                        Navigator.pop(ctx),
-                                                    child: const Text('Cancel'),
-                                                  ),
-                                                  TextButton(
-                                                    onPressed: () {
-                                                      final updated = isFocus
-                                                          ? (isLongActive
-                                                                ? preset.copyWith(
-                                                                    longFocusDuration:
-                                                                        currentDuration,
-                                                                  )
-                                                                : preset.copyWith(
-                                                                    focusDuration:
-                                                                        currentDuration,
-                                                                  ))
-                                                          : (isLongActive
-                                                                ? preset.copyWith(
-                                                                    longBreakDuration:
-                                                                        currentDuration,
-                                                                  )
-                                                                : preset.copyWith(
-                                                                    breakDuration:
-                                                                        currentDuration,
-                                                                  ));
-                                                      presetProvider
-                                                          .updatePreset(
-                                                            updated,
-                                                          );
-                                                      Navigator.pop(ctx);
-                                                    },
-                                                    child: const Text('Save'),
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                          },
-                                    icon: const Icon(Icons.check_rounded),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        PresetSelector(isDark: isDark),
-
-                        // BOTTOM CONTROLS
-                        TimerBottomControls(
-                          controlsVisible: controlsVisible,
-                          isDark: isDark,
-                          timerProvider: timerProvider,
-                          presetProvider: presetProvider,
-                          sessionProvider: sessionProvider,
-                          currentColor: currentColor,
-                        ),
-
-                        SizedBox(height: isCompact ? 4 : 10),
-                      ],
+            child: Expanded(
+              child: Padding(
+                padding: EdgeInsets.all(isCompact ? 8.0 : 12.0),
+                child: Column(
+                  spacing: isCompact ? 4 : 10,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // TOP CONTROLS
+                    TimerTopControls(
+                      controlsVisible: controlsVisible,
+                      timerProvider: timerProvider,
+                      isDark: isDark,
                     ),
-                  ),
+
+                    // TIMER CIRCLE
+                    Expanded(
+                      child: Center(
+                        child: AnimatedScale(
+                          duration: const Duration(milliseconds: 500),
+                          curve: Curves.easeInOutCubic,
+                          scale: controlsVisible.value ? 1.0 : 1.15,
+                          child: LiquidTimerCircle(
+                            color: currentColor,
+                            maxDuration: currentMaxDuration,
+                            fillPercent: fillPercent,
+                            waveController: waveController,
+                            isDragging: isDragging,
+                            isDark: isDark,
+                            contrast: timerProvider.waveContrast,
+                            animDuration: animDuration,
+                            animCurve: animCurve,
+                            showInnerLiquid: timerProvider.showInnerLiquid,
+                            controlsVisible: controlsVisible.value,
+                            onCircleTap: toggleControls,
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (presetProvider.selectedPreset != null)
+                      Row(
+                        spacing: 10,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const LongDurationButton(),
+                          Builder(
+                            builder: (context) {
+                              final preset = presetProvider.selectedPreset!;
+                              final isFocus =
+                                  timerProvider.currentType == TimerType.focus;
+                              final isLongActive = timerProvider.isLongDuration;
+                              final currentDuration =
+                                  timerProvider.totalSeconds;
+
+                              // Determine which preset duration to compare against
+                              final presetDuration = isFocus
+                                  ? (isLongActive
+                                        ? preset.longFocusDuration
+                                        : preset.focusDuration)
+                                  : (isLongActive
+                                        ? preset.longBreakDuration
+                                        : preset.breakDuration);
+
+                              final hasChanged =
+                                  currentDuration != presetDuration;
+
+                              if (!hasChanged) {
+                                return const SizedBox.shrink();
+                              }
+
+                              final durationLabel = isFocus
+                                  ? (isLongActive ? 'long focus' : 'focus')
+                                  : (isLongActive ? 'long break' : 'break');
+
+                              return IconButton.filled(
+                                style: filledFlatButton,
+                                onPressed: timerProvider.isRunning
+                                    ? null
+                                    : () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (ctx) => AlertDialog(
+                                            title: const Text('Update Preset'),
+                                            content: Text(
+                                              'Save the current duration as the $durationLabel duration for "${preset.name}"?',
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.pop(ctx),
+                                                child: const Text('Cancel'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () {
+                                                  final updated = isFocus
+                                                      ? (isLongActive
+                                                            ? preset.copyWith(
+                                                                longFocusDuration:
+                                                                    currentDuration,
+                                                              )
+                                                            : preset.copyWith(
+                                                                focusDuration:
+                                                                    currentDuration,
+                                                              ))
+                                                      : (isLongActive
+                                                            ? preset.copyWith(
+                                                                longBreakDuration:
+                                                                    currentDuration,
+                                                              )
+                                                            : preset.copyWith(
+                                                                breakDuration:
+                                                                    currentDuration,
+                                                              ));
+                                                  presetProvider.updatePreset(
+                                                    updated,
+                                                  );
+                                                  Navigator.pop(ctx);
+                                                },
+                                                child: const Text('Save'),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                icon: const Icon(Icons.check_rounded),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    PresetSelector(isDark: isDark),
+
+                    // BOTTOM CONTROLS
+                    TimerBottomControls(
+                      controlsVisible: controlsVisible,
+                      isDark: isDark,
+                      timerProvider: timerProvider,
+                      presetProvider: presetProvider,
+                      sessionProvider: sessionProvider,
+                      currentColor: currentColor,
+                    ),
+
+                    SizedBox(height: isCompact ? 4 : 10),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ],
