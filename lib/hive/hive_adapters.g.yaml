@@ -23,16 +23,12 @@ types:
         index: 6
   Session:
     typeId: 1
-    nextIndex: 10
+    nextIndex: 14
     fields:
       id:
         index: 0
       userId:
         index: 1
-      type:
-        index: 2
-      duration:
-        index: 3
       startTime:
         index: 4
       endTime:
@@ -45,6 +41,14 @@ types:
         index: 8
       completed:
         index: 9
+      name:
+        index: 10
+      targetLoops:
+        index: 11
+      loops:
+        index: 12
+      currentLoopIndex:
+        index: 13
   UserProfile:
     typeId: 2
     nextIndex: 5

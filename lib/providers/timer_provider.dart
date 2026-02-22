@@ -37,6 +37,8 @@ class TimerProvider extends ChangeNotifier {
   double _waveContrast = 0.8;
   bool _showInnerLiquid = true;
   bool _showBackgroundLiquid = true;
+  bool _autoHideControls = true;
+  bool _autoNameSessions = true;
   String? _customSoundPath;
   bool _playDefaultSound = false;
 
@@ -75,6 +77,8 @@ class TimerProvider extends ChangeNotifier {
       'timer_show_background_liquid',
       defaultValue: true,
     );
+    _autoHideControls = box.get('timer_auto_hide_controls', defaultValue: true);
+    _autoNameSessions = box.get('timer_auto_name_sessions', defaultValue: true);
     _customSoundPath = box.get('timer_custom_sound_path');
     _playDefaultSound = box.get(
       'timer_play_default_sound',
@@ -100,6 +104,8 @@ class TimerProvider extends ChangeNotifier {
     box.put('timer_wave_contrast', _waveContrast);
     box.put('timer_show_inner_liquid', _showInnerLiquid);
     box.put('timer_show_background_liquid', _showBackgroundLiquid);
+    box.put('timer_auto_hide_controls', _autoHideControls);
+    box.put('timer_auto_name_sessions', _autoNameSessions);
     if (_customSoundPath != null) {
       box.put('timer_custom_sound_path', _customSoundPath);
     }
@@ -128,6 +134,8 @@ class TimerProvider extends ChangeNotifier {
   double get waveContrast => _waveContrast;
   bool get showInnerLiquid => _showInnerLiquid;
   bool get showBackgroundLiquid => _showBackgroundLiquid;
+  bool get autoHideControls => _autoHideControls;
+  bool get autoNameSessions => _autoNameSessions;
   String? get customSoundPath => _customSoundPath;
   bool get playDefaultSound => _playDefaultSound;
 
@@ -197,6 +205,18 @@ class TimerProvider extends ChangeNotifier {
 
   void setShowBackgroundLiquid(bool value) {
     _showBackgroundLiquid = value;
+    notifyListeners();
+    _saveToStorage();
+  }
+
+  void setAutoHideControls(bool value) {
+    _autoHideControls = value;
+    notifyListeners();
+    _saveToStorage();
+  }
+
+  void setAutoNameSessions(bool value) {
+    _autoNameSessions = value;
     notifyListeners();
     _saveToStorage();
   }

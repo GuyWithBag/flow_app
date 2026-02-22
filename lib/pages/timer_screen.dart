@@ -49,20 +49,19 @@ class TimerScreen extends HookWidget {
       }
     }
 
-    void resetLoop() {
-      timerProvider.resetLoop();
-      timerProvider.resetTimer();
-      sessionProvider.clearCurrentSession();
-    }
-
     void handleSessionComplete(BuildContext ctx) {
       // Vibrate on every loop/session completion
       Vibration.vibrate(duration: 200);
 
+      // Complete the current loop
+      sessionProvider.completeCurrentLoop(skipped: false);
+
       if (timerProvider.currentType == TimerType.focus) {
         // Focus Finished
         if (timerProvider.currentLoop >= timerProvider.targetLoops) {
-          // All Loops Done — longer vibration + confetti + dialog
+          // All Loops Done — finish session
+          sessionProvider.finishSession();
+
           Vibration.vibrate(duration: 500);
           Confetti.launch(
             ctx,
@@ -77,12 +76,12 @@ class TimerScreen extends HookWidget {
             builder: (_) => AlertDialog(
               title: const Text("Great Flow!"),
               content: Text(
-                "You completed ${timerProvider.targetLoops} sessions.",
+                "You completed ${timerProvider.targetLoops} focus sessions!",
               ),
               actions: [
                 TextButton(
                   onPressed: () {
-                    resetLoop();
+                    timerProvider.resetLoop();
                     Navigator.pop(ctx);
                   },
                   child: const Text("Finish"),
@@ -94,15 +93,14 @@ class TimerScreen extends HookWidget {
         } else {
           // Start Break
           timerProvider.setTimerType(TimerType.breakTime);
+          final preset = presetProvider.selectedPreset;
+
+          sessionProvider.startLoop(
+            type: TimerType.breakTime,
+            duration: preset.breakDuration,
+          );
 
           if (timerProvider.autoStartBreak) {
-            final preset = presetProvider.selectedPreset;
-            sessionProvider.startSession(
-              userId: 'current_user',
-              type: TimerType.breakTime,
-              duration: preset.breakDuration,
-              presetName: preset.name,
-            );
             timerProvider.startTimer();
           }
         }
@@ -110,15 +108,14 @@ class TimerScreen extends HookWidget {
         // Break Finished
         timerProvider.incrementLoop();
         timerProvider.setTimerType(TimerType.focus);
+        final preset = presetProvider.selectedPreset;
+
+        sessionProvider.startLoop(
+          type: TimerType.focus,
+          duration: preset.focusDuration,
+        );
 
         if (timerProvider.autoStartFocus) {
-          final preset = presetProvider.selectedPreset;
-          sessionProvider.startSession(
-            userId: 'current_user',
-            type: TimerType.focus,
-            duration: preset.focusDuration,
-            presetName: preset.name,
-          );
           timerProvider.startTimer();
         }
       }
@@ -129,7 +126,6 @@ class TimerScreen extends HookWidget {
       if (wasRunning.value &&
           !timerProvider.isRunning &&
           timerProvider.remainingSeconds == 0) {
-        sessionProvider.completeCurrentSession();
         WidgetsBinding.instance.addPostFrameCallback((_) {
           handleSessionComplete(context);
         });
@@ -273,7 +269,7 @@ class TimerScreen extends HookWidget {
                     ),
                   ),
                   AnimatedVisibility(
-                    visible: controlsVisible.value,
+                    visible: controlsVisible.value && !timerProvider.isRunning,
                     child: Column(
                       spacing: isCompact ? 4 : 10,
                       children: [

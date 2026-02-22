@@ -591,21 +591,16 @@ class DashboardScreen extends HookWidget {
         ),
         const SizedBox(height: 12),
         ...recentSessions.map((session) {
-          final isFocus = session.type == TimerType.focus;
           return ListTile(
             leading: CircleAvatar(
-              backgroundColor: isFocus ? focusColor : breakColor,
-              child: Icon(
-                isFocus ? Icons.work : Icons.coffee,
-                color: Colors.white,
-                size: 20,
-              ),
+              backgroundColor: focusColor,
+              child: const Icon(Icons.layers, color: Colors.white, size: 20),
             ),
-            title: Text(session.label ?? (isFocus ? 'Focus' : 'Break')),
+            title: Text(session.name),
             subtitle: Text(
               DateFormat('MMM d, h:mm a').format(session.startTime),
             ),
-            trailing: Text(formatDuration(session.duration)),
+            trailing: Text(formatDuration(session.totalDuration)),
           );
         }),
       ],

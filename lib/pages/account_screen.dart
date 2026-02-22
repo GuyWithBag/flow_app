@@ -28,6 +28,7 @@ class AccountScreen extends HookWidget {
           const SizedBox(height: 24),
           _buildGoalsCard(),
           const SizedBox(height: 16),
+          _buildThemeSelector(context, themeProvider),
           _buildSettingsTile(
             context,
             'Settings',
@@ -209,6 +210,96 @@ class AccountScreen extends HookWidget {
             Text(
               '78 / 120 minutes',
               style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThemeSelector(
+    BuildContext context,
+    ThemeProvider themeProvider,
+  ) {
+    String getThemeLabel() {
+      switch (themeProvider.themeBrightness) {
+        case 'light':
+          return 'Light';
+        case 'dark':
+          return 'Dark';
+        case 'system':
+        default:
+          return 'System';
+      }
+    }
+
+    IconData getThemeIcon() {
+      switch (themeProvider.themeBrightness) {
+        case 'light':
+          return Icons.light_mode;
+        case 'dark':
+          return Icons.dark_mode;
+        case 'system':
+        default:
+          return Icons.brightness_auto;
+      }
+    }
+
+    return ListTile(
+      leading: Icon(getThemeIcon()),
+      title: const Text('Theme'),
+      subtitle: Text(getThemeLabel()),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => _showThemeBrightnessDialog(context, themeProvider),
+    );
+  }
+
+  void _showThemeBrightnessDialog(
+    BuildContext context,
+    ThemeProvider themeProvider,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Choose Theme'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RadioListTile<String>(
+              title: const Text('Light'),
+              subtitle: const Text('Always use light theme'),
+              value: 'light',
+              groupValue: themeProvider.themeBrightness,
+              onChanged: (value) {
+                if (value != null) {
+                  themeProvider.setThemeBrightness(value);
+                  Navigator.pop(context);
+                }
+              },
+            ),
+            RadioListTile<String>(
+              title: const Text('Dark'),
+              subtitle: const Text('Always use dark theme'),
+              value: 'dark',
+              groupValue: themeProvider.themeBrightness,
+              onChanged: (value) {
+                if (value != null) {
+                  themeProvider.setThemeBrightness(value);
+                  Navigator.pop(context);
+                }
+              },
+            ),
+            RadioListTile<String>(
+              title: const Text('System'),
+              subtitle: const Text('Follow system setting'),
+              value: 'system',
+              groupValue: themeProvider.themeBrightness,
+              onChanged: (value) {
+                if (value != null) {
+                  themeProvider.setThemeBrightness(value);
+                  Navigator.pop(context);
+                }
+              },
             ),
           ],
         ),

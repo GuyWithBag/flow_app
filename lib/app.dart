@@ -37,6 +37,13 @@ class App extends StatelessWidget {
               themeProvider.updateTimerType(timerType);
             });
           }
+
+          // Update theme based on system brightness if in system mode
+          final brightness = MediaQuery.platformBrightnessOf(context);
+          SchedulerBinding.instance.addPostFrameCallback((_) {
+            themeProvider.updateSystemBrightness(brightness);
+          });
+
           return MaterialApp(
             title: 'Flow',
             debugShowCheckedModeBanner: false,

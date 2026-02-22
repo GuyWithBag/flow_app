@@ -11,6 +11,20 @@ class SessionProvider extends ChangeNotifier {
   List<Session> get sessions => List.unmodifiable(_sessions);
   bool get isLoading => _isLoading;
   Session? get currentSession => _currentSession;
+  bool get isSessionActive => _currentSession != null;
+  Loop? get currentLoop {
+    if (_currentSession == null) return null;
+    if (_currentSession!.loops.isEmpty) return null;
+    if (_currentSession!.currentLoopIndex >= _currentSession!.loops.length) {
+      return null;
+    }
+    return _currentSession!.loops[_currentSession!.currentLoopIndex];
+  }
+
+  int get completedLoopsCount {
+    if (_currentSession == null) return 0;
+    return _currentSession!.loops.where((loop) => loop.completed).length;
+  }
 
   Box<Session> get _box => Hive.box<Session>('sessions');
 
@@ -23,75 +37,72 @@ class SessionProvider extends ChangeNotifier {
   }
 
   int get todayFocusMinutes {
-    return todaySessions
-        .where((s) => s.type == TimerType.focus)
-        .fold<int>(0, (sum, s) => sum + (s.duration ~/ 60));
+    return todaySessions.fold<int>(
+      0,
+      (sum, session) => sum + (session.focusDuration ~/ 60),
+    );
   }
 
   int get todayFocusSeconds {
-    return todaySessions
-        .where((s) => s.type == TimerType.focus)
-        .fold<int>(0, (sum, s) => sum + s.duration);
+    return todaySessions.fold<int>(
+      0,
+      (sum, session) => sum + session.focusDuration,
+    );
   }
 
   int get totalFocusMinutes {
     return _sessions
-        .where((s) => s.type == TimerType.focus && s.completed)
-        .fold<int>(0, (sum, s) => sum + (s.duration ~/ 60));
+        .where((s) => s.completed)
+        .fold<int>(0, (sum, session) => sum + (session.focusDuration ~/ 60));
   }
 
   int get totalFocusSeconds {
     return _sessions
-        .where((s) => s.type == TimerType.focus && s.completed)
-        .fold<int>(0, (sum, s) => sum + s.duration);
+        .where((s) => s.completed)
+        .fold<int>(0, (sum, session) => sum + session.focusDuration);
   }
 
   int get todayBreakMinutes {
-    return todaySessions
-        .where((s) => s.type == TimerType.breakTime)
-        .fold<int>(0, (sum, s) => sum + (s.duration ~/ 60));
+    return todaySessions.fold<int>(
+      0,
+      (sum, session) => sum + (session.breakDuration ~/ 60),
+    );
   }
 
   int get totalBreakMinutes {
     return _sessions
-        .where((s) => s.type == TimerType.breakTime && s.completed)
-        .fold<int>(0, (sum, s) => sum + (s.duration ~/ 60));
+        .where((s) => s.completed)
+        .fold<int>(0, (sum, session) => sum + (session.breakDuration ~/ 60));
   }
 
   int get totalBreakSeconds {
     return _sessions
-        .where((s) => s.type == TimerType.breakTime && s.completed)
-        .fold<int>(0, (sum, s) => sum + s.duration);
+        .where((s) => s.completed)
+        .fold<int>(0, (sum, session) => sum + session.breakDuration);
   }
 
   int get completedSessionCount {
-    return _sessions
-        .where((s) => s.type == TimerType.focus && s.completed)
-        .length;
+    return _sessions.where((s) => s.completed).length;
   }
 
   double get averageSessionMinutes {
-    final focusSessions = _sessions
-        .where((s) => s.type == TimerType.focus && s.completed)
-        .toList();
-    if (focusSessions.isEmpty) return 0;
-    final totalMinutes = focusSessions.fold<int>(
+    final completedSessions = _sessions.where((s) => s.completed).toList();
+    if (completedSessions.isEmpty) return 0;
+    final totalMinutes = completedSessions.fold<int>(
       0,
-      (sum, s) => sum + (s.duration ~/ 60),
+      (sum, s) => sum + (s.totalDuration ~/ 60),
     );
-    return totalMinutes / focusSessions.length;
+    return totalMinutes / completedSessions.length;
   }
 
   double get averageSessionSeconds {
-    final focusSessions = _sessions
-        .where((s) => s.type == TimerType.focus && s.completed)
-        .toList();
-    if (focusSessions.isEmpty) return 0;
-    final totalSeconds = focusSessions.fold<int>(
+    final completedSessions = _sessions.where((s) => s.completed).toList();
+    if (completedSessions.isEmpty) return 0;
+    final totalSeconds = completedSessions.fold<int>(
       0,
-      (sum, s) => sum + s.duration,
+      (sum, s) => sum + s.totalDuration,
     );
-    return totalSeconds / focusSessions.length;
+    return totalSeconds / completedSessions.length;
   }
 
   Map<DateTime, int> get weeklyFocusMinutes {
@@ -124,11 +135,9 @@ class SessionProvider extends ChangeNotifier {
 
   Map<String, int> get presetBreakdown {
     final result = <String, int>{};
-    for (final s in _sessions.where(
-      (s) => s.type == TimerType.focus && s.completed,
-    )) {
+    for (final s in _sessions.where((s) => s.completed)) {
       final name = s.presetName ?? 'Unknown';
-      result[name] = (result[name] ?? 0) + (s.duration ~/ 60);
+      result[name] = (result[name] ?? 0) + (s.focusDuration ~/ 60);
     }
     return result;
   }
@@ -157,12 +166,11 @@ class SessionProvider extends ChangeNotifier {
     return _sessions
         .where(
           (s) =>
-              s.type == TimerType.focus &&
               s.completed &&
               s.startTime.isAfter(date) &&
               s.startTime.isBefore(nextDay),
         )
-        .fold<int>(0, (sum, s) => sum + (s.duration ~/ 60));
+        .fold<int>(0, (sum, s) => sum + (s.focusDuration ~/ 60));
   }
 
   void loadSessions() {
@@ -186,26 +194,66 @@ class SessionProvider extends ChangeNotifier {
     }
   }
 
-  // Start a new session (for timer_screen)
+  // Start a new session with a name and target loops
   void startSession({
     required String userId,
-    required TimerType type,
-    required int duration,
-    String? presetName,
+    required String name,
+    required int targetLoops,
+    required String presetName,
   }) {
     _currentSession = Session(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       userId: userId,
-      type: type,
-      duration: duration,
+      name: name,
+      targetLoops: targetLoops,
       startTime: DateTime.now(),
       presetName: presetName,
+      loops: [],
+      currentLoopIndex: 0,
     );
     notifyListeners();
   }
 
-  // Complete the current session
-  void completeCurrentSession() {
+  // Start a new loop within the current session
+  void startLoop({required TimerType type, required int duration}) {
+    if (_currentSession == null) return;
+
+    final newLoop = Loop(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      type: type,
+      duration: duration,
+      startTime: DateTime.now(),
+    );
+
+    final updatedLoops = List<Loop>.from(_currentSession!.loops)..add(newLoop);
+    _currentSession = _currentSession!.copyWith(
+      loops: updatedLoops,
+      currentLoopIndex: updatedLoops.length - 1,
+    );
+    notifyListeners();
+  }
+
+  // Complete the current loop
+  void completeCurrentLoop({bool skipped = false}) {
+    if (_currentSession == null) return;
+    if (_currentSession!.loops.isEmpty) return;
+
+    final currentIndex = _currentSession!.currentLoopIndex;
+    if (currentIndex >= _currentSession!.loops.length) return;
+
+    final updatedLoops = List<Loop>.from(_currentSession!.loops);
+    updatedLoops[currentIndex] = updatedLoops[currentIndex].copyWith(
+      endTime: DateTime.now(),
+      completed: true,
+      skipped: skipped,
+    );
+
+    _currentSession = _currentSession!.copyWith(loops: updatedLoops);
+    notifyListeners();
+  }
+
+  // Finish the entire session (mark as complete and save)
+  void finishSession() {
     if (_currentSession != null) {
       _currentSession = _currentSession!.copyWith(
         endTime: DateTime.now(),
@@ -220,9 +268,14 @@ class SessionProvider extends ChangeNotifier {
     }
   }
 
-  // Clear the current session (e.g., on reset)
-  void clearCurrentSession() {
+  // Cancel the session without saving
+  void cancelSession() {
     _currentSession = null;
     notifyListeners();
+  }
+
+  // Clear the current session (alias for cancelSession)
+  void clearCurrentSession() {
+    cancelSession();
   }
 }

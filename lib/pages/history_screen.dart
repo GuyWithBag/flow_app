@@ -66,10 +66,8 @@ class HistoryScreen extends HookWidget {
     SessionProvider provider,
   ) {
     final themeProvider = context.watch<ThemeProvider>();
-    final isBreak = session.type == TimerType.breakTime;
-    final color = isBreak
-        ? themeProvider.getAccentColorFor(TimerType.breakTime)
-        : themeProvider.getAccentColorFor(TimerType.focus);
+    final color = themeProvider.getAccentColorFor(TimerType.focus);
+    final completedLoops = session.loops.where((l) => l.completed).length;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -95,7 +93,7 @@ class HistoryScreen extends HookWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      isBreak ? 'Break' : 'Focus',
+                      '$completedLoops Loops',
                       style: TextStyle(
                         color: color,
                         fontWeight: FontWeight.w600,
@@ -120,13 +118,21 @@ class HistoryScreen extends HookWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: 8),
+              Text(
+                session.name,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 12),
               Row(
                 children: [
                   Icon(Icons.timer, size: 18, color: Colors.grey.shade600),
                   const SizedBox(width: 6),
                   Text(
-                    formatDuration(session.duration),
+                    formatDuration(session.totalDuration),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,

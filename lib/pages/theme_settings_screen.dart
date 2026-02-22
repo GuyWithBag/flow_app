@@ -18,18 +18,6 @@ class ThemeSettingsScreen extends HookWidget {
       body: ListView(
         children: [
           const Text(
-            'General',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          SwitchListTile(
-            title: const Text('Dark Mode'),
-            subtitle: const Text('Use dark theme'),
-            value: themeProvider.isDarkMode,
-            onChanged: (_) => themeProvider.toggleDarkMode(),
-          ),
-          const SizedBox(height: 24),
-          const Text(
             'Focus Theme',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),

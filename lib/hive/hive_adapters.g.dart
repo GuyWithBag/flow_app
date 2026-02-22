@@ -71,9 +71,11 @@ class SessionAdapter extends TypeAdapter<Session> {
     return Session(
       id: fields[0] as String,
       userId: fields[1] as String,
-      type: fields[2] as TimerType,
-      duration: (fields[3] as num).toInt(),
+      name: fields[10] as String,
+      targetLoops: (fields[11] as num).toInt(),
       startTime: fields[4] as DateTime,
+      loops: fields[12] == null ? const [] : (fields[12] as List).cast<Loop>(),
+      currentLoopIndex: fields[13] == null ? 0 : (fields[13] as num).toInt(),
       endTime: fields[5] as DateTime?,
       presetName: fields[6] as String?,
       label: fields[7] as String?,
@@ -85,15 +87,11 @@ class SessionAdapter extends TypeAdapter<Session> {
   @override
   void write(BinaryWriter writer, Session obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
       ..write(obj.userId)
-      ..writeByte(2)
-      ..write(obj.type)
-      ..writeByte(3)
-      ..write(obj.duration)
       ..writeByte(4)
       ..write(obj.startTime)
       ..writeByte(5)
@@ -105,7 +103,15 @@ class SessionAdapter extends TypeAdapter<Session> {
       ..writeByte(8)
       ..write(obj.progressNote)
       ..writeByte(9)
-      ..write(obj.completed);
+      ..write(obj.completed)
+      ..writeByte(10)
+      ..write(obj.name)
+      ..writeByte(11)
+      ..write(obj.targetLoops)
+      ..writeByte(12)
+      ..write(obj.loops)
+      ..writeByte(13)
+      ..write(obj.currentLoopIndex);
   }
 
   @override

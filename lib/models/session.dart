@@ -1,10 +1,12 @@
-import 'timer_type.dart';
+import 'loop.dart';
 
 class Session {
   final String id;
   final String userId;
-  final TimerType type;
-  final int duration;
+  final String name;
+  final int targetLoops;
+  final List<Loop> loops;
+  final int currentLoopIndex;
   final DateTime startTime;
   final DateTime? endTime;
   final String? presetName;
@@ -15,9 +17,11 @@ class Session {
   Session({
     required this.id,
     required this.userId,
-    required this.type,
-    required this.duration,
+    required this.name,
+    required this.targetLoops,
     required this.startTime,
+    this.loops = const [],
+    this.currentLoopIndex = 0,
     this.endTime,
     this.presetName,
     this.label,
@@ -25,11 +29,38 @@ class Session {
     this.completed = false,
   });
 
+  // Calculate total duration from all completed loops
+  int get totalDuration {
+    return loops
+        .where((loop) => loop.completed)
+        .fold<int>(0, (sum, loop) => sum + loop.duration);
+  }
+
+  // Calculate focus duration from completed focus loops
+  int get focusDuration {
+    return loops
+        .where(
+          (loop) => loop.completed && loop.type.toString().contains('focus'),
+        )
+        .fold<int>(0, (sum, loop) => sum + loop.duration);
+  }
+
+  // Calculate break duration from completed break loops
+  int get breakDuration {
+    return loops
+        .where(
+          (loop) => loop.completed && loop.type.toString().contains('break'),
+        )
+        .fold<int>(0, (sum, loop) => sum + loop.duration);
+  }
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'user_id': userId,
-    'type': type.toString(),
-    'duration': duration,
+    'name': name,
+    'target_loops': targetLoops,
+    'loops': loops.map((loop) => loop.toJson()).toList(),
+    'current_loop_index': currentLoopIndex,
     'start_time': startTime.toIso8601String(),
     'end_time': endTime?.toIso8601String(),
     'preset_name': presetName,
@@ -41,10 +72,14 @@ class Session {
   factory Session.fromJson(Map<String, dynamic> json) => Session(
     id: json['id'],
     userId: json['user_id'],
-    type: json['type'].toString().contains('focus')
-        ? TimerType.focus
-        : TimerType.breakTime,
-    duration: json['duration'],
+    name: json['name'],
+    targetLoops: json['target_loops'],
+    loops:
+        (json['loops'] as List<dynamic>?)
+            ?.map((loopJson) => Loop.fromJson(loopJson))
+            .toList() ??
+        [],
+    currentLoopIndex: json['current_loop_index'] ?? 0,
     startTime: DateTime.parse(json['start_time']),
     endTime: json['end_time'] != null ? DateTime.parse(json['end_time']) : null,
     presetName: json['preset_name'],
@@ -54,6 +89,9 @@ class Session {
   );
 
   Session copyWith({
+    String? name,
+    List<Loop>? loops,
+    int? currentLoopIndex,
     String? label,
     String? progressNote,
     DateTime? endTime,
@@ -62,8 +100,10 @@ class Session {
     return Session(
       id: id,
       userId: userId,
-      type: type,
-      duration: duration,
+      name: name ?? this.name,
+      targetLoops: targetLoops,
+      loops: loops ?? this.loops,
+      currentLoopIndex: currentLoopIndex ?? this.currentLoopIndex,
       startTime: startTime,
       endTime: endTime ?? this.endTime,
       presetName: presetName,

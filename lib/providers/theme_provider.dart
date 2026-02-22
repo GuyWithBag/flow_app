@@ -6,6 +6,7 @@ import 'package:flow_app/models/models.barrel.dart';
 
 class ThemeProvider extends ChangeNotifier {
   bool _isDarkMode = false;
+  String _themeBrightness = 'system'; // 'light', 'dark', 'system'
   int _dailyGoalMinutes = 120;
   TimerType _currentTimerType = TimerType.focus;
 
@@ -26,6 +27,7 @@ class ThemeProvider extends ChangeNotifier {
   };
 
   bool get isDarkMode => _isDarkMode;
+  String get themeBrightness => _themeBrightness;
   int get dailyGoalMinutes => _dailyGoalMinutes;
   TimerType get currentTimerType => _currentTimerType;
 
@@ -75,6 +77,26 @@ class ThemeProvider extends ChangeNotifier {
     _savePreferences();
   }
 
+  void setThemeBrightness(String brightness) {
+    _themeBrightness = brightness;
+    // Update _isDarkMode based on the brightness and system setting
+    if (brightness == 'light') {
+      _isDarkMode = false;
+    } else if (brightness == 'dark') {
+      _isDarkMode = true;
+    }
+    // For 'system', _isDarkMode will be updated by updateSystemBrightness
+    notifyListeners();
+    _savePreferences();
+  }
+
+  void updateSystemBrightness(Brightness brightness) {
+    if (_themeBrightness == 'system') {
+      _isDarkMode = brightness == Brightness.dark;
+      notifyListeners();
+    }
+  }
+
   void setDailyGoalMinutes(int minutes) {
     _dailyGoalMinutes = minutes.clamp(15, 600);
     notifyListeners();
@@ -106,6 +128,7 @@ class ThemeProvider extends ChangeNotifier {
     final box = Hive.box('settings');
 
     box.put('dark_mode', _isDarkMode);
+    box.put('theme_brightness', _themeBrightness);
     box.put('daily_goal_minutes', _dailyGoalMinutes);
 
     box.put(
@@ -140,6 +163,7 @@ class ThemeProvider extends ChangeNotifier {
     final box = Hive.box('settings');
 
     _isDarkMode = box.get('dark_mode', defaultValue: false);
+    _themeBrightness = box.get('theme_brightness', defaultValue: 'system');
     _dailyGoalMinutes = box.get('daily_goal_minutes', defaultValue: 120);
 
     _modeBackgroundThemes[TimerType.focus] = box.get(

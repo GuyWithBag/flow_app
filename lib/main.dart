@@ -54,22 +54,15 @@ void main() async {
   NotificationService.instance.onActionReceived = (actionId) {
     switch (actionId) {
       case NotificationService.actionStop:
-        sessionProvider.completeCurrentSession();
+        sessionProvider.finishSession();
         timerProvider.resetLoop();
         timerProvider.resetTimer();
-        sessionProvider.clearCurrentSession();
         break;
       case NotificationService.actionPlayPause:
         if (timerProvider.isRunning) {
           timerProvider.pauseTimer();
         } else {
-          final preset = presetProvider.selectedPreset;
-          sessionProvider.startSession(
-            userId: 'current_user',
-            type: timerProvider.currentType,
-            duration: timerProvider.totalSeconds,
-            presetName: preset.name,
-          );
+          // Resume timer if session exists, otherwise notification shouldn't appear
           timerProvider.startTimer();
         }
         break;

@@ -20,26 +20,122 @@ class TimerBottomControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     void resetLoop() {
-      timerProvider.resetLoop();
-      timerProvider.resetTimer();
-      sessionProvider.clearCurrentSession();
+      if (sessionProvider.isSessionActive) {
+        // Show confirmation dialog if session is active
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Reset Session?'),
+            content: const Text(
+              'This will cancel the current session and discard all progress.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  sessionProvider.cancelSession();
+                  timerProvider.resetLoop();
+                  timerProvider.resetTimer();
+                  Navigator.pop(ctx);
+                },
+                child: const Text('Reset'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        // No active session, just reset
+        timerProvider.resetLoop();
+        timerProvider.resetTimer();
+      }
     }
 
     void finishSession() {
-      sessionProvider.completeCurrentSession();
-      timerProvider.resetLoop();
-      timerProvider.resetTimer();
-      sessionProvider.clearCurrentSession();
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('End Session'),
+          content: const Text(
+            'Do you want to finish this session (save progress) or cancel it (discard)?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                sessionProvider.cancelSession();
+                timerProvider.resetLoop();
+                timerProvider.resetTimer();
+                Navigator.pop(ctx);
+              },
+              child: const Text('Cancel Session'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                sessionProvider.finishSession();
+                timerProvider.resetLoop();
+                timerProvider.resetTimer();
+                Navigator.pop(ctx);
+              },
+              child: const Text('Finish Session'),
+            ),
+          ],
+        ),
+      );
     }
 
     void skipCycle() {
-      sessionProvider.clearCurrentSession();
+      // Complete current loop as skipped
+      sessionProvider.completeCurrentLoop(skipped: true);
       timerProvider.resetTimer();
+
       if (timerProvider.currentType == TimerType.focus) {
+        // After skipping focus, go to break
         timerProvider.setTimerType(TimerType.breakTime);
+        final preset = presetProvider.selectedPreset;
+        sessionProvider.startLoop(
+          type: TimerType.breakTime,
+          duration: preset.breakDuration,
+        );
+        if (timerProvider.autoStartBreak) {
+          timerProvider.startTimer();
+        }
       } else {
+        // After skipping break, go to next focus
         timerProvider.incrementLoop();
         timerProvider.setTimerType(TimerType.focus);
+
+        // Check if we've completed all loops
+        if (timerProvider.currentLoop > timerProvider.targetLoops) {
+          sessionProvider.finishSession();
+          timerProvider.resetLoop();
+          // Show completion dialog
+          showDialog(
+            context: context,
+            builder: (_) => AlertDialog(
+              title: const Text("Great Flow!"),
+              content: Text(
+                "You completed ${timerProvider.targetLoops} focus sessions!",
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Finish"),
+                ),
+              ],
+            ),
+          );
+        } else {
+          final preset = presetProvider.selectedPreset;
+          sessionProvider.startLoop(
+            type: TimerType.focus,
+            duration: preset.focusDuration,
+          );
+          if (timerProvider.autoStartFocus) {
+            timerProvider.startTimer();
+          }
+        }
       }
     }
 
@@ -68,7 +164,7 @@ class TimerBottomControls extends StatelessWidget {
         const Spacer(flex: 3),
         BouncingButton(
           child: IconButton.filled(
-            onPressed: finishSession,
+            onPressed: sessionProvider.isSessionActive ? finishSession : null,
             icon: const Icon(Icons.stop),
             style: filledFlatButton,
           ),
@@ -111,7 +207,6 @@ class TimerBottomControls extends StatelessWidget {
           initialChildSize: 0.6,
           minChildSize: 0.3,
           maxChildSize: 0.9,
-
           builder: (context, scrollController) {
             return TimerSettingsMenu(
               timerProvider: timerProvider,

@@ -160,6 +160,20 @@ class TimerSettingsMenu extends StatelessWidget {
                 activeThumbColor: accentColor,
               ),
               const SizedBox(height: 16),
+              const MenuSubsectionTitle(title: "Session"),
+              SwitchListTile(
+                title: const Text("Auto-name Sessions"),
+                subtitle: const Text(
+                  "Automatically name sessions with date/time",
+                ),
+                value: timerProvider.autoNameSessions,
+                onChanged: (val) {
+                  timerProvider.setAutoNameSessions(val);
+                  setState(() {});
+                },
+                activeThumbColor: accentColor,
+              ),
+              const SizedBox(height: 16),
               const MenuSubsectionTitle(title: "Controls"),
               SwitchListTile(
                 title: const Text("Auto-hide Controls"),
