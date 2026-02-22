@@ -30,9 +30,6 @@ class ModeToggle extends StatelessWidget {
           presetProvider.selectedPreset.breakDuration,
         );
       }
-
-      print(toType);
-      print(themeProvider.currentTimerType);
     }
 
     return Opacity(
