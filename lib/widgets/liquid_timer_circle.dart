@@ -101,74 +101,76 @@ class LiquidTimerCircle extends HookWidget {
                   );
                 }
               },
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // 1. Shadow
-                  Container(
-                    width: size,
-                    height: size,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isDark ? Colors.grey.shade900 : Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: color.withValues(alpha: isDark ? 0.2 : 0.3),
-                          blurRadius: currentBlur,
-                          spreadRadius: 2,
-                        ),
-                      ],
+              child: RepaintBoundary(
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // 1. Shadow
+                    Container(
+                      width: size,
+                      height: size,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isDark ? Colors.grey.shade900 : Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            color: color.withValues(alpha: isDark ? 0.2 : 0.3),
+                            blurRadius: currentBlur,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
 
-                  // 2. INNER LIQUID
-                  if (showInnerLiquid)
-                    ClipOval(
-                      child: SizedBox(
-                        width: size - 10,
-                        height: size - 10,
-                        child: AnimatedBuilder(
-                          animation: waveController,
-                          builder: (context, child) {
-                            return CustomPaint(
-                              painter: LiquidWavePainter(
-                                waveValue: waveController.value,
-                                fillPercent: animatedProgress,
-                                color: color.withValues(alpha: contrast),
-                                waveHeight: 12.0,
-                                waveFrequency: 2.0,
-                              ),
-                            );
-                          },
+                    // 2. INNER LIQUID
+                    if (showInnerLiquid)
+                      ClipOval(
+                        child: SizedBox(
+                          width: size - 10,
+                          height: size - 10,
+                          child: AnimatedBuilder(
+                            animation: waveController,
+                            builder: (context, child) {
+                              return CustomPaint(
+                                painter: LiquidWavePainter(
+                                  waveValue: waveController.value,
+                                  fillPercent: animatedProgress,
+                                  color: color.withValues(alpha: contrast),
+                                  waveHeight: 12.0,
+                                  waveFrequency: 2.0,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+
+                    // 3. Ring
+                    SizedBox(
+                      width: size,
+                      height: size,
+                      child: CustomPaint(
+                        painter: TimerPainter(
+                          progress: animatedProgress,
+                          color: color,
+                          trackColor: isDark
+                              ? Colors.grey.shade800
+                              : Colors.grey.shade100,
+                          strokeWidth: size * 0.086,
+                          knobRadius: size * 0.05,
                         ),
                       ),
                     ),
 
-                  // 3. Ring
-                  SizedBox(
-                    width: size,
-                    height: size,
-                    child: CustomPaint(
-                      painter: TimerPainter(
-                        progress: animatedProgress,
-                        color: color,
-                        trackColor: isDark
-                            ? Colors.grey.shade800
-                            : Colors.grey.shade100,
-                        strokeWidth: size * 0.086,
-                        knobRadius: size * 0.05,
-                      ),
+                    // 4. Text Content
+                    TimerCircleContent(
+                      formattedTime: timerProvider.formattedTime,
+                      isRunning: timerProvider.isRunning,
+                      controlsVisible: controlsVisible,
+                      isDark: isDark,
                     ),
-                  ),
-
-                  // 4. Text Content
-                  TimerCircleContent(
-                    formattedTime: timerProvider.formattedTime,
-                    isRunning: timerProvider.isRunning,
-                    controlsVisible: controlsVisible,
-                    isDark: isDark,
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },

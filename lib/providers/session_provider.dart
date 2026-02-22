@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_confetti/flutter_confetti.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 
 import '../models/models.barrel.dart';
@@ -253,7 +254,7 @@ class SessionProvider extends ChangeNotifier {
   }
 
   // Finish the entire session (mark as complete and save)
-  void finishSession() {
+  void finishSession([BuildContext? context]) {
     if (_currentSession != null) {
       _currentSession = _currentSession!.copyWith(
         endTime: DateTime.now(),
@@ -264,6 +265,13 @@ class SessionProvider extends ChangeNotifier {
       _box.put(_currentSession!.id, _currentSession!);
       // Clear current session
       _currentSession = null;
+
+      if (context == null) return;
+      // Show confetti celebration
+      Confetti.launch(
+        context,
+        options: const ConfettiOptions(particleCount: 100, spread: 70, y: 0.6),
+      );
       notifyListeners();
     }
   }

@@ -26,6 +26,11 @@ class ThemeProvider extends ChangeNotifier {
     TimerType.breakTime: const Color(0xFFFFB74D),
   };
 
+  // Theme caching to prevent unnecessary rebuilds
+  ThemeData? _cachedTheme;
+  Color? _cachedAccentColor;
+  bool? _cachedDarkMode;
+
   bool get isDarkMode => _isDarkMode;
   String get themeBrightness => _themeBrightness;
   int get dailyGoalMinutes => _dailyGoalMinutes;
@@ -48,31 +53,57 @@ class ThemeProvider extends ChangeNotifier {
 
   ThemeData get currentTheme {
     final accent = accentColor;
-    if (_isDarkMode) {
-      return darkTheme.copyWith(
-        colorScheme: ColorScheme.dark(
-          primary: accent,
-          secondary: Colors.grey.shade800,
-        ),
-      );
+
+    // Return cached theme if nothing changed
+    if (_cachedTheme != null &&
+        _cachedAccentColor == accent &&
+        _cachedDarkMode == _isDarkMode) {
+      return _cachedTheme!;
     }
 
-    return lightTheme.copyWith(
-      colorScheme: ColorScheme.light(
-        primary: accent,
-        secondary: Colors.grey.shade200,
-      ),
-    );
+    // Rebuild and cache
+    final newTheme = _isDarkMode
+        ? darkTheme.copyWith(
+            colorScheme: ColorScheme.dark(
+              primary: accent,
+              secondary: Colors.grey.shade800,
+            ),
+          )
+        : lightTheme.copyWith(
+            colorScheme: ColorScheme.light(
+              primary: accent,
+              secondary: Colors.grey.shade200,
+            ),
+          );
+
+    _cachedTheme = newTheme;
+    _cachedAccentColor = accent;
+    _cachedDarkMode = _isDarkMode;
+
+    return newTheme;
   }
 
   void updateTimerType(TimerType type) {
     if (_currentTimerType == type) return;
+
+    // Check if theme actually changes
+    final oldColor = _modeAccentColors[_currentTimerType];
+    final newColor = _modeAccentColors[type];
+    final oldTheme = _modeBackgroundThemes[_currentTimerType];
+    final newTheme = _modeBackgroundThemes[type];
+
     _currentTimerType = type;
-    notifyListeners();
+
+    // Only notify if visual theme is different
+    if (oldColor != newColor || oldTheme != newTheme) {
+      _cachedTheme = null; // Invalidate cache
+      notifyListeners();
+    }
   }
 
   void toggleDarkMode() {
     _isDarkMode = !_isDarkMode;
+    _cachedTheme = null; // Invalidate cache
     notifyListeners();
     _savePreferences();
   }
@@ -86,14 +117,19 @@ class ThemeProvider extends ChangeNotifier {
       _isDarkMode = true;
     }
     // For 'system', _isDarkMode will be updated by updateSystemBrightness
+    _cachedTheme = null; // Invalidate cache
     notifyListeners();
     _savePreferences();
   }
 
   void updateSystemBrightness(Brightness brightness) {
     if (_themeBrightness == 'system') {
-      _isDarkMode = brightness == Brightness.dark;
-      notifyListeners();
+      final newDarkMode = brightness == Brightness.dark;
+      if (_isDarkMode != newDarkMode) {
+        _isDarkMode = newDarkMode;
+        _cachedTheme = null; // Invalidate cache
+        notifyListeners();
+      }
     }
   }
 
@@ -120,6 +156,7 @@ class ThemeProvider extends ChangeNotifier {
 
   void setModeAccentColor(TimerType type, Color color) {
     _modeAccentColors[type] = color;
+    _cachedTheme = null; // Invalidate cache
     notifyListeners();
     _savePreferences();
   }

@@ -60,7 +60,7 @@ class TimerScreen extends HookWidget {
         // Focus Finished
         if (timerProvider.currentLoop >= timerProvider.targetLoops) {
           // All Loops Done — finish session
-          sessionProvider.finishSession();
+          sessionProvider.finishSession(ctx);
 
           Vibration.vibrate(duration: 500);
           Confetti.launch(
@@ -73,6 +73,7 @@ class TimerScreen extends HookWidget {
           );
           showDialog(
             context: ctx,
+            barrierDismissible: false,
             builder: (_) => AlertDialog(
               title: const Text("Great Flow!"),
               content: Text(
@@ -89,7 +90,6 @@ class TimerScreen extends HookWidget {
               ],
             ),
           );
-          timerProvider.resetLoop();
         } else {
           // Start Break
           timerProvider.setTimerType(TimerType.breakTime);
@@ -102,6 +102,7 @@ class TimerScreen extends HookWidget {
 
           if (timerProvider.autoStartBreak) {
             timerProvider.startTimer();
+            themeProvider.updateTimerType(TimerType.breakTime);
           }
         }
       } else {
@@ -117,6 +118,7 @@ class TimerScreen extends HookWidget {
 
         if (timerProvider.autoStartFocus) {
           timerProvider.startTimer();
+          themeProvider.updateTimerType(TimerType.focus);
         }
       }
     }
@@ -193,30 +195,32 @@ class TimerScreen extends HookWidget {
           // 1. BACKGROUND LIQUID
           if (timerProvider.showBackgroundLiquid)
             Positioned.fill(
-              child: TweenAnimationBuilder<double>(
-                tween: Tween<double>(begin: 0.0, end: fillPercent),
-                duration: Duration(milliseconds: animDuration),
-                curve: animCurve,
-                builder: (context, animatedBgFill, child) {
-                  return AnimatedBuilder(
-                    animation: waveController,
-                    builder: (context, child) {
-                      return CustomPaint(
-                        painter: LiquidWavePainter(
-                          waveValue: waveController.value,
-                          fillPercent: animatedBgFill,
-                          color: currentColor.withValues(
-                            alpha: (timerProvider.waveContrast - 0.2 <= 0)
-                                ? 0.1
-                                : timerProvider.waveContrast - 0.2,
+              child: RepaintBoundary(
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween<double>(begin: 0.0, end: fillPercent),
+                  duration: Duration(milliseconds: animDuration),
+                  curve: animCurve,
+                  builder: (context, animatedBgFill, child) {
+                    return AnimatedBuilder(
+                      animation: waveController,
+                      builder: (context, child) {
+                        return CustomPaint(
+                          painter: LiquidWavePainter(
+                            waveValue: waveController.value,
+                            fillPercent: animatedBgFill,
+                            color: currentColor.withValues(
+                              alpha: (timerProvider.waveContrast - 0.2 <= 0)
+                                  ? 0.1
+                                  : timerProvider.waveContrast - 0.2,
+                            ),
+                            waveHeight: 25.0,
+                            waveFrequency: 1.2,
                           ),
-                          waveHeight: 25.0,
-                          waveFrequency: 1.2,
-                        ),
-                      );
-                    },
-                  );
-                },
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
             ),
 

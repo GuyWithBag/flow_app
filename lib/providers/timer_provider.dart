@@ -302,6 +302,15 @@ class TimerProvider extends ChangeNotifier {
     NotificationService.instance.cancelTimerNotification();
   }
 
+  void resetTimerToPreset(PomodoroPreset preset) {
+    resetTimer();
+    final isFocus = _currentType == TimerType.focus;
+    final duration = _isLongDuration
+        ? (isFocus ? preset.longFocusDuration : preset.longBreakDuration)
+        : (isFocus ? preset.focusDuration : preset.breakDuration);
+    setCustomDuration(duration);
+  }
+
   void _completeTimer() {
     _timer?.cancel();
     _isRunning = false;

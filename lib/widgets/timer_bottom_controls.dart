@@ -38,7 +38,9 @@ class TimerBottomControls extends StatelessWidget {
                 onPressed: () {
                   sessionProvider.cancelSession();
                   timerProvider.resetLoop();
-                  timerProvider.resetTimer();
+                  timerProvider.resetTimerToPreset(
+                    presetProvider.selectedPreset,
+                  );
                   Navigator.pop(ctx);
                 },
                 child: const Text('Reset'),
@@ -49,7 +51,7 @@ class TimerBottomControls extends StatelessWidget {
       } else {
         // No active session, just reset
         timerProvider.resetLoop();
-        timerProvider.resetTimer();
+        timerProvider.resetTimerToPreset(presetProvider.selectedPreset);
       }
     }
 
@@ -66,16 +68,16 @@ class TimerBottomControls extends StatelessWidget {
               onPressed: () {
                 sessionProvider.cancelSession();
                 timerProvider.resetLoop();
-                timerProvider.resetTimer();
+                timerProvider.resetTimerToPreset(presetProvider.selectedPreset);
                 Navigator.pop(ctx);
               },
               child: const Text('Cancel Session'),
             ),
             ElevatedButton(
               onPressed: () {
-                sessionProvider.finishSession();
+                sessionProvider.finishSession(context);
                 timerProvider.resetLoop();
-                timerProvider.resetTimer();
+                timerProvider.resetTimerToPreset(presetProvider.selectedPreset);
                 Navigator.pop(ctx);
               },
               child: const Text('Finish Session'),
@@ -88,7 +90,7 @@ class TimerBottomControls extends StatelessWidget {
     void skipCycle() {
       // Complete current loop as skipped
       sessionProvider.completeCurrentLoop(skipped: true);
-      timerProvider.resetTimer();
+      timerProvider.resetTimerToPreset(presetProvider.selectedPreset);
 
       if (timerProvider.currentType == TimerType.focus) {
         // After skipping focus, go to break
@@ -108,7 +110,7 @@ class TimerBottomControls extends StatelessWidget {
 
         // Check if we've completed all loops
         if (timerProvider.currentLoop > timerProvider.targetLoops) {
-          sessionProvider.finishSession();
+          sessionProvider.finishSession(context);
           timerProvider.resetLoop();
           // Show completion dialog
           showDialog(

@@ -14,8 +14,9 @@ class MainScreen extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final currentIndex = useState(1); // Start on Timer screen
+    final pageController = usePageController(initialPage: 1);
     final themeProvider = Provider.of<ThemeProvider>(context);
-
+    
     final currentAccent = Theme.of(context).colorScheme.primary;
 
     final screens = <Widget>[
@@ -25,12 +26,15 @@ class MainScreen extends HookWidget {
     ];
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
       extendBody: true,
       body: Stack(
         children: [
           Positioned.fill(child: AppBackground(themeProvider: themeProvider)),
-          IndexedStack(index: currentIndex.value, children: screens),
+          PageView(
+            controller: pageController,
+            onPageChanged: (index) => currentIndex.value = index,
+            children: screens,
+          ),
         ],
       ),
       bottomNavigationBar: ClipRect(
@@ -39,7 +43,14 @@ class MainScreen extends HookWidget {
           child: BottomNavigationBar(
             backgroundColor: Theme.of(context).cardColor.withAlpha(100),
             currentIndex: currentIndex.value,
-            onTap: (index) => currentIndex.value = index,
+            onTap: (index) {
+              currentIndex.value = index;
+              pageController.animateToPage(
+                index,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            },
             selectedItemColor: currentAccent,
             type: BottomNavigationBarType.fixed,
             elevation: 0,

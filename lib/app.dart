@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 
 import 'pages/pages.barrel.dart';
 import 'providers/providers.barrel.dart';
 
-class App extends StatelessWidget {
+class App extends StatefulWidget {
   const App({
     super.key,
     required this.themeProvider,
@@ -20,22 +19,50 @@ class App extends StatelessWidget {
   final TimerProvider timerProvider;
 
   @override
+  State<App> createState() => _AppState();
+}
+
+class _AppState extends State<App> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangePlatformBrightness() {
+    super.didChangePlatformBrightness();
+    // Only update if theme is set to 'system'
+    if (widget.themeProvider.themeBrightness == 'system') {
+      final brightness =
+          WidgetsBinding.instance.platformDispatcher.platformBrightness;
+      widget.themeProvider.updateSystemBrightness(brightness);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => timerProvider),
-        ChangeNotifierProvider(create: (_) => themeProvider),
+        ChangeNotifierProvider(create: (_) => widget.timerProvider),
+        ChangeNotifierProvider(create: (_) => widget.themeProvider),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => sessionProvider),
-        ChangeNotifierProvider(create: (_) => presetProvider),
+        ChangeNotifierProvider(create: (_) => widget.sessionProvider),
+        ChangeNotifierProvider(create: (_) => widget.presetProvider),
       ],
-      // This is to update the Theme
-      child: Consumer2<ThemeProvider, TimerProvider>(
-        builder: (context, themeProvider2, timerProvider2, _) {
+      // Only watch ThemeProvider - not TimerProvider
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) {
           return MaterialApp(
             title: 'Flow',
             debugShowCheckedModeBanner: false,
-            theme: themeProvider2.currentTheme,
+            theme: themeProvider.currentTheme,
             home: const MainScreen(),
           );
         },

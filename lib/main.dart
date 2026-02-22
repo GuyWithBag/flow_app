@@ -56,7 +56,7 @@ void main() async {
       case NotificationService.actionStop:
         sessionProvider.finishSession();
         timerProvider.resetLoop();
-        timerProvider.resetTimer();
+        timerProvider.resetTimerToPreset(presetProvider.selectedPreset);
         break;
       case NotificationService.actionPlayPause:
         if (timerProvider.isRunning) {
@@ -68,7 +68,7 @@ void main() async {
         break;
       case NotificationService.actionSkip:
         sessionProvider.clearCurrentSession();
-        timerProvider.resetTimer();
+        timerProvider.resetTimerToPreset(presetProvider.selectedPreset);
         if (timerProvider.currentType == TimerType.focus) {
           timerProvider.setTimerType(TimerType.breakTime);
         } else {
@@ -77,7 +77,7 @@ void main() async {
         }
         break;
       case NotificationService.actionReset:
-        timerProvider.resetTimer();
+        timerProvider.resetTimerToPreset(presetProvider.selectedPreset);
         break;
     }
   };
