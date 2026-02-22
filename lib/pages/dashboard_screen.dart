@@ -2,6 +2,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flow_app/models/models.barrel.dart';
 import 'package:flow_app/pages/pages.barrel.dart';
 import 'package:flow_app/providers/providers.barrel.dart';
+import 'package:flow_app/shared/format_duration.dart';
+import 'package:flow_app/widgets/widgets.barrel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:intl/intl.dart';
@@ -10,8 +12,6 @@ import 'package:provider/provider.dart';
 class DashboardScreen extends HookWidget {
   const DashboardScreen({super.key});
 
-  static const _focusColor = Color(0xFF66BB6A);
-  static const _breakColor = Color(0xFFFFB74D);
   static const _presetColors = [
     Color(0xFF66BB6A),
     Color(0xFF42A5F5),
@@ -28,45 +28,40 @@ class DashboardScreen extends HookWidget {
     final themeProvider = context.watch<ThemeProvider>();
     final showMonthly = useState(false);
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: const Text('Dashboard'),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        scrolledUnderElevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.history),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const HistoryScreen()),
-              );
-            },
-          ),
-        ],
-      ),
+    final focusColor = themeProvider.getAccentColorFor(TimerType.focus);
+    final breakColor = themeProvider.getAccentColorFor(TimerType.breakTime);
+
+    return FlowMenuBar(
+      title: 'Dashboard',
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.history),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const HistoryScreen()),
+            );
+          },
+        ),
+      ],
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16 + kToolbarHeight, 16, 16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildDailyProgress(sessionProvider, themeProvider),
+            _buildDailyProgress(sessionProvider, themeProvider, focusColor),
             const SizedBox(height: 16),
             _buildStreakCard(sessionProvider, themeProvider),
             const SizedBox(height: 16),
-            _buildStatsRow(sessionProvider),
+            _buildStatsRow(sessionProvider, focusColor),
             const SizedBox(height: 24),
-            _buildBarChartSection(sessionProvider, showMonthly),
+            _buildBarChartSection(sessionProvider, showMonthly, focusColor),
             const SizedBox(height: 24),
             _buildPresetBreakdown(sessionProvider),
             const SizedBox(height: 24),
-            _buildFocusBreakRatio(sessionProvider),
+            _buildFocusBreakRatio(sessionProvider, focusColor, breakColor),
             const SizedBox(height: 24),
-            _buildRecentActivity(sessionProvider),
+            _buildRecentActivity(sessionProvider, focusColor, breakColor),
           ],
         ),
       ),
@@ -76,10 +71,13 @@ class DashboardScreen extends HookWidget {
   Widget _buildDailyProgress(
     SessionProvider sessionProvider,
     ThemeProvider themeProvider,
+    Color focusColor,
   ) {
-    final goal = themeProvider.dailyGoalMinutes;
-    final current = sessionProvider.todayFocusMinutes;
-    final progress = goal > 0 ? (current / goal).clamp(0.0, 1.0) : 0.0;
+    final goalSeconds = themeProvider.dailyGoalMinutes * 60;
+    final currentSeconds = sessionProvider.todayFocusSeconds;
+    final progress = goalSeconds > 0
+        ? (currentSeconds / goalSeconds).clamp(0.0, 1.0)
+        : 0.0;
     final percent = (progress * 100).round();
 
     return Card(
@@ -99,7 +97,7 @@ class DashboardScreen extends HookWidget {
                     value: progress,
                     strokeWidth: 8,
                     backgroundColor: Colors.grey.shade200,
-                    valueColor: const AlwaysStoppedAnimation(_focusColor),
+                    valueColor: AlwaysStoppedAnimation(focusColor),
                   ),
                   Center(
                     child: Text(
@@ -124,7 +122,7 @@ class DashboardScreen extends HookWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '$current / $goal minutes',
+                    '${formatDuration(currentSeconds)} / ${formatDuration(goalSeconds)}',
                     style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                   ),
                 ],
@@ -184,13 +182,13 @@ class DashboardScreen extends HookWidget {
     );
   }
 
-  Widget _buildStatsRow(SessionProvider provider) {
+  Widget _buildStatsRow(SessionProvider provider, Color focusColor) {
     return Row(
       children: [
         Expanded(
           child: _buildStatCard(
             'Total Focus',
-            '${provider.totalFocusMinutes}m',
+            formatDuration(provider.totalFocusSeconds),
             Icons.timer,
             const Color(0xFF42A5F5),
           ),
@@ -201,14 +199,14 @@ class DashboardScreen extends HookWidget {
             'Sessions',
             '${provider.completedSessionCount}',
             Icons.check_circle_outline,
-            _focusColor,
+            focusColor,
           ),
         ),
         const SizedBox(width: 8),
         Expanded(
           child: _buildStatCard(
             'Avg Length',
-            '${provider.averageSessionMinutes.round()}m',
+            formatDuration(provider.averageSessionSeconds.round()),
             Icons.trending_up,
             const Color(0xFFAB47BC),
           ),
@@ -256,6 +254,7 @@ class DashboardScreen extends HookWidget {
   Widget _buildBarChartSection(
     SessionProvider provider,
     ValueNotifier<bool> showMonthly,
+    Color focusColor,
   ) {
     final data = showMonthly.value
         ? provider.monthlyFocusMinutes
@@ -301,7 +300,7 @@ class DashboardScreen extends HookWidget {
                       touchTooltipData: BarTouchTooltipData(
                         getTooltipItem: (group, groupIndex, rod, rodIndex) {
                           return BarTooltipItem(
-                            '${rod.toY.round()}m',
+                            formatDuration(rod.toY.round() * 60),
                             const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -339,8 +338,9 @@ class DashboardScreen extends HookWidget {
                           showTitles: true,
                           getTitlesWidget: (value, meta) {
                             final index = value.toInt();
-                            if (index < 0 || index >= entries.length)
+                            if (index < 0 || index >= entries.length) {
                               return const SizedBox.shrink();
+                            }
                             final date = entries[index].key;
                             final label = showMonthly.value
                                 ? (index % 5 == 0
@@ -369,7 +369,7 @@ class DashboardScreen extends HookWidget {
                         barRods: [
                           BarChartRodData(
                             toY: entry.value.value.toDouble(),
-                            color: _focusColor,
+                            color: focusColor,
                             width: showMonthly.value ? 6 : 20,
                             borderRadius: const BorderRadius.vertical(
                               top: Radius.circular(4),
@@ -438,6 +438,7 @@ class DashboardScreen extends HookWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: entries.asMap().entries.map((entry) {
                   final color = _presetColors[entry.key % _presetColors.length];
+                  final minutes = entry.value.value;
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 3),
                     child: Row(
@@ -453,7 +454,7 @@ class DashboardScreen extends HookWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '${entry.value.key} (${entry.value.value}m)',
+                          '${entry.value.key} (${formatDuration(minutes * 60)})',
                           style: const TextStyle(fontSize: 12),
                         ),
                       ],
@@ -468,16 +469,20 @@ class DashboardScreen extends HookWidget {
     );
   }
 
-  Widget _buildFocusBreakRatio(SessionProvider provider) {
-    final focusMin = provider.totalFocusMinutes;
-    final breakMin = provider.todayBreakMinutes;
-    final total = focusMin + breakMin;
+  Widget _buildFocusBreakRatio(
+    SessionProvider provider,
+    Color focusColor,
+    Color breakColor,
+  ) {
+    final focusSec = provider.totalFocusSeconds;
+    final breakSec = provider.totalBreakSeconds;
+    final total = focusSec + breakSec;
 
     if (total == 0) {
       return const SizedBox.shrink();
     }
 
-    final focusPercent = (focusMin / total * 100).round();
+    final focusPercent = (focusSec / total * 100).round();
     final breakPercent = 100 - focusPercent;
 
     return Column(
@@ -499,8 +504,8 @@ class DashboardScreen extends HookWidget {
                     centerSpaceRadius: 30,
                     sections: [
                       PieChartSectionData(
-                        value: focusMin.toDouble(),
-                        color: _focusColor,
+                        value: focusSec.toDouble(),
+                        color: focusColor,
                         radius: 50,
                         title: '$focusPercent%',
                         titleStyle: const TextStyle(
@@ -510,8 +515,8 @@ class DashboardScreen extends HookWidget {
                         ),
                       ),
                       PieChartSectionData(
-                        value: breakMin.toDouble(),
-                        color: _breakColor,
+                        value: breakSec.toDouble(),
+                        color: breakColor,
                         radius: 50,
                         title: '$breakPercent%',
                         titleStyle: const TextStyle(
@@ -529,9 +534,17 @@ class DashboardScreen extends HookWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildLegendItem('Focus', _focusColor, '${focusMin}m'),
+                  _buildLegendItem(
+                    'Focus',
+                    focusColor,
+                    formatDuration(focusSec),
+                  ),
                   const SizedBox(height: 8),
-                  _buildLegendItem('Break', _breakColor, '${breakMin}m'),
+                  _buildLegendItem(
+                    'Break',
+                    breakColor,
+                    formatDuration(breakSec),
+                  ),
                 ],
               ),
             ],
@@ -559,7 +572,11 @@ class DashboardScreen extends HookWidget {
     );
   }
 
-  Widget _buildRecentActivity(SessionProvider provider) {
+  Widget _buildRecentActivity(
+    SessionProvider provider,
+    Color focusColor,
+    Color breakColor,
+  ) {
     final recentSessions = provider.sessions
         .where((s) => s.completed)
         .take(3)
@@ -575,22 +592,21 @@ class DashboardScreen extends HookWidget {
         ),
         const SizedBox(height: 12),
         ...recentSessions.map((session) {
+          final isFocus = session.type == TimerType.focus;
           return ListTile(
             leading: CircleAvatar(
-              backgroundColor: session.type == TimerType.focus
-                  ? _focusColor
-                  : _breakColor,
+              backgroundColor: isFocus ? focusColor : breakColor,
               child: Icon(
-                session.type == TimerType.focus ? Icons.work : Icons.coffee,
+                isFocus ? Icons.work : Icons.coffee,
                 color: Colors.white,
                 size: 20,
               ),
             ),
-            title: Text(session.label ?? 'Session'),
+            title: Text(session.label ?? (isFocus ? 'Focus' : 'Break')),
             subtitle: Text(
               DateFormat('MMM d, h:mm a').format(session.startTime),
             ),
-            trailing: Text('${session.duration ~/ 60}m'),
+            trailing: Text(formatDuration(session.duration)),
           );
         }),
       ],

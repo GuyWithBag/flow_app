@@ -1,5 +1,7 @@
 import 'package:flow_app/models/models.barrel.dart';
 import 'package:flow_app/providers/providers.barrel.dart';
+import 'package:flow_app/shared/format_duration.dart';
+import 'package:flow_app/widgets/widgets.barrel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:intl/intl.dart';
@@ -21,27 +23,14 @@ class HistoryScreen extends HookWidget {
         .where((s) => s.completed)
         .toList();
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: const Text('History'),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        scrolledUnderElevation: 0,
-      ),
+    return FlowMenuBar(
+      title: 'History',
       body: sessionProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : completedSessions.isEmpty
           ? _buildEmptyState()
           : ListView.builder(
-              padding: const EdgeInsets.fromLTRB(
-                16,
-                16 + kToolbarHeight,
-                16,
-                16,
-              ),
+              padding: const EdgeInsets.all(16),
               itemCount: completedSessions.length,
               itemBuilder: (context, index) {
                 final session = completedSessions[index];
@@ -77,8 +66,11 @@ class HistoryScreen extends HookWidget {
     Session session,
     SessionProvider provider,
   ) {
+    final themeProvider = context.watch<ThemeProvider>();
     final isBreak = session.type == TimerType.breakTime;
-    final color = isBreak ? const Color(0xFFFFB74D) : const Color(0xFF66BB6A);
+    final color = isBreak
+        ? themeProvider.getAccentColorFor(TimerType.breakTime)
+        : themeProvider.getAccentColorFor(TimerType.focus);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -135,7 +127,7 @@ class HistoryScreen extends HookWidget {
                   Icon(Icons.timer, size: 18, color: Colors.grey.shade600),
                   const SizedBox(width: 6),
                   Text(
-                    '${session.duration ~/ 60} minutes',
+                    formatDuration(session.duration),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
