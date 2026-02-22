@@ -3,7 +3,10 @@
     "allow": [
       "Bash(flutter analyze:*)",
       "Bash(where:*)",
-      "mcp__acp__Edit"
+      "mcp__acp__Edit",
+      "mcp__acp__Bash",
+      "mcp__acp__Write",
+      "WebFetch(domain:pub.dev)"
     ]
   }
 }

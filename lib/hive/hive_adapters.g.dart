@@ -217,6 +217,8 @@ class SoundTypeAdapter extends TypeAdapter<SoundType> {
         return SoundType.bird;
       case 3:
         return SoundType.none;
+      case 4:
+        return SoundType.custom;
       default:
         return SoundType.bell;
     }
@@ -233,6 +235,8 @@ class SoundTypeAdapter extends TypeAdapter<SoundType> {
         writer.writeByte(2);
       case SoundType.none:
         writer.writeByte(3);
+      case SoundType.custom:
+        writer.writeByte(4);
     }
   }
 

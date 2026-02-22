@@ -2,3 +2,5 @@
 
 // Barrel files
 export 'enums/enums.barrel.dart';
+// Other files
+export 'theme.dart';

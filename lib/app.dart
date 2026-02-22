@@ -10,17 +10,19 @@ class App extends StatelessWidget {
     required this.themeProvider,
     required this.presetProvider,
     required this.sessionProvider,
+    required this.timerProvider,
   });
 
   final ThemeProvider themeProvider;
   final PresetProvider presetProvider;
   final SessionProvider sessionProvider;
+  final TimerProvider timerProvider;
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => TimerProvider()),
+        ChangeNotifierProvider(create: (_) => timerProvider),
         ChangeNotifierProvider(create: (_) => themeProvider),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => sessionProvider),

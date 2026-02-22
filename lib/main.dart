@@ -9,6 +9,7 @@ import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'app.dart';
 import 'hive/hive_registrar.g.dart';
 import 'providers/providers.barrel.dart';
+import 'services/notification_service.dart';
 
 // ============================================================================
 // MAIN APP ENTRY POINT
@@ -33,8 +34,9 @@ void main() async {
   //   anonKey: 'YOUR_SUPABASE_ANON_KEY',
   // );
 
-  // TODO: Initialize notifications
-  // await NotificationService.initialize();
+  // Initialize notifications
+  await NotificationService.instance.initialize();
+  await NotificationService.instance.requestPermissions();
 
   // Load persisted state from Hive
   final themeProvider = ThemeProvider();
@@ -46,11 +48,53 @@ void main() async {
   final sessionProvider = SessionProvider();
   sessionProvider.loadSessions();
 
+  final timerProvider = TimerProvider();
+
+  // Wire notification action buttons to timer controls
+  NotificationService.instance.onActionReceived = (actionId) {
+    switch (actionId) {
+      case NotificationService.actionStop:
+        sessionProvider.completeCurrentSession();
+        timerProvider.resetLoop();
+        timerProvider.resetTimer();
+        sessionProvider.clearCurrentSession();
+        break;
+      case NotificationService.actionPlayPause:
+        if (timerProvider.isRunning) {
+          timerProvider.pauseTimer();
+        } else {
+          final preset = presetProvider.selectedPreset;
+          sessionProvider.startSession(
+            userId: 'current_user',
+            type: timerProvider.currentType,
+            duration: timerProvider.totalSeconds,
+            presetName: preset.name,
+          );
+          timerProvider.startTimer();
+        }
+        break;
+      case NotificationService.actionSkip:
+        sessionProvider.clearCurrentSession();
+        timerProvider.resetTimer();
+        if (timerProvider.currentType == TimerType.focus) {
+          timerProvider.setTimerType(TimerType.breakTime);
+        } else {
+          timerProvider.incrementLoop();
+          timerProvider.setTimerType(TimerType.focus);
+        }
+        break;
+      case NotificationService.actionReset:
+        timerProvider.resetTimer();
+        break;
+    }
+  };
+
   runApp(
     App(
       themeProvider: themeProvider,
       presetProvider: presetProvider,
       sessionProvider: sessionProvider,
+      timerProvider: timerProvider,
     ),
   );
 }

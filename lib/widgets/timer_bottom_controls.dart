@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flow_app/models/models.barrel.dart';
 import 'package:flow_app/providers/providers.barrel.dart';
 import 'package:flow_app/shared/enums/enums.barrel.dart';
@@ -233,18 +234,37 @@ class TimerBottomControls extends StatelessWidget {
                         border: OutlineInputBorder(),
                       ),
                       items: SoundType.values.map((s) {
-                        return DropdownMenuItem(
-                          value: s,
-                          child: Text(
-                            s.toString().split('.').last.toUpperCase(),
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (val) {
-                        if (val != null) {
-                          timerProvider.setSelectedSound(val);
-                          setState(() {});
+                        String label = s
+                            .toString()
+                            .split('.')
+                            .last
+                            .toUpperCase();
+                        if (s == SoundType.custom &&
+                            timerProvider.customSoundPath != null) {
+                          final fileName = timerProvider.customSoundPath!
+                              .split('/')
+                              .last;
+                          label = 'CUSTOM ($fileName)';
                         }
+                        return DropdownMenuItem(value: s, child: Text(label));
+                      }).toList(),
+                      onChanged: (val) async {
+                        if (val == null) return;
+                        if (val == SoundType.custom) {
+                          final result = await FilePicker.platform.pickFiles(
+                            type: FileType.audio,
+                          );
+                          if (result != null &&
+                              result.files.single.path != null) {
+                            timerProvider.setCustomSoundPath(
+                              result.files.single.path!,
+                            );
+                            timerProvider.setSelectedSound(SoundType.custom);
+                          }
+                        } else {
+                          timerProvider.setSelectedSound(val);
+                        }
+                        setState(() {});
                       },
                     ),
                     const Divider(),

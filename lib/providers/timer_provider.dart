@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 
 import '../models/models.barrel.dart';
+import '../services/notification_service.dart';
 import '../shared/enums/enums.barrel.dart';
 
 class TimerProvider extends ChangeNotifier {
@@ -36,6 +37,7 @@ class TimerProvider extends ChangeNotifier {
   double _waveContrast = 0.8;
   bool _showInnerLiquid = true;
   bool _showBackgroundLiquid = true;
+  String? _customSoundPath;
 
   void _loadFromStorage() {
     final box = Hive.box('settings');
@@ -72,6 +74,7 @@ class TimerProvider extends ChangeNotifier {
       'timer_show_background_liquid',
       defaultValue: true,
     );
+    _customSoundPath = box.get('timer_custom_sound_path');
   }
 
   void _saveToStorage() {
@@ -92,6 +95,9 @@ class TimerProvider extends ChangeNotifier {
     box.put('timer_wave_contrast', _waveContrast);
     box.put('timer_show_inner_liquid', _showInnerLiquid);
     box.put('timer_show_background_liquid', _showBackgroundLiquid);
+    if (_customSoundPath != null) {
+      box.put('timer_custom_sound_path', _customSoundPath);
+    }
   }
 
   // --- TIMER GETTERS ---
@@ -116,6 +122,7 @@ class TimerProvider extends ChangeNotifier {
   double get waveContrast => _waveContrast;
   bool get showInnerLiquid => _showInnerLiquid;
   bool get showBackgroundLiquid => _showBackgroundLiquid;
+  String? get customSoundPath => _customSoundPath;
 
   // --- CONFIG SETTERS ---
   void setAutoStartBreak(bool value) {
@@ -187,6 +194,12 @@ class TimerProvider extends ChangeNotifier {
     _saveToStorage();
   }
 
+  void setCustomSoundPath(String? path) {
+    _customSoundPath = path;
+    notifyListeners();
+    _saveToStorage();
+  }
+
   void setLongDuration(bool value) {
     _isLongDuration = value;
     notifyListeners();
@@ -229,6 +242,7 @@ class TimerProvider extends ChangeNotifier {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_remainingSeconds > 0) {
         _remainingSeconds--;
+        _updateTimerNotification();
         notifyListeners();
       } else {
         _completeTimer();
@@ -236,13 +250,14 @@ class TimerProvider extends ChangeNotifier {
     });
 
     notifyListeners();
-    // TODO: Play start sound
+    _showTimerNotification();
   }
 
   void pauseTimer() {
     _isRunning = false;
     _timer?.cancel();
     notifyListeners();
+    _updateTimerNotification();
   }
 
   void resetTimer() {
@@ -251,15 +266,30 @@ class TimerProvider extends ChangeNotifier {
     _remainingSeconds = _defaultDurations[_currentType]!;
     _totalSeconds = _remainingSeconds;
     notifyListeners();
+    NotificationService.instance.cancelTimerNotification();
   }
 
   void _completeTimer() {
     _timer?.cancel();
     _isRunning = false;
 
-    // TODO: Play completion sound
-    // TODO: Show notification
-    // Session completion is handled by SessionProvider
+    // Play completion sound
+    NotificationService.instance.playCompletionSound(
+      _selectedSound,
+      customSoundPath: _customSoundPath,
+    );
+
+    // Show completion notification
+    final label = _currentType == TimerType.focus ? 'Focus' : 'Break';
+    NotificationService.instance.showCompletionNotification(
+      title: '$label Complete!',
+      body: _currentType == TimerType.focus
+          ? 'Great work! Time for a break.'
+          : 'Break is over. Ready to focus?',
+    );
+
+    // Cancel the ongoing timer notification
+    NotificationService.instance.cancelTimerNotification();
 
     if (_currentType == TimerType.focus) {
       _completedCycles++;
@@ -267,15 +297,28 @@ class TimerProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
 
-    // Auto-switch logic
-    // if (_currentType == TimerType.focus && _completedCycles % 4 == 0) {
-    //   // Long break after 4 cycles
-    // } else if (_currentType == TimerType.focus) {
-    //   setTimerType(TimerType.breakTime);
-    // } else {
-    //   setTimerType(TimerType.focus);
-    // }
+  // --- NOTIFICATION HELPERS ---
+
+  String get _notificationTitle =>
+      'Flow — ${_currentType == TimerType.focus ? 'Focus' : 'Break'}';
+
+  void _showTimerNotification() {
+    NotificationService.instance.showTimerNotification(
+      title: _notificationTitle,
+      body: formattedTime,
+      isRunning: _isRunning,
+    );
+  }
+
+  void _updateTimerNotification() {
+    final status = _isRunning ? formattedTime : '$formattedTime (Paused)';
+    NotificationService.instance.showTimerNotification(
+      title: _notificationTitle,
+      body: status,
+      isRunning: _isRunning,
+    );
   }
 
   @override
