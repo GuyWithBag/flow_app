@@ -1,6 +1,7 @@
 import 'package:flow_app/models/models.barrel.dart';
 import 'package:flow_app/pages/pages.barrel.dart';
 import 'package:flow_app/providers/providers.barrel.dart';
+import 'package:flow_app/shared/ad_helper.dart';
 import 'package:flow_app/widgets/widgets.barrel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -23,28 +24,41 @@ class AccountScreen extends HookWidget {
               authProvider.currentUser != null) ...[
             _buildProfileHeader(authProvider.currentUser!),
           ] else ...[
+            // TODO: REPLACE WITH REAL BANNER AD - See AD_IMPLEMENTATION.md
+            // Ad placeholder for guest users
+            const AdPlaceholder(height: 60),
+            const SizedBox(height: 8),
             _buildGuestHeader(themeProvider),
           ],
           const SizedBox(height: 24),
           _buildGoalsCard(),
+
           const SizedBox(height: 16),
           _buildThemeSelector(context, themeProvider),
           _buildSettingsTile(
             context,
             'Settings',
             Icons.settings,
-            () => Navigator.push(
+            () => AdHelper.maybeShowAdAndNavigate(
               context,
-              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              adProbability: 0.5,
+              onNavigate: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              ),
             ),
           ),
           _buildSettingsTile(
             context,
             'Presets',
             Icons.bookmark,
-            () => Navigator.push(
+            () => AdHelper.maybeShowAdAndNavigate(
               context,
-              MaterialPageRoute(builder: (_) => const PresetsScreen()),
+              adProbability: 0.5,
+              onNavigate: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PresetsScreen()),
+              ),
             ),
           ),
           const SizedBox(height: 24),
@@ -88,6 +102,9 @@ class AccountScreen extends HookWidget {
                   ),
                 ),
               ),
+            const SizedBox(height: 16),
+            // TODO: Replace with real in-app purchase when ready
+            _buildRemoveAdsCard(context),
           ],
         ],
       ),
@@ -212,6 +229,124 @@ class AccountScreen extends HookWidget {
               style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRemoveAdsCard(BuildContext context) {
+    // TODO: Replace with actual in-app purchase logic
+    // Check purchase status from PurchaseProvider
+    // final purchaseProvider = Provider.of<PurchaseProvider>(context);
+    // if (purchaseProvider.isAdFree) return const SizedBox.shrink();
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFFFFD54F), // Amber
+            Color(0xFFFF9800), // Orange
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFFF9800).withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            // TODO: Implement in-app purchase flow
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Remove Ads'),
+                content: const Text(
+                  'In-app purchase to remove ads will be available soon!\n\n'
+                  'This feature is currently under development.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('OK'),
+                  ),
+                ],
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.workspace_premium,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'Go Premium',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(width: 6),
+                          Icon(Icons.star, color: Colors.white, size: 18),
+                        ],
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Remove ads & unlock features',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Upgrade',
+                    style: TextStyle(
+                      color: Color(0xFFFF9800),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

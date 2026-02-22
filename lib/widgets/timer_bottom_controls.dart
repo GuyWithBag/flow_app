@@ -1,5 +1,6 @@
 import 'package:flow_app/models/models.barrel.dart';
 import 'package:flow_app/providers/providers.barrel.dart';
+import 'package:flow_app/shared/ad_helper.dart';
 import 'package:flow_app/widgets/widgets.barrel.dart';
 import 'package:flutter/material.dart';
 
@@ -185,7 +186,11 @@ class TimerBottomControls extends StatelessWidget {
         BouncingButton(
           child: IconButton(
             onPressed: () {
-              _showSettingsSheet(context, timerProvider);
+              AdHelper.maybeShowAdAndNavigate(
+                context,
+                adProbability: 0.5,
+                onNavigate: () => _showSettingsSheet(context, timerProvider),
+              );
             },
             icon: const Icon(Icons.tune),
             style: filledFlatButton,
