@@ -47,10 +47,10 @@ class LiquidTimerCircle extends HookWidget {
         final available = math.min(constraints.maxWidth, constraints.maxHeight);
         final size = available.clamp(180.0, 360.0);
         final center = Offset(size / 2, size / 2);
-        // Inner zone for tap-to-open picker (reduced to expand grab area)
-        final innerZoneRadius = (size / 2) - (size * 0.16);
-        // Expanded grab zone - allows grabbing further inside the circle
-        final grabZoneRadius = innerZoneRadius - (size * 0.08);
+        // Inner zone for tap-to-open picker (when paused) / tap-to-toggle-controls (when running)
+        final innerZoneRadius = (size / 2) - (size * 0.18);
+        // Grab zone - only claim gesture in outer ring area
+        final grabZoneRadius = (size / 2) - (size * 0.12);
 
         return TweenAnimationBuilder<double>(
           tween: Tween<double>(begin: 0.0, end: fillPercent),
