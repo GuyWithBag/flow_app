@@ -190,202 +190,204 @@ class TimerPage extends HookWidget {
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
-          // 1. BACKGROUND LIQUID
-          if (timerProvider.showBackgroundLiquid)
-            Positioned.fill(
-              child: RepaintBoundary(
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween<double>(begin: 0.0, end: fillPercent),
-                  duration: Duration(milliseconds: animDuration),
-                  curve: animCurve,
-                  builder: (context, animatedBgFill, child) {
-                    return AnimatedBuilder(
-                      animation: waveController,
-                      builder: (context, child) {
-                        return CustomPaint(
-                          painter: LiquidWavePainter(
-                            waveValue: waveController.value,
-                            fillPercent: animatedBgFill,
-                            color: currentColor.withValues(
-                              alpha: (timerProvider.waveContrast - 0.2 <= 0)
-                                  ? 0.1
-                                  : timerProvider.waveContrast - 0.2,
+            // 1. BACKGROUND LIQUID
+            if (timerProvider.showBackgroundLiquid)
+              Positioned.fill(
+                child: RepaintBoundary(
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween<double>(begin: 0.0, end: fillPercent),
+                    duration: Duration(milliseconds: animDuration),
+                    curve: animCurve,
+                    builder: (context, animatedBgFill, child) {
+                      return AnimatedBuilder(
+                        animation: waveController,
+                        builder: (context, child) {
+                          return CustomPaint(
+                            painter: LiquidWavePainter(
+                              waveValue: waveController.value,
+                              fillPercent: animatedBgFill,
+                              color: currentColor.withValues(
+                                alpha: (timerProvider.waveContrast - 0.2 <= 0)
+                                    ? 0.1
+                                    : timerProvider.waveContrast - 0.2,
+                              ),
+                              waveHeight: 25.0,
+                              waveFrequency: 1.2,
                             ),
-                            waveHeight: 25.0,
-                            waveFrequency: 1.2,
-                          ),
-                        );
-                      },
-                    );
-                  },
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
 
-          // 2. MAIN CONTENT
-          SafeArea(
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: isCompact ? 15.0 : 20.0,
-                vertical: isCompact ? 15 : 20,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  // TOP CONTROLS
-                  AnimatedVisibility(
-                    visible: controlsVisible.value,
-                    child: TimerTopControls(
-                      timerProvider: timerProvider,
-                      showPresetSelector: true,
+            // 2. MAIN CONTENT
+            SafeArea(
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isCompact ? 15.0 : 20.0,
+                  vertical: isCompact ? 15 : 20,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // TOP CONTROLS
+                    AnimatedVisibility(
+                      visible: controlsVisible.value,
+                      child: TimerTopControls(
+                        timerProvider: timerProvider,
+                        showPresetSelector: true,
+                      ),
                     ),
-                  ),
-                  Spacer(),
-                  AnimatedVisibility(
-                    visible: controlsVisible.value,
-                    child: ModeToggle(),
-                  ),
-                  // TIMER CIRCLE
-                  Expanded(
-                    flex: 6,
-                    child: Center(
-                      child: AnimatedScale(
-                        duration: const Duration(milliseconds: 500),
-                        curve: Curves.easeInOutCubic,
-                        scale: controlsVisible.value ? 0.9 : 1.05,
-                        child: LiquidTimerCircle(
-                          color: currentColor,
-                          maxDuration: currentMaxDuration,
-                          fillPercent: fillPercent,
-                          waveController: waveController,
-                          isDragging: isDragging,
-                          contrast: timerProvider.waveContrast,
-                          animDuration: animDuration,
-                          animCurve: animCurve,
-                          showInnerLiquid: timerProvider.showInnerLiquid,
-                          controlsVisible: controlsVisible.value,
-                          onCircleTap: toggleControls,
+                    Spacer(),
+                    AnimatedVisibility(
+                      visible: controlsVisible.value,
+                      child: ModeToggle(),
+                    ),
+                    // TIMER CIRCLE
+                    Expanded(
+                      flex: 6,
+                      child: Center(
+                        child: AnimatedScale(
+                          duration: const Duration(milliseconds: 500),
+                          curve: Curves.easeInOutCubic,
+                          scale: controlsVisible.value ? 0.9 : 1.05,
+                          child: LiquidTimerCircle(
+                            color: currentColor,
+                            maxDuration: currentMaxDuration,
+                            fillPercent: fillPercent,
+                            waveController: waveController,
+                            isDragging: isDragging,
+                            contrast: timerProvider.waveContrast,
+                            animDuration: animDuration,
+                            animCurve: animCurve,
+                            showInnerLiquid: timerProvider.showInnerLiquid,
+                            controlsVisible: controlsVisible.value,
+                            onCircleTap: toggleControls,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  AnimatedVisibility(
-                    visible: controlsVisible.value && !timerProvider.isRunning,
-                    child: Column(
-                      spacing: isCompact ? 4 : 10,
-                      children: [
-                        Row(
-                          spacing: 10,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const LongDurationButton(),
-                            Builder(
-                              builder: (context) {
-                                final preset = presetProvider.selectedPreset;
-                                final isFocus =
-                                    timerProvider.currentType ==
-                                    TimerType.focus;
-                                final isLongActive =
-                                    timerProvider.isLongDuration;
-                                final currentDuration =
-                                    timerProvider.totalSeconds;
+                    AnimatedVisibility(
+                      visible:
+                          controlsVisible.value && !timerProvider.isRunning,
+                      child: Column(
+                        spacing: isCompact ? 4 : 10,
+                        children: [
+                          Row(
+                            spacing: 10,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const LongDurationButton(),
+                              Builder(
+                                builder: (context) {
+                                  final preset = presetProvider.selectedPreset;
+                                  final isFocus =
+                                      timerProvider.currentType ==
+                                      TimerType.focus;
+                                  final isLongActive =
+                                      timerProvider.isLongDuration;
+                                  final currentDuration =
+                                      timerProvider.totalSeconds;
 
-                                // Determine which preset duration to compare against
-                                final presetDuration = isFocus
-                                    ? (isLongActive
-                                          ? preset.longFocusDuration
-                                          : preset.focusDuration)
-                                    : (isLongActive
-                                          ? preset.longBreakDuration
-                                          : preset.breakDuration);
+                                  // Determine which preset duration to compare against
+                                  final presetDuration = isFocus
+                                      ? (isLongActive
+                                            ? preset.longFocusDuration
+                                            : preset.focusDuration)
+                                      : (isLongActive
+                                            ? preset.longBreakDuration
+                                            : preset.breakDuration);
 
-                                final hasChanged =
-                                    currentDuration != presetDuration;
+                                  final hasChanged =
+                                      currentDuration != presetDuration;
 
-                                if (!hasChanged) {
-                                  return const SizedBox.shrink();
-                                }
+                                  if (!hasChanged) {
+                                    return const SizedBox.shrink();
+                                  }
 
-                                final durationLabel = isFocus
-                                    ? (isLongActive ? 'long focus' : 'focus')
-                                    : (isLongActive ? 'long break' : 'break');
+                                  final durationLabel = isFocus
+                                      ? (isLongActive ? 'long focus' : 'focus')
+                                      : (isLongActive ? 'long break' : 'break');
 
-                                return IconButton.filled(
-                                  style: filledFlatButton,
-                                  onPressed: timerProvider.isRunning
-                                      ? null
-                                      : () {
-                                          showDialog(
-                                            context: context,
-                                            builder: (ctx) => AlertDialog(
-                                              title: const Text(
-                                                'Update Preset',
-                                              ),
-                                              content: Text(
-                                                'Save the current duration as the $durationLabel duration for "${preset.name}"?',
-                                              ),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(ctx),
-                                                  child: const Text('Cancel'),
+                                  return IconButton.filled(
+                                    style: filledFlatButton,
+                                    onPressed: timerProvider.isRunning
+                                        ? null
+                                        : () {
+                                            showDialog(
+                                              context: context,
+                                              builder: (ctx) => AlertDialog(
+                                                title: const Text(
+                                                  'Update Preset',
                                                 ),
-                                                TextButton(
-                                                  onPressed: () {
-                                                    final updated = isFocus
-                                                        ? (isLongActive
-                                                              ? preset.copyWith(
-                                                                  longFocusDuration:
-                                                                      currentDuration,
-                                                                )
-                                                              : preset.copyWith(
-                                                                  focusDuration:
-                                                                      currentDuration,
-                                                                ))
-                                                        : (isLongActive
-                                                              ? preset.copyWith(
-                                                                  longBreakDuration:
-                                                                      currentDuration,
-                                                                )
-                                                              : preset.copyWith(
-                                                                  breakDuration:
-                                                                      currentDuration,
-                                                                ));
-                                                    presetProvider.updatePreset(
-                                                      updated,
-                                                    );
-                                                    Navigator.pop(ctx);
-                                                  },
-                                                  child: const Text('Save'),
+                                                content: Text(
+                                                  'Save the current duration as the $durationLabel duration for "${preset.name}"?',
                                                 ),
-                                              ],
-                                            ),
-                                          );
-                                        },
-                                  icon: const Icon(Icons.edit_note),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.pop(ctx),
+                                                    child: const Text('Cancel'),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      final updated = isFocus
+                                                          ? (isLongActive
+                                                                ? preset.copyWith(
+                                                                    longFocusDuration:
+                                                                        currentDuration,
+                                                                  )
+                                                                : preset.copyWith(
+                                                                    focusDuration:
+                                                                        currentDuration,
+                                                                  ))
+                                                          : (isLongActive
+                                                                ? preset.copyWith(
+                                                                    longBreakDuration:
+                                                                        currentDuration,
+                                                                  )
+                                                                : preset.copyWith(
+                                                                    breakDuration:
+                                                                        currentDuration,
+                                                                  ));
+                                                      presetProvider
+                                                          .updatePreset(
+                                                            updated,
+                                                          );
+                                                      Navigator.pop(ctx);
+                                                    },
+                                                    child: const Text('Save'),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          },
+                                    icon: const Icon(Icons.edit_note),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  Spacer(),
-                  // BOTTOM CONTROLS
-                  AnimatedVisibility(
-                    visible: controlsVisible.value,
-                    child: TimerBottomControls(
-                      timerProvider: timerProvider,
-                      presetProvider: presetProvider,
-                      sessionProvider: sessionProvider,
-                      currentColor: currentColor,
+                    Spacer(),
+                    // BOTTOM CONTROLS
+                    AnimatedVisibility(
+                      visible: controlsVisible.value,
+                      child: TimerBottomControls(
+                        timerProvider: timerProvider,
+                        presetProvider: presetProvider,
+                        sessionProvider: sessionProvider,
+                        currentColor: currentColor,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

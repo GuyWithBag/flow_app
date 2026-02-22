@@ -64,17 +64,31 @@ class LiquidTimerCircle extends HookWidget {
                 _AllowedPanGestureRecognizer:
                     GestureRecognizerFactoryWithHandlers<
                       _AllowedPanGestureRecognizer
-                    >(() => _AllowedPanGestureRecognizer(), (
-                      _AllowedPanGestureRecognizer instance,
-                    ) {
-                      instance
-                        ..onStart = (details) {
-                          if (timerProvider.isRunning) return;
-                          final dist =
-                              (details.localPosition - center).distance;
-                          if (dist >= grabZoneRadius) {
-                            isDragging.value = true;
-                            HapticFeedback.selectionClick();
+                    >(
+                      () => _AllowedPanGestureRecognizer(
+                        center: center,
+                        grabZoneRadius: grabZoneRadius,
+                        isRunning: timerProvider.isRunning,
+                      ),
+                      (_AllowedPanGestureRecognizer instance) {
+                        instance
+                          ..onStart = (details) {
+                            if (timerProvider.isRunning) return;
+                            final dist =
+                                (details.localPosition - center).distance;
+                            if (dist >= grabZoneRadius) {
+                              isDragging.value = true;
+                              HapticFeedback.selectionClick();
+                              _updateTimeFromDrag(
+                                details.localPosition,
+                                size,
+                                timerProvider,
+                                maxDuration,
+                              );
+                            }
+                          }
+                          ..onUpdate = (details) {
+                            if (timerProvider.isRunning) return;
                             _updateTimeFromDrag(
                               details.localPosition,
                               size,
@@ -82,23 +96,14 @@ class LiquidTimerCircle extends HookWidget {
                               maxDuration,
                             );
                           }
-                        }
-                        ..onUpdate = (details) {
-                          if (timerProvider.isRunning) return;
-                          _updateTimeFromDrag(
-                            details.localPosition,
-                            size,
-                            timerProvider,
-                            maxDuration,
-                          );
-                        }
-                        ..onEnd = (_) {
-                          isDragging.value = false;
-                        }
-                        ..onCancel = () {
-                          isDragging.value = false;
-                        };
-                    }),
+                          ..onEnd = (_) {
+                            isDragging.value = false;
+                          }
+                          ..onCancel = () {
+                            isDragging.value = false;
+                          };
+                      },
+                    ),
               },
               child: GestureDetector(
                 onTapUp: (details) {
@@ -322,10 +327,29 @@ class LiquidTimerCircle extends HookWidget {
 // Custom pan gesture recognizer that eagerly wins the gesture arena
 // to prevent PageView from stealing drags on the timer circle
 class _AllowedPanGestureRecognizer extends VerticalDragGestureRecognizer {
+  final Offset center;
+  final double grabZoneRadius;
+  final bool isRunning;
+
+  _AllowedPanGestureRecognizer({
+    required this.center,
+    required this.grabZoneRadius,
+    required this.isRunning,
+  });
+
   @override
   void addAllowedPointer(PointerDownEvent event) {
     super.addAllowedPointer(event);
-    // Immediately claim the gesture to win against PageView
-    resolve(GestureDisposition.accepted);
+
+    // Only claim the gesture if:
+    // 1. Timer is not running (to allow drag adjustment)
+    // 2. AND the tap is in the grab zone (outer ring area)
+    if (!isRunning) {
+      final distance = (event.localPosition - center).distance;
+      if (distance >= grabZoneRadius) {
+        // Immediately claim the gesture to win against PageView
+        resolve(GestureDisposition.accepted);
+      }
+    }
   }
 }
