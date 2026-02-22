@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 class PresetSelector extends StatelessWidget {
   final bool isDark;
 
-  const PresetSelector({Key? key, required this.isDark}) : super(key: key);
+  const PresetSelector({super.key, required this.isDark});
 
   @override
   Widget build(BuildContext context) {

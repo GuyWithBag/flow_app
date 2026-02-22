@@ -5,10 +5,10 @@ class ModeButtonContent extends StatelessWidget {
   final bool isSelected;
 
   const ModeButtonContent({
-    Key? key,
+    super.key,
     required this.label,
     required this.isSelected,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

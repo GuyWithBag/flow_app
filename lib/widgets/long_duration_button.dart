@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 class LongDurationButton extends StatelessWidget {
-  const LongDurationButton({Key? key}) : super(key: key);
+  const LongDurationButton({super.key});
 
   String _formatDuration(int seconds) {
     final hours = seconds ~/ 3600;

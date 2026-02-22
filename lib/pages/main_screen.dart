@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 import '../providers/providers.barrel.dart';
 
 class MainScreen extends HookWidget {
-  const MainScreen({Key? key}) : super(key: key);
+  const MainScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

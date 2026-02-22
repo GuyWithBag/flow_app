@@ -6,11 +6,11 @@ class DurationInputSection extends StatelessWidget {
   final TextEditingController secondsController;
 
   const DurationInputSection({
-    Key? key,
+    super.key,
     required this.title,
     required this.minutesController,
     required this.secondsController,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

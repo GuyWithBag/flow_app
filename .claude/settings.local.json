@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(flutter analyze:*)",
-      "Bash(where:*)"
+      "Bash(where:*)",
+      "mcp__acp__Edit"
     ]
   }
 }

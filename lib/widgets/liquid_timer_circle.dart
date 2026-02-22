@@ -113,7 +113,7 @@ class LiquidTimerCircle extends HookWidget {
                       color: isDark ? Colors.grey.shade900 : Colors.white,
                       boxShadow: [
                         BoxShadow(
-                          color: color.withOpacity(isDark ? 0.2 : 0.3),
+                          color: color.withValues(alpha: isDark ? 0.2 : 0.3),
                           blurRadius: currentBlur,
                           spreadRadius: 2,
                         ),
@@ -124,7 +124,7 @@ class LiquidTimerCircle extends HookWidget {
                   // 2. INNER LIQUID
                   if (showInnerLiquid)
                     ClipOval(
-                      child: Container(
+                      child: SizedBox(
                         width: size - 10,
                         height: size - 10,
                         child: AnimatedBuilder(
@@ -134,7 +134,7 @@ class LiquidTimerCircle extends HookWidget {
                               painter: LiquidWavePainter(
                                 waveValue: waveController.value,
                                 fillPercent: animatedProgress,
-                                color: color.withOpacity(contrast),
+                                color: color.withValues(alpha: contrast),
                                 waveHeight: 12.0,
                                 waveFrequency: 2.0,
                               ),

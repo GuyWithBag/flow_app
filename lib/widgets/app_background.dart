@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 class AppBackground extends StatelessWidget {
   final ThemeProvider themeProvider;
-  const AppBackground({required this.themeProvider});
+  const AppBackground({super.key, required this.themeProvider});
 
   @override
   Widget build(BuildContext context) {

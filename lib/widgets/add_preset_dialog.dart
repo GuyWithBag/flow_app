@@ -9,10 +9,10 @@ class AddPresetDialog extends HookWidget {
   final TimerProvider timerProvider;
 
   const AddPresetDialog({
-    Key? key,
+    super.key,
     required this.presetProvider,
     required this.timerProvider,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

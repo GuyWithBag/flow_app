@@ -5,7 +5,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:provider/provider.dart';
 
 class PresetsScreen extends HookWidget {
-  const PresetsScreen({Key? key}) : super(key: key);
+  const PresetsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class ModeToggle extends StatelessWidget {
-  const ModeToggle({Key? key}) : super(key: key);
+  const ModeToggle({super.key});
 
   @override
   Widget build(BuildContext context) {

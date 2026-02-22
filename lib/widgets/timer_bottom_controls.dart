@@ -25,20 +25,20 @@ class TimerBottomControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    void _resetLoop() {
+    void resetLoop() {
       timerProvider.resetLoop();
       timerProvider.resetTimer();
       sessionProvider.clearCurrentSession();
     }
 
-    void _finishSession() {
+    void finishSession() {
       sessionProvider.completeCurrentSession();
       timerProvider.resetLoop();
       timerProvider.resetTimer();
       sessionProvider.clearCurrentSession();
     }
 
-    void _skipCycle() {
+    void skipCycle() {
       sessionProvider.clearCurrentSession();
       timerProvider.resetTimer();
       if (timerProvider.currentType == TimerType.focus) {
@@ -76,7 +76,7 @@ class TimerBottomControls extends StatelessWidget {
             // Reset button
             BouncingButton(
               child: IconButton(
-                onPressed: _resetLoop,
+                onPressed: resetLoop,
                 icon: const Icon(Icons.refresh),
                 style: filledFlatButton,
               ),
@@ -85,7 +85,7 @@ class TimerBottomControls extends StatelessWidget {
             // Finish button
             BouncingButton(
               child: IconButton.filled(
-                onPressed: _finishSession,
+                onPressed: finishSession,
                 icon: const Icon(Icons.stop),
                 style: filledFlatButton,
               ),
@@ -97,7 +97,7 @@ class TimerBottomControls extends StatelessWidget {
             // Skip button
             BouncingButton(
               child: IconButton(
-                onPressed: _skipCycle,
+                onPressed: skipCycle,
                 icon: const Icon(Icons.skip_next),
                 style: filledFlatButton,
               ),
@@ -152,7 +152,7 @@ class TimerBottomControls extends StatelessWidget {
                         width: 40,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.3),
+                          color: Colors.grey.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -175,7 +175,7 @@ class TimerBottomControls extends StatelessWidget {
                         timerProvider.setAutoStartBreak(val);
                         setState(() {});
                       },
-                      activeColor: Colors.blue,
+                      activeThumbColor: Colors.blue,
                     ),
                     SwitchListTile(
                       title: const Text("Auto-start Focus"),
@@ -185,7 +185,7 @@ class TimerBottomControls extends StatelessWidget {
                         timerProvider.setAutoStartFocus(val);
                         setState(() {});
                       },
-                      activeColor: Colors.blue,
+                      activeThumbColor: Colors.blue,
                     ),
                     ListTile(
                       title: const Text("Total Loops"),
@@ -228,7 +228,7 @@ class TimerBottomControls extends StatelessWidget {
                     const Divider(),
                     const SettingsSectionHeader(title: "Sound"),
                     DropdownButtonFormField<SoundType>(
-                      value: timerProvider.selectedSound,
+                      initialValue: timerProvider.selectedSound,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                       ),

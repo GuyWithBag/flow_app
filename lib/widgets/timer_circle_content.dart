@@ -7,12 +7,12 @@ class TimerCircleContent extends StatelessWidget {
   final bool isDark;
 
   const TimerCircleContent({
-    Key? key,
+    super.key,
     required this.formattedTime,
     required this.isRunning,
     required this.controlsVisible,
     required this.isDark,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

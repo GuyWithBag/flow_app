@@ -8,18 +8,18 @@ class PresetCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const PresetCard({
-    Key? key,
+    super.key,
     required this.preset,
     required this.isSelected,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: isSelected ? 4 : 1,
-      color: isSelected ? const Color(0xFF66BB6A).withOpacity(0.1) : null,
+      color: isSelected ? const Color(0xFF66BB6A).withValues(alpha: 0.1) : null,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: isSelected

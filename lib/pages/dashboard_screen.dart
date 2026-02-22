@@ -8,7 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class DashboardScreen extends HookWidget {
-  const DashboardScreen({Key? key}) : super(key: key);
+  const DashboardScreen({super.key});
 
   static const _focusColor = Color(0xFF66BB6A);
   static const _breakColor = Color(0xFFFFB74D);

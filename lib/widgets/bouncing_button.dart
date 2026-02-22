@@ -6,8 +6,7 @@ class BouncingButton extends HookWidget {
   final Widget child;
   final VoidCallback? onTap;
 
-  const BouncingButton({Key? key, required this.child, this.onTap})
-    : super(key: key);
+  const BouncingButton({super.key, required this.child, this.onTap});
 
   @override
   Widget build(BuildContext context) {

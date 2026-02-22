@@ -6,7 +6,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:provider/provider.dart';
 
 class ThemeSettingsScreen extends HookWidget {
-  const ThemeSettingsScreen({Key? key}) : super(key: key);
+  const ThemeSettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +78,7 @@ class ThemeSettingsScreen extends HookWidget {
                 color: themeProvider.getAccentColorFor(TimerType.focus),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: Colors.grey.withOpacity(0.3),
+                  color: Colors.grey.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -128,7 +128,7 @@ class ThemeSettingsScreen extends HookWidget {
                 color: themeProvider.getAccentColorFor(TimerType.breakTime),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: Colors.grey.withOpacity(0.3),
+                  color: Colors.grey.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -150,28 +150,27 @@ class ThemeSettingsScreen extends HookWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Background Theme'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RadioListTile<String>(
-              title: const Text('Default'),
-              value: 'default',
-              groupValue: provider.getBackgroundThemeFor(type),
-              onChanged: (v) {
-                provider.setModeBackgroundTheme(type, v!);
-                Navigator.pop(context);
-              },
-            ),
-            RadioListTile<String>(
-              title: const Text('Gradient'),
-              value: 'gradient',
-              groupValue: provider.getBackgroundThemeFor(type),
-              onChanged: (v) {
-                provider.setModeBackgroundTheme(type, v!);
-                Navigator.pop(context);
-              },
-            ),
-          ],
+        content: RadioGroup<String>(
+          groupValue: provider.getBackgroundThemeFor(type),
+          onChanged: (v) {
+            if (v != null) {
+              provider.setModeBackgroundTheme(type, v);
+              Navigator.pop(context);
+            }
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<String>(
+                title: const Text('Default'),
+                value: 'default',
+              ),
+              RadioListTile<String>(
+                title: const Text('Gradient'),
+                value: 'gradient',
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -245,7 +244,8 @@ class ThemeSettingsScreen extends HookWidget {
             pickerAreaHeightPercent: 0.7,
             enableAlpha: false, // Usually disabled for theme accents
             displayThumbColor: true,
-            showLabel: true,
+            labelTypes:
+                const [], // Empty list disables label (replaces showLabel: true)
             paletteType: PaletteType.hsvWithHue,
             pickerAreaBorderRadius: const BorderRadius.only(
               topLeft: Radius.circular(2.0),

@@ -7,12 +7,12 @@ class ScaleChip extends StatelessWidget {
   final VoidCallback onSelected;
 
   const ScaleChip({
-    Key? key,
+    super.key,
     required this.seconds,
     required this.label,
     required this.isSelected,
     required this.onSelected,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
