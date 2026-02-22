@@ -1,31 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class TimerCircleContent extends StatelessWidget {
   final String formattedTime;
   final bool isRunning;
   final bool controlsVisible;
-  final bool isDark;
 
   const TimerCircleContent({
     super.key,
     required this.formattedTime,
     required this.isRunning,
     required this.controlsVisible,
-    required this.isDark,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           formattedTime,
-          style: TextStyle(
-            fontSize: 52,
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black87,
-            letterSpacing: -1.0,
+          style: GoogleFonts.dynaPuff(
+            // fontWeight: FontWeight.bold,
+            fontSize: 60,
           ),
         ),
         const SizedBox(height: 8),
@@ -36,9 +37,9 @@ class TimerCircleContent extends StatelessWidget {
             isRunning
                 ? (controlsVisible ? "Running" : "Tap for controls")
                 : "Tap to Edit",
-            style: TextStyle(
+            style: GoogleFonts.dynaPuff(
               fontSize: 14,
-              color: isDark ? Colors.grey.shade300 : Colors.black54,
+              color: isDark ? Colors.grey.shade400 : Colors.black54,
               fontWeight: FontWeight.w600,
             ),
           ),

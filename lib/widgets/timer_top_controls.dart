@@ -1,6 +1,7 @@
 import 'package:flow_app/providers/providers.barrel.dart';
 import 'package:flow_app/widgets/widgets.barrel.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class TimerTopControls extends StatelessWidget {
   const TimerTopControls({
@@ -14,6 +15,9 @@ class TimerTopControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -22,7 +26,10 @@ class TimerTopControls extends StatelessWidget {
           children: [
             Text(
               'Flow',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+              style: GoogleFonts.dynaPuff(
+                // fontWeight: FontWeight.bold,
+                fontSize: textTheme.headlineMedium!.fontSize,
+              ),
             ),
             Row(
               spacing: 8,

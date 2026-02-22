@@ -184,7 +184,6 @@ class LiquidTimerCircle extends HookWidget {
                         formattedTime: timerProvider.formattedTime,
                         isRunning: timerProvider.isRunning,
                         controlsVisible: controlsVisible,
-                        isDark: isDark,
                       ),
                     ],
                   ),
