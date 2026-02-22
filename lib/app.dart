@@ -63,7 +63,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
             title: 'Flow',
             debugShowCheckedModeBanner: false,
             theme: themeProvider.currentTheme,
-            home: const MainScreen(),
+            home: const MainPage(),
           );
         },
       ),

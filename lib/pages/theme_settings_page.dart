@@ -9,8 +9,8 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:provider/provider.dart';
 
-class ThemeSettingsScreen extends HookWidget {
-  const ThemeSettingsScreen({super.key});
+class ThemeSettingsPage extends HookWidget {
+  const ThemeSettingsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -31,8 +31,9 @@ class ThemeSettingsScreen extends HookWidget {
               'Enable background images on Dashboard and Account screens',
             ),
             value: themeProvider.showBackgroundOnMenuScreens,
-            onChanged: (value) => themeProvider.setShowBackgroundOnMenuScreens(value),
-            activeColor: Theme.of(context).colorScheme.primary,
+            onChanged: (value) =>
+                themeProvider.setShowBackgroundOnMenuScreens(value),
+            activeTrackColor: Theme.of(context).colorScheme.primary,
           ),
           const SizedBox(height: 24),
           const Text(

@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart' show AuthProvider;
 
-class LoginScreen extends HookWidget {
-  const LoginScreen({super.key});
+class LoginPage extends HookWidget {
+  const LoginPage({super.key});
 
   @override
   Widget build(BuildContext context) {

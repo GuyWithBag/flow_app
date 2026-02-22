@@ -41,13 +41,15 @@ class AppBackground extends StatelessWidget {
       return Image.network(
         path,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _fallbackBackground(context, scaffoldBg),
+        errorBuilder: (context, error, stackTrace) =>
+            _fallbackBackground(context, scaffoldBg),
       );
     } else {
       return Image.file(
         File(path),
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _fallbackBackground(context, scaffoldBg),
+        errorBuilder: (context, error, stackTrace) =>
+            _fallbackBackground(context, scaffoldBg),
       );
     }
   }

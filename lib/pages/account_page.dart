@@ -7,8 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:provider/provider.dart';
 
-class AccountScreen extends HookWidget {
-  const AccountScreen({super.key});
+class AccountPage extends HookWidget {
+  const AccountPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +44,7 @@ class AccountScreen extends HookWidget {
               adProbability: 0.5,
               onNavigate: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                MaterialPageRoute(builder: (_) => const SettingsPage()),
               ),
             ),
           ),
@@ -57,7 +57,7 @@ class AccountScreen extends HookWidget {
               adProbability: 0.5,
               onNavigate: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const PresetsScreen()),
+                MaterialPageRoute(builder: (_) => const PresetsPage()),
               ),
             ),
           ),
@@ -397,48 +397,38 @@ class AccountScreen extends HookWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Choose Theme'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RadioListTile<String>(
-              title: const Text('Light'),
-              subtitle: const Text('Always use light theme'),
-              value: 'light',
-              groupValue: themeProvider.themeBrightness,
-              onChanged: (value) {
-                if (value != null) {
-                  themeProvider.setThemeBrightness(value);
-                  Navigator.pop(context);
-                }
-              },
-            ),
-            RadioListTile<String>(
-              title: const Text('Dark'),
-              subtitle: const Text('Always use dark theme'),
-              value: 'dark',
-              groupValue: themeProvider.themeBrightness,
-              onChanged: (value) {
-                if (value != null) {
-                  themeProvider.setThemeBrightness(value);
-                  Navigator.pop(context);
-                }
-              },
-            ),
-            RadioListTile<String>(
-              title: const Text('System'),
-              subtitle: const Text('Follow system setting'),
-              value: 'system',
-              groupValue: themeProvider.themeBrightness,
-              onChanged: (value) {
-                if (value != null) {
-                  themeProvider.setThemeBrightness(value);
-                  final brightness = MediaQuery.platformBrightnessOf(context);
-                  themeProvider.updateSystemBrightness(brightness);
-                  Navigator.pop(context);
-                }
-              },
-            ),
-          ],
+        content: RadioGroup<String>(
+          groupValue: themeProvider.themeBrightness,
+          onChanged: (value) {
+            if (value != null) {
+              themeProvider.setThemeBrightness(value);
+              if (value == 'system') {
+                final brightness = MediaQuery.platformBrightnessOf(context);
+                themeProvider.updateSystemBrightness(brightness);
+              }
+              Navigator.pop(context);
+            }
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<String>(
+                title: const Text('Light'),
+                subtitle: const Text('Always use light theme'),
+                value: 'light',
+              ),
+              RadioListTile<String>(
+                title: const Text('Dark'),
+                subtitle: const Text('Always use dark theme'),
+                value: 'dark',
+              ),
+              RadioListTile<String>(
+                title: const Text('System'),
+                subtitle: const Text('Follow system setting'),
+                value: 'system',
+              ),
+            ],
+          ),
         ),
       ),
     );

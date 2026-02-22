@@ -7,8 +7,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-class HistoryScreen extends HookWidget {
-  const HistoryScreen({super.key});
+class HistoryPage extends HookWidget {
+  const HistoryPage({super.key});
 
   @override
   Widget build(BuildContext context) {

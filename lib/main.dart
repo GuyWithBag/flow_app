@@ -14,7 +14,9 @@ import 'services/notification_service.dart';
 // ============================================================================
 // MAIN APP ENTRY POINT
 // ============================================================================
-@BarrelConfig(exclude: ['lib/lib.barrel.dart', 'lib/excluded/**'])
+@BarrelConfig(
+  exclude: ['lib/lib.barrel.dart', 'lib/excluded/**', 'lib/hive/**'],
+)
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 

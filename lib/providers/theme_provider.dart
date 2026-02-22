@@ -195,13 +195,13 @@ class ThemeProvider extends ChangeNotifier {
     );
     box.put(
       'focus_accent_color',
-      _modeAccentColors[TimerType.focus]?.value ??
-          const Color(0xFF66BB6A).value,
+      (_modeAccentColors[TimerType.focus] ?? const Color(0xFF66BB6A))
+          .toARGB32(),
     );
     box.put(
       'break_accent_color',
-      _modeAccentColors[TimerType.breakTime]?.value ??
-          const Color(0xFFFFB74D).value,
+      (_modeAccentColors[TimerType.breakTime] ?? const Color(0xFFFFB74D))
+          .toARGB32(),
     );
   }
 
@@ -239,13 +239,13 @@ class ThemeProvider extends ChangeNotifier {
     _modeAccentColors[TimerType.focus] = Color(
       box.get(
         'focus_accent_color',
-        defaultValue: const Color(0xFF66BB6A).value,
+        defaultValue: const Color(0xFF66BB6A).toARGB32(),
       ),
     );
     _modeAccentColors[TimerType.breakTime] = Color(
       box.get(
         'break_accent_color',
-        defaultValue: const Color(0xFFFFB74D).value,
+        defaultValue: const Color(0xFFFFB74D).toARGB32(),
       ),
     );
 

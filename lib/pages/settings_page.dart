@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:provider/provider.dart';
 
-class SettingsScreen extends HookWidget {
-  const SettingsScreen({super.key});
+class SettingsPage extends HookWidget {
+  const SettingsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +26,7 @@ class SettingsScreen extends HookWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ThemeSettingsScreen()),
+              MaterialPageRoute(builder: (_) => const ThemeSettingsPage()),
             ),
           ),
           ListTile(

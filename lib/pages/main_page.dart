@@ -8,8 +8,8 @@ import 'package:provider/provider.dart';
 
 import '../providers/providers.barrel.dart';
 
-class MainScreen extends HookWidget {
-  const MainScreen({super.key});
+class MainPage extends HookWidget {
+  const MainPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -31,11 +31,11 @@ class MainScreen extends HookWidget {
             itemBuilder: (context, index) {
               switch (index) {
                 case 0:
-                  return const DashboardScreen();
+                  return const DashboardPage();
                 case 1:
-                  return const TimerScreen();
+                  return const TimerPage();
                 case 2:
-                  return const AccountScreen();
+                  return const AccountPage();
                 default:
                   return const SizedBox.shrink();
               }

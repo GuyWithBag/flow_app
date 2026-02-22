@@ -9,5 +9,7 @@ import '../shared/enums/sound_type.dart';
   AdapterSpec<UserProfile>(),
   AdapterSpec<TimerType>(),
   AdapterSpec<SoundType>(),
+  AdapterSpec<Loop>(),
 ])
+
 part 'hive_adapters.g.dart';

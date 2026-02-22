@@ -1,30 +1,12 @@
-import 'package:hive_ce/hive.dart';
-
 import 'timer_type.dart';
 
-part 'loop.g.dart';
-
-@HiveType(typeId: 5)
 class Loop {
-  @HiveField(0)
   final String id;
-
-  @HiveField(1)
   final TimerType type;
-
-  @HiveField(2)
   final int duration;
-
-  @HiveField(3)
   final DateTime startTime;
-
-  @HiveField(4)
   final DateTime? endTime;
-
-  @HiveField(5)
   final bool completed;
-
-  @HiveField(6)
   final bool skipped;
 
   Loop({

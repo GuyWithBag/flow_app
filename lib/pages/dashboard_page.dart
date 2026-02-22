@@ -10,8 +10,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-class DashboardScreen extends HookWidget {
-  const DashboardScreen({super.key});
+class DashboardPage extends HookWidget {
+  const DashboardPage({super.key});
 
   static const _presetColors = [
     Color(0xFF66BB6A),
@@ -43,7 +43,7 @@ class DashboardScreen extends HookWidget {
               adProbability: 0.5,
               onNavigate: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const HistoryScreen()),
+                MaterialPageRoute(builder: (_) => const HistoryPage()),
               ),
             );
           },

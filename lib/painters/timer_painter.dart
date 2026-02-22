@@ -52,7 +52,7 @@ class TimerPainter extends CustomPainter {
       canvas.drawCircle(
         knobCenter,
         knobRadius + 4,
-        Paint()..color = Colors.black.withOpacity(0.15),
+        Paint()..color = Colors.black.withValues(alpha: 0.15),
       );
       canvas.drawCircle(knobCenter, knobRadius, Paint()..color = Colors.white);
       canvas.drawCircle(knobCenter, knobRadius - 4, Paint()..color = color);

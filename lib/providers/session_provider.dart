@@ -6,7 +6,7 @@ import '../models/models.barrel.dart';
 
 class SessionProvider extends ChangeNotifier {
   final List<Session> _sessions = [];
-  bool _isLoading = false;
+  final bool _isLoading = false;
   Session? _currentSession;
 
   List<Session> get sessions => List.unmodifiable(_sessions);

@@ -10,8 +10,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:provider/provider.dart';
 import 'package:vibration/vibration.dart';
 
-class TimerScreen extends HookWidget {
-  const TimerScreen({super.key});
+class TimerPage extends HookWidget {
+  const TimerPage({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -110,7 +110,7 @@ class TimerSettingsMenu extends HookWidget {
           const MenuSubsectionTitle(title: "Sound"),
 
           DropdownButtonFormField<SoundType>(
-            value: timerProvider.selectedSound,
+            initialValue: timerProvider.selectedSound,
             decoration: const InputDecoration(border: OutlineInputBorder()),
             items: SoundType.values.map((s) {
               String label = s.toString().split('.').last.toUpperCase();

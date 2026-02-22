@@ -4,7 +4,6 @@
 
 import 'package:hive_ce/hive.dart';
 import 'package:flow_app/hive/hive_adapters.dart';
-import 'package:flow_app/models/loop.dart';
 
 extension HiveRegistrar on HiveInterface {
   void registerAdapters() {
