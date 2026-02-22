@@ -11,27 +11,28 @@ class PresetsScreen extends HookWidget {
   Widget build(BuildContext context) {
     final presetProvider = Provider.of<PresetProvider>(context);
     final timerProvider = Provider.of<TimerProvider>(context, listen: false);
-    final themeProvider = Provider.of<ThemeProvider>(context);
-
-    return Scaffold(
-      backgroundColor: themeProvider.isDarkMode
-          ? const Color(0xFF121212)
-          : Colors.white,
-      appBar: AppBar(
-        title: const Text('Presets'),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        scrolledUnderElevation: 0,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: PresetSelectorMenu(
+    void showAddPresetDialog(BuildContext context) {
+      showDialog(
+        context: context,
+        builder: (context) => AddPresetDialog(
           presetProvider: presetProvider,
           timerProvider: timerProvider,
-          showAddButton: true,
-          onPresetSelected: () => Navigator.pop(context),
         ),
+      );
+    }
+
+    return FlowMenuBar(
+      title: 'Presets',
+      actions: [
+        IconButton(
+          onPressed: () => showAddPresetDialog(context),
+          icon: const Icon(Icons.add),
+        ),
+      ],
+      body: PresetSelectorMenu(
+        presetProvider: presetProvider,
+        timerProvider: timerProvider,
+        onPresetSelected: () => Navigator.pop(context),
       ),
     );
   }

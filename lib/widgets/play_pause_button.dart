@@ -19,7 +19,7 @@ class PlayPauseButton extends StatelessWidget {
     //     color: color,
     //     boxShadow: [
     //       BoxShadow(
-    //         color: color.withOpacity(0.4),
+    //         color: color.withValues(alpha: 0.4),
     //         blurRadius: 15,
     //         offset: const Offset(0, 5),
     //       ),
@@ -46,7 +46,7 @@ class PlayPauseButton extends StatelessWidget {
             userId: 'current_user',
             type: timerProvider.currentType,
             duration: timerProvider.totalSeconds,
-            presetName: preset?.name,
+            presetName: preset.name,
           );
           timerProvider.startTimer();
         }

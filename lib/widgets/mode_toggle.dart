@@ -22,9 +22,7 @@ class ModeToggle extends StatelessWidget {
             onTap: () {
               timerProvider.setTimerType(TimerType.focus);
               final preset = presetProvider.selectedPreset;
-              if (preset != null) {
-                timerProvider.setCustomDuration(preset.focusDuration);
-              }
+              timerProvider.setCustomDuration(preset.focusDuration);
             },
             child: ModeButtonContent(
               label: 'Focus',
@@ -35,9 +33,7 @@ class ModeToggle extends StatelessWidget {
             onTap: () {
               timerProvider.setTimerType(TimerType.breakTime);
               final preset = presetProvider.selectedPreset;
-              if (preset != null) {
-                timerProvider.setCustomDuration(preset.breakDuration);
-              }
+              timerProvider.setCustomDuration(preset.breakDuration);
             },
             child: ModeButtonContent(
               label: 'Break',

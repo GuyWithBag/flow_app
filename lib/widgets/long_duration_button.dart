@@ -22,8 +22,6 @@ class LongDurationButton extends StatelessWidget {
     final presetProvider = Provider.of<PresetProvider>(context);
 
     final preset = presetProvider.selectedPreset;
-    if (preset == null) return const SizedBox.shrink();
-
     final isFocusMode = timerProvider.currentType == TimerType.focus;
     final longDuration = isFocusMode
         ? preset.longFocusDuration

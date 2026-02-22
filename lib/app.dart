@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 
 import 'pages/pages.barrel.dart';
@@ -30,7 +31,12 @@ class App extends StatelessWidget {
       ],
       child: Consumer2<ThemeProvider, TimerProvider>(
         builder: (context, themeProvider, timerProvider, _) {
-          themeProvider.updateTimerType(timerProvider.currentType);
+          final timerType = timerProvider.currentType;
+          if (themeProvider.currentTimerType != timerType) {
+            SchedulerBinding.instance.addPostFrameCallback((_) {
+              themeProvider.updateTimerType(timerType);
+            });
+          }
           return MaterialApp(
             title: 'Flow',
             debugShowCheckedModeBanner: false,

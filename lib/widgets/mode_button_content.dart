@@ -24,9 +24,10 @@ class ModeButtonContent extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: Theme.of(
-          context,
-        ).textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold),
+        style: Theme.of(context).textTheme.titleMedium!.copyWith(
+          fontWeight: FontWeight.bold,
+          color: isSelected ? Theme.of(context).colorScheme.onPrimary : null,
+        ),
       ),
     );
   }

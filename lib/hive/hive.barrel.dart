@@ -2,4 +2,5 @@
 
 // Other files
 export 'hive_adapters.dart';
+export 'hive_adapters.g.dart';
 export 'hive_registrar.g.dart';

@@ -1,9 +1,10 @@
 import 'package:flow_app/providers/providers.barrel.dart';
 import 'package:flow_app/widgets/widgets.barrel.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:provider/provider.dart';
 
-class PresetSelector extends StatelessWidget {
+class PresetSelector extends HookWidget {
   const PresetSelector({super.key});
 
   @override
@@ -12,8 +13,11 @@ class PresetSelector extends StatelessWidget {
     final timerProvider = Provider.of<TimerProvider>(context, listen: false);
     final accentColor = Theme.of(context).colorScheme.primary;
 
+    final isActive = useState<bool>(false);
+
     return InkWell(
-      onTap: () => _showPresetSelector(context, presetProvider, timerProvider),
+      onTap: () =>
+          _showPresetSelector(context, presetProvider, timerProvider, isActive),
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -36,7 +40,11 @@ class PresetSelector extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 4),
-            Icon(Icons.arrow_drop_up, size: 20, color: accentColor),
+            Icon(
+              !isActive.value ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+              size: 20,
+              color: accentColor,
+            ),
           ],
         ),
       ),
@@ -47,7 +55,9 @@ class PresetSelector extends StatelessWidget {
     BuildContext context,
     PresetProvider presetProvider,
     TimerProvider timerProvider,
+    ValueNotifier<bool> isActive,
   ) {
+    isActive.value = !isActive.value;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -71,6 +81,7 @@ class PresetSelector extends StatelessWidget {
                   showAddButton: true,
                   onPresetSelected: () => Navigator.pop(context),
                   scrollController: scrollController,
+                  showTitleAndHandle: false,
                 ),
               ),
             );

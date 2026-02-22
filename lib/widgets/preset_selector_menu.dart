@@ -7,6 +7,7 @@ class PresetSelectorMenu extends StatelessWidget {
   final PresetProvider presetProvider;
   final TimerProvider timerProvider;
   final bool showAddButton;
+  final bool showTitleAndHandle;
   final VoidCallback? onPresetSelected;
   final ScrollController? scrollController;
 
@@ -14,9 +15,10 @@ class PresetSelectorMenu extends StatelessWidget {
     super.key,
     required this.presetProvider,
     required this.timerProvider,
-    this.showAddButton = true,
+    this.showAddButton = false,
     this.onPresetSelected,
     this.scrollController,
+    this.showTitleAndHandle = false,
   });
 
   @override
@@ -24,26 +26,30 @@ class PresetSelectorMenu extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Center(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 12, bottom: 8),
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
+        if (showTitleAndHandle)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 12, bottom: 8),
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
           ),
-        ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Pomodoro Presets',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+            if (showTitleAndHandle)
+              Text(
+                'Pomodoro Presets',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.bold),
+              ),
             if (showAddButton)
               IconButton(
                 icon: const Icon(Icons.add),
@@ -62,12 +68,8 @@ class PresetSelectorMenu extends StatelessWidget {
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
-                elevation: isSelected ? 4 : 1,
-                color: isSelected
-                    ? Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.1)
-                    : null,
+                elevation: 1,
+
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                   side: isSelected

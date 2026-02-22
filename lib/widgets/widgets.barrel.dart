@@ -2,12 +2,15 @@
 
 // Other files
 export 'add_preset_dialog.dart';
+export 'animated_visibility.dart';
 export 'app_background.dart';
 export 'bouncing_button.dart';
 export 'circular_progress_painter.dart';
 export 'duration_input_section.dart';
 export 'liquid_timer_circle.dart';
 export 'long_duration_button.dart';
+export 'menu_bar.dart';
+export 'menu_sub_section_title.dart';
 export 'mode_button_content.dart';
 export 'mode_toggle.dart';
 export 'play_pause_button.dart';
@@ -15,7 +18,7 @@ export 'preset_card.dart';
 export 'preset_selector.dart';
 export 'preset_selector_menu.dart';
 export 'scale_chip.dart';
-export 'settings_section_header.dart';
 export 'timer_bottom_controls.dart';
 export 'timer_circle_content.dart';
+export 'timer_settings_menu.dart';
 export 'timer_top_controls.dart';

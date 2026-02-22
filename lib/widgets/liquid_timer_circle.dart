@@ -24,7 +24,7 @@ class LiquidTimerCircle extends HookWidget {
   final VoidCallback onCircleTap;
 
   const LiquidTimerCircle({
-    Key? key,
+    super.key,
     required this.color,
     required this.maxDuration,
     required this.fillPercent,
@@ -37,7 +37,7 @@ class LiquidTimerCircle extends HookWidget {
     required this.showInnerLiquid,
     required this.controlsVisible,
     required this.onCircleTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +91,7 @@ class LiquidTimerCircle extends HookWidget {
 
                 final dist = (details.localPosition - center).distance;
                 if (dist < innerZoneRadius) {
-                  _showTimePicker(context, timerProvider, isDark);
+                  _showTimePicker(context, timerProvider);
                 } else {
                   _updateTimeFromDrag(
                     details.localPosition,
@@ -196,11 +196,7 @@ class LiquidTimerCircle extends HookWidget {
     provider.setCustomDuration(newSeconds);
   }
 
-  void _showTimePicker(
-    BuildContext context,
-    TimerProvider timerProvider,
-    bool isDark,
-  ) {
+  void _showTimePicker(BuildContext context, TimerProvider timerProvider) {
     if (timerProvider.isRunning) return;
 
     final totalSeconds = timerProvider.remainingSeconds;
@@ -208,19 +204,21 @@ class LiquidTimerCircle extends HookWidget {
     final m = (totalSeconds % 3600) ~/ 60;
     final s = totalSeconds % 60;
 
-    Picker(
-      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-      headerColor: isDark ? Colors.grey.shade800 : Colors.grey.shade100,
-      textStyle: TextStyle(
-        color: isDark ? Colors.white : Colors.black87,
-        fontSize: 18,
-      ),
-      confirmText: "Set Time",
-      confirmTextStyle: const TextStyle(
-        color: Colors.blue,
+    final theme = Theme.of(context);
+
+    final picker = Picker(
+      headerDecoration: BoxDecoration(),
+      textStyle: theme.textTheme.bodyMedium!.copyWith(
         fontWeight: FontWeight.bold,
       ),
-      cancelTextStyle: TextStyle(color: isDark ? Colors.grey : Colors.black54),
+      confirmText: "Set Time",
+      confirmTextStyle: theme.textTheme.titleMedium!.copyWith(
+        fontWeight: FontWeight.bold,
+        color: Theme.of(context).colorScheme.primary,
+      ),
+      cancelTextStyle: theme.textTheme.titleMedium!.copyWith(
+        color: Theme.of(context).disabledColor,
+      ),
       adapter: NumberPickerAdapter(
         data: [
           NumberPickerColumn(
@@ -253,10 +251,9 @@ class LiquidTimerCircle extends HookWidget {
             alignment: Alignment.center,
             child: Text(
               ":",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
         ),
@@ -267,15 +264,14 @@ class LiquidTimerCircle extends HookWidget {
             alignment: Alignment.center,
             child: Text(
               ":",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
         ),
       ],
-      title: const Text("Set Timer Duration"),
+      title: const Text("Timer Duration"),
       onConfirm: (Picker picker, List<int> values) {
         final data = picker.getSelectedValues();
         final hours = data[0] as int;
@@ -285,9 +281,21 @@ class LiquidTimerCircle extends HookWidget {
         final newTotal = (hours * 3600) + (mins * 60) + secs;
         timerProvider.setCustomDuration(newTotal);
       },
-    ).showModal(
-      context,
-      builder: (context, pickerWidget) => SafeArea(child: pickerWidget),
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: picker.makePicker(),
+          ),
+        );
+      },
     );
   }
 }

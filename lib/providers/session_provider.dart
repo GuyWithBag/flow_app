@@ -28,16 +28,40 @@ class SessionProvider extends ChangeNotifier {
         .fold<int>(0, (sum, s) => sum + (s.duration ~/ 60));
   }
 
+  int get todayFocusSeconds {
+    return todaySessions
+        .where((s) => s.type == TimerType.focus)
+        .fold<int>(0, (sum, s) => sum + s.duration);
+  }
+
   int get totalFocusMinutes {
     return _sessions
         .where((s) => s.type == TimerType.focus && s.completed)
         .fold<int>(0, (sum, s) => sum + (s.duration ~/ 60));
   }
 
+  int get totalFocusSeconds {
+    return _sessions
+        .where((s) => s.type == TimerType.focus && s.completed)
+        .fold<int>(0, (sum, s) => sum + s.duration);
+  }
+
   int get todayBreakMinutes {
     return todaySessions
         .where((s) => s.type == TimerType.breakTime)
         .fold<int>(0, (sum, s) => sum + (s.duration ~/ 60));
+  }
+
+  int get totalBreakMinutes {
+    return _sessions
+        .where((s) => s.type == TimerType.breakTime && s.completed)
+        .fold<int>(0, (sum, s) => sum + (s.duration ~/ 60));
+  }
+
+  int get totalBreakSeconds {
+    return _sessions
+        .where((s) => s.type == TimerType.breakTime && s.completed)
+        .fold<int>(0, (sum, s) => sum + s.duration);
   }
 
   int get completedSessionCount {
@@ -56,6 +80,18 @@ class SessionProvider extends ChangeNotifier {
       (sum, s) => sum + (s.duration ~/ 60),
     );
     return totalMinutes / focusSessions.length;
+  }
+
+  double get averageSessionSeconds {
+    final focusSessions = _sessions
+        .where((s) => s.type == TimerType.focus && s.completed)
+        .toList();
+    if (focusSessions.isEmpty) return 0;
+    final totalSeconds = focusSessions.fold<int>(
+      0,
+      (sum, s) => sum + s.duration,
+    );
+    return totalSeconds / focusSessions.length;
   }
 
   Map<DateTime, int> get weeklyFocusMinutes {
