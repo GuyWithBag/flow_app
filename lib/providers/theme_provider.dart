@@ -9,6 +9,7 @@ class ThemeProvider extends ChangeNotifier {
   String _themeBrightness = 'system'; // 'light', 'dark', 'system'
   int _dailyGoalMinutes = 120;
   TimerType _currentTimerType = TimerType.focus;
+  bool _showBackgroundOnMenuScreens = false;
 
   // Per-mode theming for Focus / Break
   final Map<TimerType, String> _modeBackgroundThemes = {
@@ -35,6 +36,7 @@ class ThemeProvider extends ChangeNotifier {
   String get themeBrightness => _themeBrightness;
   int get dailyGoalMinutes => _dailyGoalMinutes;
   TimerType get currentTimerType => _currentTimerType;
+  bool get showBackgroundOnMenuScreens => _showBackgroundOnMenuScreens;
 
   // Current-mode convenience getters (resolve based on active timer type)
   Color get accentColor => _modeAccentColors[_currentTimerType]!;
@@ -139,6 +141,12 @@ class ThemeProvider extends ChangeNotifier {
     _savePreferences();
   }
 
+  void setShowBackgroundOnMenuScreens(bool value) {
+    _showBackgroundOnMenuScreens = value;
+    notifyListeners();
+    _savePreferences();
+  }
+
   // Per-mode setters
   void setModeBackgroundTheme(TimerType type, String theme) {
     _modeBackgroundThemes[type] = theme;
@@ -167,6 +175,7 @@ class ThemeProvider extends ChangeNotifier {
     box.put('dark_mode', _isDarkMode);
     box.put('theme_brightness', _themeBrightness);
     box.put('daily_goal_minutes', _dailyGoalMinutes);
+    box.put('show_background_on_menu_screens', _showBackgroundOnMenuScreens);
 
     box.put(
       'focus_background_theme',
@@ -202,6 +211,10 @@ class ThemeProvider extends ChangeNotifier {
     _isDarkMode = box.get('dark_mode', defaultValue: false);
     _themeBrightness = box.get('theme_brightness', defaultValue: 'system');
     _dailyGoalMinutes = box.get('daily_goal_minutes', defaultValue: 120);
+    _showBackgroundOnMenuScreens = box.get(
+      'show_background_on_menu_screens',
+      defaultValue: false,
+    );
 
     _modeBackgroundThemes[TimerType.focus] = box.get(
       'focus_background_theme',

@@ -156,9 +156,7 @@ class TimerScreen extends HookWidget {
     )..repeat();
 
     // Colors
-    final isDark = themeProvider.isDarkMode;
     final currentColor = Theme.of(context).colorScheme.primary;
-    final backgroundColor = isDark ? const Color(0xFF121212) : Colors.white;
 
     // Progress Calculation
     int currentMaxDuration;
@@ -188,7 +186,7 @@ class TimerScreen extends HookWidget {
     final isCompact = screenHeight < 1000;
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: Colors.transparent,
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
@@ -261,7 +259,6 @@ class TimerScreen extends HookWidget {
                           fillPercent: fillPercent,
                           waveController: waveController,
                           isDragging: isDragging,
-                          isDark: isDark,
                           contrast: timerProvider.waveContrast,
                           animDuration: animDuration,
                           animCurve: animCurve,

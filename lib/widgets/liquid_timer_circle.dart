@@ -16,7 +16,6 @@ class LiquidTimerCircle extends HookWidget {
   final double fillPercent;
   final AnimationController waveController;
   final ValueNotifier<bool> isDragging;
-  final bool isDark;
   final double contrast;
   final int animDuration;
   final Curve animCurve;
@@ -31,7 +30,6 @@ class LiquidTimerCircle extends HookWidget {
     required this.fillPercent,
     required this.waveController,
     required this.isDragging,
-    required this.isDark,
     required this.contrast,
     required this.animDuration,
     required this.animCurve,
@@ -43,7 +41,7 @@ class LiquidTimerCircle extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final timerProvider = Provider.of<TimerProvider>(context);
-
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return LayoutBuilder(
       builder: (context, constraints) {
         final available = math.min(constraints.maxWidth, constraints.maxHeight);
@@ -131,12 +129,9 @@ class LiquidTimerCircle extends HookWidget {
                         height: size,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isDark ? Colors.grey.shade900 : Colors.white,
                           boxShadow: [
                             BoxShadow(
-                              color: color.withValues(
-                                alpha: isDark ? 0.2 : 0.3,
-                              ),
+                              color: color.withValues(alpha: 0.3),
                               blurRadius: currentBlur,
                               spreadRadius: 2,
                             ),

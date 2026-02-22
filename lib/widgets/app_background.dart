@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flow_app/providers/providers.barrel.dart';
 import 'package:flutter/material.dart';
 
@@ -17,18 +19,37 @@ class AppBackground extends StatelessWidget {
       return Stack(
         fit: StackFit.expand,
         children: [
-          Image.network(
-            url,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) =>
-                _fallbackBackground(context, scaffoldBg),
-          ),
+          _buildImageWidget(url, context, scaffoldBg),
           DecoratedBox(decoration: BoxDecoration(color: overlayColor)),
         ],
       );
     }
 
     return _fallbackBackground(context, scaffoldBg);
+  }
+
+  bool _isRemoteUrl(String path) {
+    return path.startsWith('http://') || path.startsWith('https://');
+  }
+
+  Widget _buildImageWidget(
+    String path,
+    BuildContext context,
+    Color scaffoldBg,
+  ) {
+    if (_isRemoteUrl(path)) {
+      return Image.network(
+        path,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _fallbackBackground(context, scaffoldBg),
+      );
+    } else {
+      return Image.file(
+        File(path),
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _fallbackBackground(context, scaffoldBg),
+      );
+    }
   }
 
   Widget _fallbackBackground(BuildContext context, Color scaffoldBg) {
