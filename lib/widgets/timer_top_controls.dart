@@ -8,11 +8,13 @@ class TimerTopControls extends StatelessWidget {
     required this.controlsVisible,
     required this.timerProvider,
     required this.isDark,
+    required this.showPresetSelector,
   });
 
   final ValueNotifier<bool> controlsVisible;
   final TimerProvider timerProvider;
   final bool isDark;
+  final bool showPresetSelector;
 
   @override
   Widget build(BuildContext context) {
@@ -33,20 +35,25 @@ class TimerTopControls extends StatelessWidget {
                   'Flow',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
                 ),
-                // Preset Label and Loop Indicator
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    child: Text(
-                      "Loop ${timerProvider.currentLoop} / ${timerProvider.targetLoops}",
-                      style: Theme.of(context).textTheme.labelMedium!.copyWith(
-                        fontWeight: FontWeight.bold,
+                // Preset Selector and Loop Indicator
+                Row(
+                  spacing: 8,
+                  children: [
+                    PresetSelector(),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        child: Text(
+                          "Loop ${timerProvider.currentLoop} / ${timerProvider.targetLoops}",
+                          style: Theme.of(context).textTheme.labelMedium!
+                              .copyWith(fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),

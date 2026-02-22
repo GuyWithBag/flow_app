@@ -32,13 +32,17 @@ class PresetProvider extends ChangeNotifier {
   ];
 
   final List<PomodoroPreset> _presets = [];
-  PomodoroPreset? _selectedPreset;
+  PomodoroPreset _selectedPreset =
+      _defaultPresets.first; // Initialize with Classic
 
   List<PomodoroPreset> get presets => List.unmodifiable(_presets);
-  PomodoroPreset? get selectedPreset => _selectedPreset;
+  PomodoroPreset get selectedPreset => _selectedPreset;
 
   Box<PomodoroPreset> get _box => Hive.box<PomodoroPreset>('presets');
   Box get _settingsBox => Hive.box('settings');
+
+  // Get the Classic preset (default)
+  PomodoroPreset get _classicPreset => _defaultPresets.first;
 
   void loadPresets() {
     _presets.clear();
@@ -53,10 +57,10 @@ class PresetProvider extends ChangeNotifier {
     }
 
     final selectedId =
-        _settingsBox.get('selected_preset_id', defaultValue: '') as String;
-    if (selectedId.isNotEmpty) {
-      _selectedPreset = _presets.where((p) => p.id == selectedId).firstOrNull;
-    }
+        _settingsBox.get('selected_preset_id', defaultValue: 'classic')
+            as String;
+    _selectedPreset =
+        _presets.where((p) => p.id == selectedId).firstOrNull ?? _classicPreset;
 
     notifyListeners();
   }
@@ -64,12 +68,6 @@ class PresetProvider extends ChangeNotifier {
   void selectPreset(PomodoroPreset preset) {
     _selectedPreset = preset;
     _settingsBox.put('selected_preset_id', preset.id);
-    notifyListeners();
-  }
-
-  void clearPreset() {
-    _selectedPreset = null;
-    _settingsBox.put('selected_preset_id', '');
     notifyListeners();
   }
 
@@ -85,7 +83,7 @@ class PresetProvider extends ChangeNotifier {
     if (index != -1) {
       _presets[index] = updated;
     }
-    if (_selectedPreset?.id == updated.id) {
+    if (_selectedPreset.id == updated.id) {
       _selectedPreset = updated;
     }
     notifyListeners();
@@ -94,9 +92,10 @@ class PresetProvider extends ChangeNotifier {
   Future<void> deletePreset(String id) async {
     await _box.delete(id);
     _presets.removeWhere((p) => p.id == id);
-    if (_selectedPreset?.id == id) {
-      _selectedPreset = null;
-      _settingsBox.put('selected_preset_id', '');
+    if (_selectedPreset.id == id) {
+      // If deleting the selected preset, fall back to Classic
+      _selectedPreset = _classicPreset;
+      _settingsBox.put('selected_preset_id', 'classic');
     }
     notifyListeners();
   }

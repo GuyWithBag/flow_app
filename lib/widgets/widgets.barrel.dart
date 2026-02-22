@@ -13,6 +13,7 @@ export 'mode_toggle.dart';
 export 'play_pause_button.dart';
 export 'preset_card.dart';
 export 'preset_selector.dart';
+export 'preset_selector_menu.dart';
 export 'scale_chip.dart';
 export 'settings_section_header.dart';
 export 'timer_circle_content.dart';
