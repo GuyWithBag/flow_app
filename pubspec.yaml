@@ -58,7 +58,7 @@ dependencies:
   flutter_colorpicker: 1.1.0
 
   # Confetti
-  flutter_confetti: ^0.5.1
+  flutter_confetti: 0.5.1
 
   # UI Enhancements
 dev_dependencies:
