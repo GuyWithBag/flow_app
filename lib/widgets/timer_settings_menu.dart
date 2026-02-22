@@ -160,6 +160,18 @@ class TimerSettingsMenu extends StatelessWidget {
                 activeThumbColor: accentColor,
               ),
               const SizedBox(height: 16),
+              const MenuSubsectionTitle(title: "Controls"),
+              SwitchListTile(
+                title: const Text("Auto-hide Controls"),
+                subtitle: const Text("Hide controls when timer is running"),
+                value: timerProvider.autoHideControls,
+                onChanged: (val) {
+                  timerProvider.setAutoHideControls(val);
+                  setState(() {});
+                },
+                activeThumbColor: accentColor,
+              ),
+              const SizedBox(height: 16),
               const MenuSubsectionTitle(title: "Visuals"),
               SwitchListTile(
                 title: const Text("Show Background Liquid"),

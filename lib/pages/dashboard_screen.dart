@@ -45,7 +45,6 @@ class DashboardScreen extends HookWidget {
         ),
       ],
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

@@ -18,7 +18,6 @@ class AccountScreen extends HookWidget {
     return FlowMenuBar(
       title: 'Account',
       body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
         children: [
           if (authProvider.isAuthenticated &&
               authProvider.currentUser != null) ...[

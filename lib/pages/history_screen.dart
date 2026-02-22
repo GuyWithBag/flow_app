@@ -30,7 +30,6 @@ class HistoryScreen extends HookWidget {
           : completedSessions.isEmpty
           ? _buildEmptyState()
           : ListView.builder(
-              padding: const EdgeInsets.all(16),
               itemCount: completedSessions.length,
               itemBuilder: (context, index) {
                 final session = completedSessions[index];

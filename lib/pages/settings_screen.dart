@@ -15,7 +15,6 @@ class SettingsScreen extends HookWidget {
     return FlowMenuBar(
       title: 'Settings',
       body: ListView(
-        padding: const EdgeInsets.all(16),
         children: [
           const Text(
             'General',

@@ -15,17 +15,13 @@ class FlowMenuBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: Text(title),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        scrolledUnderElevation: 0,
-        actions: actions,
+      appBar: AppBar(title: Text(title), elevation: 1, actions: actions),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+          child: body,
+        ),
       ),
-      body: SafeArea(child: body),
     );
   }
 }

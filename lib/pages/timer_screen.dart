@@ -38,12 +38,14 @@ class TimerScreen extends HookWidget {
       } else {
         controlsVisible.value = true;
         autoHideTimer.value?.cancel();
-        // Auto-hide again after 3 seconds if running
-        autoHideTimer.value = Timer(const Duration(seconds: 3), () {
-          if (timerProvider.isRunning) {
-            controlsVisible.value = false;
-          }
-        });
+        // Auto-hide again after 3 seconds if running and auto-hide is enabled
+        if (timerProvider.autoHideControls) {
+          autoHideTimer.value = Timer(const Duration(seconds: 3), () {
+            if (timerProvider.isRunning) {
+              controlsVisible.value = false;
+            }
+          });
+        }
       }
     }
 
@@ -140,7 +142,9 @@ class TimerScreen extends HookWidget {
     useEffect(() {
       if (timerProvider.isRunning) {
         playbackTotalDuration.value = timerProvider.remainingSeconds;
-        controlsVisible.value = false;
+        if (timerProvider.autoHideControls) {
+          controlsVisible.value = false;
+        }
       } else {
         controlsVisible.value = true;
         autoHideTimer.value?.cancel();
@@ -178,7 +182,7 @@ class TimerScreen extends HookWidget {
         : (timerProvider.isRunning ? Curves.linear : Curves.easeOutCubic);
 
     final filledFlatButton = IconButton.styleFrom(
-      backgroundColor: Theme.of(context).colorScheme.onPrimary,
+      backgroundColor: Theme.of(context).cardColor,
       foregroundColor: Theme.of(context).colorScheme.inverseSurface,
     );
 

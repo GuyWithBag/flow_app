@@ -16,7 +16,6 @@ class ThemeSettingsScreen extends HookWidget {
     return FlowMenuBar(
       title: 'Theme & Appearance',
       body: ListView(
-        padding: const EdgeInsets.all(16),
         children: [
           const Text(
             'General',
