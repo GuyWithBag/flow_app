@@ -68,6 +68,8 @@ dependencies:
 
   google_fonts: 8.0.2
 
+  google_mobile_ads: 7.0.0
+
   # UI Enhancements
 dev_dependencies:
   flutter_test:
