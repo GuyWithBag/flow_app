@@ -12,8 +12,28 @@ class ModeToggle extends StatelessWidget {
     final timerProvider = Provider.of<TimerProvider>(context);
     final presetProvider = Provider.of<PresetProvider>(context);
     final sessionProvider = Provider.of<SessionProvider>(context);
+    final themeProvider = context.watch<ThemeProvider>();
 
     final isSessionActive = sessionProvider.isSessionActive;
+
+    void onTap(TimerType toType) {
+      if (timerProvider.currentType == toType) return;
+
+      timerProvider.setTimerType(toType);
+      themeProvider.updateTimerType(toType);
+      if (toType == TimerType.focus) {
+        timerProvider.setCustomDuration(
+          presetProvider.selectedPreset.focusDuration,
+        );
+      } else {
+        timerProvider.setCustomDuration(
+          presetProvider.selectedPreset.breakDuration,
+        );
+      }
+
+      print(toType);
+      print(themeProvider.currentTimerType);
+    }
 
     return Opacity(
       opacity: isSessionActive ? 0.5 : 1.0,
@@ -23,26 +43,15 @@ class ModeToggle extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             BouncingButton(
-              onTap: isSessionActive
-                  ? null
-                  : () {
-                      timerProvider.setTimerType(TimerType.focus);
-                      final preset = presetProvider.selectedPreset;
-                      timerProvider.setCustomDuration(preset.focusDuration);
-                    },
+              onTap: () => onTap(TimerType.focus),
+
               child: ModeButtonContent(
                 label: 'Focus',
                 isSelected: timerProvider.currentType == TimerType.focus,
               ),
             ),
             BouncingButton(
-              onTap: isSessionActive
-                  ? null
-                  : () {
-                      timerProvider.setTimerType(TimerType.breakTime);
-                      final preset = presetProvider.selectedPreset;
-                      timerProvider.setCustomDuration(preset.breakDuration);
-                    },
+              onTap: () => onTap(TimerType.breakTime),
               child: ModeButtonContent(
                 label: 'Break',
                 isSelected: timerProvider.currentType == TimerType.breakTime,

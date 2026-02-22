@@ -29,25 +29,13 @@ class App extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => sessionProvider),
         ChangeNotifierProvider(create: (_) => presetProvider),
       ],
+      // This is to update the Theme
       child: Consumer2<ThemeProvider, TimerProvider>(
-        builder: (context, themeProvider, timerProvider, _) {
-          final timerType = timerProvider.currentType;
-          if (themeProvider.currentTimerType != timerType) {
-            SchedulerBinding.instance.addPostFrameCallback((_) {
-              themeProvider.updateTimerType(timerType);
-            });
-          }
-
-          // Update theme based on system brightness if in system mode
-          final brightness = MediaQuery.platformBrightnessOf(context);
-          SchedulerBinding.instance.addPostFrameCallback((_) {
-            themeProvider.updateSystemBrightness(brightness);
-          });
-
+        builder: (context, themeProvider2, timerProvider2, _) {
           return MaterialApp(
             title: 'Flow',
             debugShowCheckedModeBanner: false,
-            theme: themeProvider.currentTheme,
+            theme: themeProvider2.currentTheme,
             home: const MainScreen(),
           );
         },

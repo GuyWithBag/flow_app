@@ -297,6 +297,8 @@ class AccountScreen extends HookWidget {
               onChanged: (value) {
                 if (value != null) {
                   themeProvider.setThemeBrightness(value);
+                  final brightness = MediaQuery.platformBrightnessOf(context);
+                  themeProvider.updateSystemBrightness(brightness);
                   Navigator.pop(context);
                 }
               },
