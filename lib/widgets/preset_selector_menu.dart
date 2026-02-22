@@ -8,6 +8,7 @@ class PresetSelectorMenu extends StatelessWidget {
   final TimerProvider timerProvider;
   final bool showAddButton;
   final VoidCallback? onPresetSelected;
+  final ScrollController? scrollController;
 
   const PresetSelectorMenu({
     super.key,
@@ -15,6 +16,7 @@ class PresetSelectorMenu extends StatelessWidget {
     required this.timerProvider,
     this.showAddButton = true,
     this.onPresetSelected,
+    this.scrollController,
   });
 
   @override
@@ -22,6 +24,19 @@ class PresetSelectorMenu extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 12, bottom: 8),
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+        ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -39,6 +54,7 @@ class PresetSelectorMenu extends StatelessWidget {
         const SizedBox(height: 16),
         Expanded(
           child: ListView.builder(
+            controller: scrollController,
             itemCount: presetProvider.presets.length,
             itemBuilder: (context, index) {
               final preset = presetProvider.presets[index];

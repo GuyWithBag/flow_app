@@ -377,7 +377,6 @@ class TimerScreen extends HookWidget {
                   // BOTTOM CONTROLS
                   TimerBottomControls(
                     controlsVisible: controlsVisible,
-                    isDark: isDark,
                     timerProvider: timerProvider,
                     presetProvider: presetProvider,
                     sessionProvider: sessionProvider,

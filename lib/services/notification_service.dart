@@ -152,14 +152,15 @@ class NotificationService {
   Future<void> showCompletionNotification({
     required String title,
     required String body,
+    bool playDefaultSound = false,
   }) async {
-    const details = AndroidNotificationDetails(
+    final details = AndroidNotificationDetails(
       _alertChannelId,
       _alertChannelName,
       channelDescription: _alertChannelDesc,
       importance: Importance.high,
       priority: Priority.high,
-      playSound: true,
+      playSound: playDefaultSound,
       enableVibration: true,
     );
 
@@ -167,7 +168,7 @@ class NotificationService {
       id: _completionNotificationId,
       title: title,
       body: body,
-      notificationDetails: const NotificationDetails(android: details),
+      notificationDetails: NotificationDetails(android: details),
     );
   }
 

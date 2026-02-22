@@ -64,12 +64,13 @@ class PresetSelector extends StatelessWidget {
           builder: (context, scrollController) {
             return SafeArea(
               child: Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: PresetSelectorMenu(
                   presetProvider: presetProvider,
                   timerProvider: timerProvider,
                   showAddButton: true,
                   onPresetSelected: () => Navigator.pop(context),
+                  scrollController: scrollController,
                 ),
               ),
             );

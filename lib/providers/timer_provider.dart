@@ -38,6 +38,7 @@ class TimerProvider extends ChangeNotifier {
   bool _showInnerLiquid = true;
   bool _showBackgroundLiquid = true;
   String? _customSoundPath;
+  bool _playDefaultSound = false;
 
   void _loadFromStorage() {
     final box = Hive.box('settings');
@@ -75,6 +76,10 @@ class TimerProvider extends ChangeNotifier {
       defaultValue: true,
     );
     _customSoundPath = box.get('timer_custom_sound_path');
+    _playDefaultSound = box.get(
+      'timer_play_default_sound',
+      defaultValue: false,
+    );
   }
 
   void _saveToStorage() {
@@ -98,6 +103,7 @@ class TimerProvider extends ChangeNotifier {
     if (_customSoundPath != null) {
       box.put('timer_custom_sound_path', _customSoundPath);
     }
+    box.put('timer_play_default_sound', _playDefaultSound);
   }
 
   // --- TIMER GETTERS ---
@@ -123,6 +129,7 @@ class TimerProvider extends ChangeNotifier {
   bool get showInnerLiquid => _showInnerLiquid;
   bool get showBackgroundLiquid => _showBackgroundLiquid;
   String? get customSoundPath => _customSoundPath;
+  bool get playDefaultSound => _playDefaultSound;
 
   // --- CONFIG SETTERS ---
   void setAutoStartBreak(bool value) {
@@ -196,6 +203,12 @@ class TimerProvider extends ChangeNotifier {
 
   void setCustomSoundPath(String? path) {
     _customSoundPath = path;
+    notifyListeners();
+    _saveToStorage();
+  }
+
+  void setPlayDefaultSound(bool value) {
+    _playDefaultSound = value;
     notifyListeners();
     _saveToStorage();
   }
@@ -286,6 +299,7 @@ class TimerProvider extends ChangeNotifier {
       body: _currentType == TimerType.focus
           ? 'Great work! Time for a break.'
           : 'Break is over. Ready to focus?',
+      playDefaultSound: _playDefaultSound,
     );
 
     // Cancel the ongoing timer notification
