@@ -81,7 +81,7 @@ class PresetSelector extends HookWidget {
                   showAddButton: true,
                   onPresetSelected: () => Navigator.pop(context),
                   scrollController: scrollController,
-                  showTitleAndHandle: false,
+                  showTitleAndHandle: true,
                 ),
               ),
             );
