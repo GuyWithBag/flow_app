@@ -21,39 +21,7 @@ class TimerBottomControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     void resetLoop() {
-      if (sessionProvider.isSessionActive) {
-        // Show confirmation dialog if session is active
-        showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Reset Session?'),
-            content: const Text(
-              'This will cancel the current session and discard all progress.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  sessionProvider.cancelSession();
-                  timerProvider.resetLoop();
-                  timerProvider.resetTimerToPreset(
-                    presetProvider.selectedPreset,
-                  );
-                  Navigator.pop(ctx);
-                },
-                child: const Text('Reset'),
-              ),
-            ],
-          ),
-        );
-      } else {
-        // No active session, just reset
-        timerProvider.resetLoop();
-        timerProvider.resetTimerToPreset(presetProvider.selectedPreset);
-      }
+      timerProvider.resetTimerToPreset(presetProvider.selectedPreset);
     }
 
     void finishSession() {

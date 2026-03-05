@@ -40,7 +40,9 @@ class LiquidTimerCircle extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final timerProvider = Provider.of<TimerProvider>(context);
+    final sessionProvider = Provider.of<SessionProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isLocked = timerProvider.isRunning || sessionProvider.isSessionActive;
     return LayoutBuilder(
       builder: (context, constraints) {
         final available = math.min(constraints.maxWidth, constraints.maxHeight);
@@ -60,6 +62,26 @@ class LiquidTimerCircle extends HookWidget {
               onTapUp: (details) {
                 if (timerProvider.isRunning) {
                   onCircleTap();
+                  return;
+                }
+
+                if (sessionProvider.isSessionActive) {
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text('Timer Locked'),
+                      content: const Text(
+                        'You cannot change the timer while a session is active. '
+                        'Finish or cancel the session first.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: const Text('OK'),
+                        ),
+                      ],
+                    ),
+                  );
                   return;
                 }
 
@@ -143,7 +165,7 @@ class LiquidTimerCircle extends HookWidget {
                         size: size,
                         strokeWidth: size * 0.086,
                         knobRadius: size * 0.05,
-                        onDragStart: timerProvider.isRunning
+                        onDragStart: isLocked
                             ? null
                             : (globalPosition) {
                                 isDragging.value = true;
@@ -156,7 +178,7 @@ class LiquidTimerCircle extends HookWidget {
                                   context,
                                 );
                               },
-                        onDragUpdate: timerProvider.isRunning
+                        onDragUpdate: isLocked
                             ? null
                             : (globalPosition) {
                                 _updateTimeFromDrag(
@@ -167,7 +189,7 @@ class LiquidTimerCircle extends HookWidget {
                                   context,
                                 );
                               },
-                        onDragEnd: timerProvider.isRunning
+                        onDragEnd: isLocked
                             ? null
                             : () {
                                 isDragging.value = false;
