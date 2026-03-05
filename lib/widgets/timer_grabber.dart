@@ -54,6 +54,7 @@ class TimerGrabber extends StatelessWidget {
       width: size,
       height: size,
       child: Stack(
+        clipBehavior: Clip.none,
         children: [
           // Layer 1: Shadow
           Positioned(
