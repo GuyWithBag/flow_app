@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:flow_app/painters/painters.barrel.dart';
 import 'package:flow_app/providers/providers.barrel.dart';
 import 'package:flow_app/widgets/widgets.barrel.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -49,8 +48,6 @@ class LiquidTimerCircle extends HookWidget {
         final center = Offset(size / 2, size / 2);
         // Inner zone for tap-to-open picker (when paused) / tap-to-toggle-controls (when running)
         final innerZoneRadius = (size / 2) - (size * 0.18);
-        // Grab zone - only claim gesture in outer ring area
-        final grabZoneRadius = (size / 2) - (size * 0.12);
 
         return TweenAnimationBuilder<double>(
           tween: Tween<double>(begin: 0.0, end: fillPercent),
@@ -59,148 +56,131 @@ class LiquidTimerCircle extends HookWidget {
           builder: (context, animatedProgress, child) {
             final double currentBlur = 10.0 + (30.0 * animatedProgress);
 
-            return RawGestureDetector(
-              gestures: {
-                _AllowedPanGestureRecognizer:
-                    GestureRecognizerFactoryWithHandlers<
-                      _AllowedPanGestureRecognizer
-                    >(
-                      () => _AllowedPanGestureRecognizer(
-                        center: center,
-                        grabZoneRadius: grabZoneRadius,
-                        isRunning: timerProvider.isRunning,
-                      ),
-                      (_AllowedPanGestureRecognizer instance) {
-                        instance
-                          ..onStart = (details) {
-                            if (timerProvider.isRunning) return;
-                            final dist =
-                                (details.localPosition - center).distance;
-                            if (dist >= grabZoneRadius) {
-                              isDragging.value = true;
-                              HapticFeedback.selectionClick();
-                              _updateTimeFromDrag(
-                                details.localPosition,
-                                size,
-                                timerProvider,
-                                maxDuration,
-                              );
-                            }
-                          }
-                          ..onUpdate = (details) {
-                            if (timerProvider.isRunning) return;
-                            _updateTimeFromDrag(
-                              details.localPosition,
-                              size,
-                              timerProvider,
-                              maxDuration,
-                            );
-                          }
-                          ..onEnd = (_) {
-                            isDragging.value = false;
-                          }
-                          ..onCancel = () {
-                            isDragging.value = false;
-                          };
-                      },
-                    ),
+            return GestureDetector(
+              onTapUp: (details) {
+                if (timerProvider.isRunning) {
+                  onCircleTap();
+                  return;
+                }
+
+                final dist = (details.localPosition - center).distance;
+                if (dist < innerZoneRadius) {
+                  _showTimePicker(context, timerProvider);
+                } else {
+                  _updateTimeFromDrag(
+                    details.globalPosition,
+                    size,
+                    timerProvider,
+                    maxDuration,
+                    context,
+                  );
+                }
               },
-              child: GestureDetector(
-                onTapUp: (details) {
-                  if (timerProvider.isRunning) {
-                    onCircleTap();
-                    return;
-                  }
-
-                  final dist = (details.localPosition - center).distance;
-                  if (dist < innerZoneRadius) {
-                    _showTimePicker(context, timerProvider);
-                  } else {
-                    _updateTimeFromDrag(
-                      details.localPosition,
-                      size,
-                      timerProvider,
-                      maxDuration,
-                    );
-                  }
-                },
-                child: RepaintBoundary(
-                  child: Stack(
-                    alignment: Alignment.center,
-                    clipBehavior: Clip.none,
-                    children: [
-                      // 1. Shadow
-                      Container(
-                        width: size,
-                        height: size,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: color.withValues(alpha: 0.3),
-                              blurRadius: currentBlur,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
+              child: RepaintBoundary(
+                child: Stack(
+                  alignment: Alignment.center,
+                  clipBehavior: Clip.none,
+                  children: [
+                    // 1. Shadow
+                    Container(
+                      width: size,
+                      height: size,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: color.withValues(alpha: 0.3),
+                            blurRadius: currentBlur,
+                            spreadRadius: 2,
+                          ),
+                        ],
                       ),
+                    ),
 
-                      // 2. INNER LIQUID
-                      if (showInnerLiquid)
-                        ClipOval(
-                          child: SizedBox(
-                            width: size - 10,
-                            height: size - 10,
-                            child: AnimatedBuilder(
-                              animation: waveController,
-                              builder: (context, child) {
-                                return CustomPaint(
-                                  painter: LiquidWavePainter(
-                                    waveValue: waveController.value,
-                                    fillPercent: animatedProgress,
-                                    color: color.withValues(alpha: contrast),
-                                    waveHeight: 12.0,
-                                    waveFrequency: 2.0,
-                                  ),
-                                );
-                              },
-                            ),
+                    // 2. INNER LIQUID
+                    if (showInnerLiquid)
+                      ClipOval(
+                        child: SizedBox(
+                          width: size - 10,
+                          height: size - 10,
+                          child: AnimatedBuilder(
+                            animation: waveController,
+                            builder: (context, child) {
+                              return CustomPaint(
+                                painter: LiquidWavePainter(
+                                  waveValue: waveController.value,
+                                  fillPercent: animatedProgress,
+                                  color: color.withValues(alpha: contrast),
+                                  waveHeight: 12.0,
+                                  waveFrequency: 2.0,
+                                ),
+                              );
+                            },
                           ),
                         ),
-
-                      // 3. Ring - CircularProgressIndicator
-                      SizedBox(
-                        width: size,
-                        height: size,
-                        child: CircularProgressIndicator(
-                          value: animatedProgress,
-                          strokeWidth: size * 0.086,
-                          valueColor: AlwaysStoppedAnimation<Color>(color),
-                          backgroundColor: isDark
-                              ? Colors.grey.shade800
-                              : Colors.grey.shade100,
-                          strokeCap: StrokeCap.round,
-                        ),
                       ),
 
-                      // 4. Custom grabber knob
-                      if (animatedProgress > 0)
-                        TimerGrabber(
-                          progress: animatedProgress,
-                          color: color,
-                          size: size,
-                          strokeWidth: size * 0.086,
-                          knobRadius: size * 0.05,
-                        ),
-
-                      // 5. Text Content
-                      TimerCircleContent(
-                        formattedTime: timerProvider.formattedTime,
-                        isRunning: timerProvider.isRunning,
-                        controlsVisible: controlsVisible,
+                    // 3. Ring - CircularProgressIndicator
+                    SizedBox(
+                      width: size,
+                      height: size,
+                      child: CircularProgressIndicator(
+                        value: animatedProgress,
+                        strokeWidth: size * 0.086,
+                        valueColor: AlwaysStoppedAnimation<Color>(color),
+                        backgroundColor: isDark
+                            ? Colors.grey.shade800
+                            : Colors.grey.shade100,
+                        strokeCap: StrokeCap.round,
                       ),
-                    ],
-                  ),
+                    ),
+
+                    // 4. Custom grabber knob
+                    if (animatedProgress > 0)
+                      TimerGrabber(
+                        progress: animatedProgress,
+                        color: color,
+                        size: size,
+                        strokeWidth: size * 0.086,
+                        knobRadius: size * 0.05,
+                        onDragStart: timerProvider.isRunning
+                            ? null
+                            : (globalPosition) {
+                                isDragging.value = true;
+                                HapticFeedback.selectionClick();
+                                _updateTimeFromDrag(
+                                  globalPosition,
+                                  size,
+                                  timerProvider,
+                                  maxDuration,
+                                  context,
+                                );
+                              },
+                        onDragUpdate: timerProvider.isRunning
+                            ? null
+                            : (globalPosition) {
+                                _updateTimeFromDrag(
+                                  globalPosition,
+                                  size,
+                                  timerProvider,
+                                  maxDuration,
+                                  context,
+                                );
+                              },
+                        onDragEnd: timerProvider.isRunning
+                            ? null
+                            : () {
+                                isDragging.value = false;
+                              },
+                      ),
+
+                    // 5. Text Content
+                    TimerCircleContent(
+                      formattedTime: timerProvider.formattedTime,
+                      isRunning: timerProvider.isRunning,
+                      controlsVisible: controlsVisible,
+                    ),
+                  ],
                 ),
               ),
             );
@@ -211,11 +191,14 @@ class LiquidTimerCircle extends HookWidget {
   }
 
   void _updateTimeFromDrag(
-    Offset localPosition,
+    Offset globalPosition,
     double size,
     TimerProvider provider,
     int maxDuration,
+    BuildContext context,
   ) {
+    final box = context.findRenderObject() as RenderBox;
+    final localPosition = box.globalToLocal(globalPosition);
     final center = Offset(size / 2, size / 2);
     final dx = localPosition.dx - center.dx;
     final dy = localPosition.dy - center.dy;
@@ -330,35 +313,5 @@ class LiquidTimerCircle extends HookWidget {
         );
       },
     );
-  }
-}
-
-// Custom pan gesture recognizer that eagerly wins the gesture arena
-// to prevent PageView from stealing drags on the timer circle
-class _AllowedPanGestureRecognizer extends VerticalDragGestureRecognizer {
-  final Offset center;
-  final double grabZoneRadius;
-  final bool isRunning;
-
-  _AllowedPanGestureRecognizer({
-    required this.center,
-    required this.grabZoneRadius,
-    required this.isRunning,
-  });
-
-  @override
-  void addAllowedPointer(PointerDownEvent event) {
-    super.addAllowedPointer(event);
-
-    // Only claim the gesture if:
-    // 1. Timer is not running (to allow drag adjustment)
-    // 2. AND the tap is in the grab zone (outer ring area)
-    if (!isRunning) {
-      final distance = (event.localPosition - center).distance;
-      if (distance >= grabZoneRadius) {
-        // Immediately claim the gesture to win against PageView
-        resolve(GestureDisposition.accepted);
-      }
-    }
   }
 }

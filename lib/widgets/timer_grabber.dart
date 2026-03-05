@@ -1,28 +1,17 @@
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-/// A custom grabber/knob widget that positions itself at the end of a circular progress arc.
-///
-/// This widget renders a 3-layer knob:
-/// 1. Shadow layer (outermost) - subtle shadow effect
-/// 2. White ring (middle) - border/highlight
-/// 3. Colored core (innermost) - matches the progress color
 class TimerGrabber extends StatelessWidget {
-  /// Progress value from 0.0 to 1.0
   final double progress;
-
-  /// Core knob color (matches progress arc)
   final Color color;
-
-  /// Circle diameter
   final double size;
-
-  /// Ring thickness (for radius calculation)
   final double strokeWidth;
-
-  /// Knob radius
   final double knobRadius;
+  final ValueChanged<Offset>? onDragStart;
+  final ValueChanged<Offset>? onDragUpdate;
+  final VoidCallback? onDragEnd;
 
   const TimerGrabber({
     super.key,
@@ -31,24 +20,24 @@ class TimerGrabber extends StatelessWidget {
     required this.size,
     required this.strokeWidth,
     required this.knobRadius,
+    this.onDragStart,
+    this.onDragUpdate,
+    this.onDragEnd,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Calculate the position of the knob based on progress
     final center = Offset(size / 2, size / 2);
-    // CircularProgressIndicator draws on the outer edge, so the knob
-    // should be positioned on the outer radius minus half stroke width
-    final radius = (size / 2);
-
-    // Start angle is at the top (-π/2)
-    // Sweep angle is progress around the circle
+    final radius = size / 2;
     final knobAngle = -math.pi / 2 + (2 * math.pi * progress);
 
     final knobCenter = Offset(
       center.dx + radius * math.cos(knobAngle),
       center.dy + radius * math.sin(knobAngle),
     );
+
+    // Hit area is larger than the visual knob for easier grabbing
+    final hitRadius = knobRadius + 12;
 
     return SizedBox(
       width: size,
@@ -94,8 +83,52 @@ class TimerGrabber extends StatelessWidget {
               decoration: BoxDecoration(shape: BoxShape.circle, color: color),
             ),
           ),
+
+          // Layer 4: Hit area with pointer interception
+          if (onDragStart != null)
+            Positioned(
+              left: knobCenter.dx - hitRadius,
+              top: knobCenter.dy - hitRadius,
+              child: Listener(
+                behavior: HitTestBehavior.opaque,
+                onPointerDown: (event) {
+                  // Claim the pointer in the gesture arena so PageView
+                  // cannot use it for scrolling
+                  GestureBinding.instance.gestureArena
+                      .add(event.pointer, _WinningEntry())
+                      .resolve(GestureDisposition.accepted);
+                  onDragStart!(event.position);
+                },
+                onPointerMove: onDragUpdate != null
+                    ? (event) {
+                        onDragUpdate!(event.position);
+                      }
+                    : null,
+                onPointerUp: onDragEnd != null
+                    ? (_) {
+                        onDragEnd!();
+                      }
+                    : null,
+                onPointerCancel: onDragEnd != null
+                    ? (_) {
+                        onDragEnd!();
+                      }
+                    : null,
+                child: SizedBox(width: hitRadius * 2, height: hitRadius * 2),
+              ),
+            ),
         ],
       ),
     );
   }
+}
+
+/// A no-op arena member that wins the gesture arena,
+/// preventing other recognizers (like PageView's scroll) from claiming the pointer.
+class _WinningEntry extends GestureArenaMember {
+  @override
+  void acceptGesture(int pointer) {}
+
+  @override
+  void rejectGesture(int pointer) {}
 }
