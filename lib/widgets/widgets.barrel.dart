@@ -21,5 +21,6 @@ export 'preset_selector_menu.dart';
 export 'scale_chip.dart';
 export 'timer_bottom_controls.dart';
 export 'timer_circle_content.dart';
+export 'timer_grabber.dart';
 export 'timer_settings_menu.dart';
 export 'timer_top_controls.dart';

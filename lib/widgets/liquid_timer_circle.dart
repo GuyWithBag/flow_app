@@ -127,6 +127,7 @@ class LiquidTimerCircle extends HookWidget {
                 child: RepaintBoundary(
                   child: Stack(
                     alignment: Alignment.center,
+                    clipBehavior: Clip.none,
                     children: [
                       // 1. Shadow
                       Container(
@@ -167,24 +168,32 @@ class LiquidTimerCircle extends HookWidget {
                           ),
                         ),
 
-                      // 3. Ring
+                      // 3. Ring - CircularProgressIndicator
                       SizedBox(
                         width: size,
                         height: size,
-                        child: CustomPaint(
-                          painter: TimerPainter(
-                            progress: animatedProgress,
-                            color: color,
-                            trackColor: isDark
-                                ? Colors.grey.shade800
-                                : Colors.grey.shade100,
-                            strokeWidth: size * 0.086,
-                            knobRadius: size * 0.05,
-                          ),
+                        child: CircularProgressIndicator(
+                          value: animatedProgress,
+                          strokeWidth: size * 0.086,
+                          valueColor: AlwaysStoppedAnimation<Color>(color),
+                          backgroundColor: isDark
+                              ? Colors.grey.shade800
+                              : Colors.grey.shade100,
+                          strokeCap: StrokeCap.round,
                         ),
                       ),
 
-                      // 4. Text Content
+                      // 4. Custom grabber knob
+                      if (animatedProgress > 0)
+                        TimerGrabber(
+                          progress: animatedProgress,
+                          color: color,
+                          size: size,
+                          strokeWidth: size * 0.086,
+                          knobRadius: size * 0.05,
+                        ),
+
+                      // 5. Text Content
                       TimerCircleContent(
                         formattedTime: timerProvider.formattedTime,
                         isRunning: timerProvider.isRunning,
