@@ -74,7 +74,7 @@ class PlayPauseButton extends StatelessWidget {
           ),
         ],
       ),
-    ).whenComplete(() => nameController.dispose());
+    );
   }
 
   void _startSession(
