@@ -18,17 +18,10 @@ class AnimatedVisibility extends StatelessWidget {
   final Duration slideDuration;
   final Duration opacityDuration;
   final Curve curve;
-
-  /// If true, the widget will take up space even when not visible.
-  /// If false, the widget will be removed from the layout when not visible.
   final bool maintainSize;
 
   @override
   Widget build(BuildContext context) {
-    if (!maintainSize && !visible) {
-      return const SizedBox.shrink();
-    }
-
     return AnimatedSlide(
       duration: slideDuration,
       curve: curve,

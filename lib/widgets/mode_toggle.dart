@@ -17,6 +17,7 @@ class ModeToggle extends StatelessWidget {
     final isSessionActive = sessionProvider.isSessionActive;
 
     void onTap(TimerType toType) {
+      if (isSessionActive) return;
       if (timerProvider.currentType == toType) return;
 
       timerProvider.setTimerType(toType);

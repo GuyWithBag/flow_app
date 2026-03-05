@@ -215,10 +215,7 @@ class TimerBottomControls extends StatelessWidget {
           minChildSize: 0.3,
           maxChildSize: 0.9,
           builder: (context, scrollController) {
-            return TimerSettingsMenu(
-              timerProvider: timerProvider,
-              scrollController: scrollController,
-            );
+            return TimerSettingsMenu(scrollController: scrollController);
           },
         );
       },
