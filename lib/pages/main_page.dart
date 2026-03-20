@@ -19,9 +19,11 @@ class MainPage extends HookWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     final currentAccent = Theme.of(context).colorScheme.primary;
+    final adService = context.read<AdService>();
 
     useEffect(() {
       adService.loadInterstitial();
+      adService.loadBannerAd(context);
       return null;
     });
 

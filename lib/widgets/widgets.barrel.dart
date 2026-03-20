@@ -2,7 +2,6 @@
 
 // Other files
 export 'add_preset_dialog.dart';
-export 'ad_placeholder.dart';
 export 'animated_visibility.dart';
 export 'app_background.dart';
 export 'banner_ad_widget.dart';

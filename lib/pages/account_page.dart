@@ -1,6 +1,7 @@
 import 'package:flow_app/models/models.barrel.dart';
 import 'package:flow_app/pages/pages.barrel.dart';
 import 'package:flow_app/providers/providers.barrel.dart';
+import 'package:flow_app/services/services.barrel.dart';
 import 'package:flow_app/shared/ad_helper.dart';
 import 'package:flow_app/widgets/widgets.barrel.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,7 @@ class AccountPage extends HookWidget {
     final authProvider = Provider.of<AuthProvider>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
     final showPlannedMessage = useState(false);
+    final AdService adService = context.watch<AdService>();
 
     return MenuScaffold(
       title: 'Account',
@@ -35,32 +37,20 @@ class AccountPage extends HookWidget {
 
           const SizedBox(height: 16),
           _buildThemeSelector(context, themeProvider),
-          _buildSettingsTile(
-            context,
-            'Settings',
-            Icons.settings,
-            () => AdHelper.maybeShowAdAndNavigate(
+          _buildSettingsTile(context, 'Settings', Icons.settings, () {
+            adService.iAd!.show();
+            Navigator.push(
               context,
-              adProbability: 0.5,
-              onNavigate: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SettingsPage()),
-              ),
-            ),
-          ),
-          _buildSettingsTile(
-            context,
-            'Presets',
-            Icons.bookmark,
-            () => AdHelper.maybeShowAdAndNavigate(
+              MaterialPageRoute(builder: (_) => const SettingsPage()),
+            );
+          }),
+          _buildSettingsTile(context, 'Presets', Icons.bookmark, () {
+            adService.iAd!.show();
+            Navigator.push(
               context,
-              adProbability: 0.5,
-              onNavigate: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const PresetsPage()),
-              ),
-            ),
-          ),
+              MaterialPageRoute(builder: (_) => const PresetsPage()),
+            );
+          }),
           const SizedBox(height: 24),
           if (authProvider.isAuthenticated) ...[
             ElevatedButton(

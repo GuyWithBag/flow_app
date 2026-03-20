@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-class AdService {
+class AdService extends ChangeNotifier {
   InterstitialAd? iAd;
+  BannerAd? bAd;
 
-  static Future<BannerAd?> loadBannerAd(BuildContext context) async {
+  void loadBannerAd(BuildContext context) async {
     // Get an AnchoredAdaptiveBannerAdSize before loading the ad.
     final size = await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
       MediaQuery.sizeOf(context).width.truncate(),
@@ -15,26 +16,25 @@ class AdService {
       return null;
     }
 
-    late final BannerAd bannerAd;
-
-    BannerAd(
+    await BannerAd(
       adUnitId: "ca-app-pub-3940256099942544/9214589741",
       request: const AdRequest(),
       size: size,
       listener: BannerAdListener(
         onAdLoaded: (ad) {
           // Called when an ad is successfully received.
-          debugPrint("Ad was loaded.");
-          bannerAd = ad as BannerAd;
+          debugPrint("Banner Ad was loaded.");
+          bAd = ad as BannerAd;
+          notifyListeners();
         },
         onAdFailedToLoad: (ad, err) {
           // Called when an ad request failed.
-          debugPrint("Ad failed to load with error: $err");
+          debugPrint("Banner Ad failed to load with error: $err");
           ad.dispose();
+          notifyListeners();
         },
       ),
     ).load();
-    return bannerAd;
   }
 
   void loadInterstitial({Function(LoadAdError)? onAdFailedToLoad}) {
@@ -64,5 +64,3 @@ class AdService {
     );
   }
 }
-
-final adService = AdService();

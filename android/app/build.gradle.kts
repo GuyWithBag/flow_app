@@ -53,7 +53,7 @@ android {
 
     buildTypes {
         release {
-            signingConfigs.getByName("debug")
+            signingConfigs.getByName("release")
         }
     }
 }

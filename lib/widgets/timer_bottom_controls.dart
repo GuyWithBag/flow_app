@@ -1,8 +1,10 @@
 import 'package:flow_app/models/models.barrel.dart';
 import 'package:flow_app/providers/providers.barrel.dart';
+import 'package:flow_app/services/ad_service.dart';
 import 'package:flow_app/shared/ad_helper.dart';
 import 'package:flow_app/widgets/widgets.barrel.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class TimerBottomControls extends StatelessWidget {
   const TimerBottomControls({
@@ -122,6 +124,7 @@ class TimerBottomControls extends StatelessWidget {
       maximumSize: Size(btnSize, btnSize),
       iconSize: iconSize,
     );
+    final adService = context.watch<AdService>();
 
     return Row(
       children: [
@@ -154,11 +157,8 @@ class TimerBottomControls extends StatelessWidget {
         BouncingButton(
           child: IconButton(
             onPressed: () {
-              AdHelper.maybeShowAdAndNavigate(
-                context,
-                adProbability: 0.5,
-                onNavigate: () => _showSettingsSheet(context, timerProvider),
-              );
+              adService.iAd!.show();
+              _showSettingsSheet(context, timerProvider);
             },
             icon: const Icon(Icons.tune),
             style: filledFlatButton,

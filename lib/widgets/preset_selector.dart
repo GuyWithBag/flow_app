@@ -1,6 +1,5 @@
 import 'package:flow_app/providers/providers.barrel.dart';
 import 'package:flow_app/services/ad_service.dart';
-import 'package:flow_app/shared/ad_helper.dart';
 import 'package:flow_app/widgets/widgets.barrel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -12,13 +11,16 @@ class PresetSelector extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final presetProvider = Provider.of<PresetProvider>(context);
-    final timerProvider = Provider.of<TimerProvider>(context, listen: false);
     final accentColor = Theme.of(context).colorScheme.primary;
-
+    final adService = context.read<AdService>();
+    final timerProvider = Provider.of<TimerProvider>(context, listen: false);
     final isActive = useState<bool>(false);
 
     return InkWell(
-      onTap: () => adService.iAd?.show(),
+      onTap: () {
+        adService.iAd?.show();
+        _showPresetSelector(context, presetProvider, timerProvider, isActive);
+      },
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flow_app/models/models.barrel.dart';
 import 'package:flow_app/pages/pages.barrel.dart';
 import 'package:flow_app/providers/providers.barrel.dart';
+import 'package:flow_app/services/ad_service.dart';
 import 'package:flow_app/shared/ad_helper.dart';
 import 'package:flow_app/shared/format_duration.dart';
 import 'package:flow_app/widgets/widgets.barrel.dart';
@@ -31,6 +32,7 @@ class DashboardPage extends HookWidget {
 
     final focusColor = themeProvider.getAccentColorFor(TimerType.focus);
     final breakColor = themeProvider.getAccentColorFor(TimerType.breakTime);
+    final adService = context.watch<AdService>();
 
     return MenuScaffold(
       title: 'Dashboard',
@@ -38,13 +40,11 @@ class DashboardPage extends HookWidget {
         IconButton(
           icon: const Icon(Icons.history),
           onPressed: () {
-            AdHelper.maybeShowAdAndNavigate(
+            adService.iAd!.show();
+            // todo: Gotta change navigation
+            Navigator.push(
               context,
-              adProbability: 0.5,
-              onNavigate: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const HistoryPage()),
-              ),
+              MaterialPageRoute(builder: (_) => const HistoryPage()),
             );
           },
         ),
