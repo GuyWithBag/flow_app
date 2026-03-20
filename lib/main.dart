@@ -3,7 +3,9 @@
 
 import 'package:barrel_annotation/barrel_annotation.dart';
 import 'package:flow_app/models/models.barrel.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 
 import 'app.dart';
@@ -51,6 +53,10 @@ void main() async {
   sessionProvider.loadSessions();
 
   final timerProvider = TimerProvider();
+  if (defaultTargetPlatform == TargetPlatform.android ||
+      defaultTargetPlatform == TargetPlatform.iOS) {
+    await MobileAds.instance.initialize();
+  }
 
   // Wire notification action buttons to timer controls
   NotificationService.instance.onActionReceived = (actionId) {

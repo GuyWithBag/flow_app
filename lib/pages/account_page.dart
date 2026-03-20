@@ -26,7 +26,7 @@ class AccountPage extends HookWidget {
           ] else ...[
             // TODO: REPLACE WITH REAL BANNER AD - See AD_IMPLEMENTATION.md
             // Ad placeholder for guest users
-            const AdPlaceholder(height: 60),
+            BannerAdWidget(),
             const SizedBox(height: 8),
             _buildGuestHeader(themeProvider),
           ],

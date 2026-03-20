@@ -5,6 +5,7 @@ export 'add_preset_dialog.dart';
 export 'ad_placeholder.dart';
 export 'animated_visibility.dart';
 export 'app_background.dart';
+export 'banner_ad_widget.dart';
 export 'bouncing_button.dart';
 export 'circular_progress_painter.dart';
 export 'duration_input_section.dart';

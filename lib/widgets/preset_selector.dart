@@ -1,4 +1,5 @@
 import 'package:flow_app/providers/providers.barrel.dart';
+import 'package:flow_app/services/ad_service.dart';
 import 'package:flow_app/shared/ad_helper.dart';
 import 'package:flow_app/widgets/widgets.barrel.dart';
 import 'package:flutter/material.dart';
@@ -17,16 +18,7 @@ class PresetSelector extends HookWidget {
     final isActive = useState<bool>(false);
 
     return InkWell(
-      onTap: () => AdHelper.maybeShowAdAndNavigate(
-        context,
-        adProbability: 0.5,
-        onNavigate: () => _showPresetSelector(
-          context,
-          presetProvider,
-          timerProvider,
-          isActive,
-        ),
-      ),
+      onTap: () => adService.iAd?.show(),
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
