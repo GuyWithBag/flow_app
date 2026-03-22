@@ -31,7 +31,7 @@ android {
 
     defaultConfig {
 
-        applicationId = "com.example.flow_app"
+        applicationId = "com.madepoies.flow_app"
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
@@ -51,7 +51,7 @@ android {
 
     buildTypes {
         release {
-            signingConfigs.getByName("release")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }
