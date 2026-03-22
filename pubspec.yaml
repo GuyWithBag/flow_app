@@ -47,7 +47,7 @@ dependencies:
   hive_ce_flutter: 2.3.4
 
   # Audio
-  audioplayers: ^6.6.0
+  audioplayers: 5.2.1
 
   # Date & Time Formatting
   intl: any
