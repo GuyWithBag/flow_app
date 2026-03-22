@@ -9,7 +9,10 @@ plugins {
 }
 
 val keystoreProperties = Properties()
-
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
 
 android {
     namespace = "com.example.flow_app"
@@ -27,8 +30,11 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
 
+        applicationId = "com.example.flow_app"
+        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
+        minSdk = flutter.minSdkVersion
+        targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         multiDexEnabled = true
