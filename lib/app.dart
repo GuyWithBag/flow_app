@@ -1,3 +1,4 @@
+import 'package:flow_app/services/services.barrel.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -24,6 +25,11 @@ class App extends StatefulWidget {
 
 class _AppState extends State<App> with WidgetsBindingObserver {
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -44,7 +50,14 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => widget.timerProvider)],
+      providers: [
+        ChangeNotifierProvider(create: (_) => widget.timerProvider),
+        ChangeNotifierProvider(create: (_) => widget.themeProvider),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => AdService()),
+        ChangeNotifierProvider(create: (_) => widget.sessionProvider),
+        ChangeNotifierProvider(create: (_) => widget.presetProvider),
+      ],
       // Only watch ThemeProvider - not TimerProvider
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {
