@@ -3,6 +3,5 @@
 // Barrel files
 export 'enums/enums.barrel.dart';
 // Other files
-export 'ad_helper.dart';
 export 'format_duration.dart';
 export 'theme.dart';
