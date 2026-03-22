@@ -2,17 +2,10 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" />
-    <!-- For Android 12 and below -->
-    <uses-permission
-        android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32"
-    />
-    <!-- For Android 13+ (Tiramisu) -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <application
-        android:label="Flow"
+        android:label="flow_app"
         android:name="${applicationName}"
-        android:icon="@mipmap/launcher_icon"
+        android:icon="@mipmap/ic_launcher"
     >
         <activity
             android:name=".MainActivity"
