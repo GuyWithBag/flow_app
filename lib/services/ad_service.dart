@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
@@ -5,7 +6,12 @@ class AdService extends ChangeNotifier {
   InterstitialAd? iAd;
   BannerAd? bAd;
 
+  static bool get _isMobile =>
+      defaultTargetPlatform == TargetPlatform.android ||
+      defaultTargetPlatform == TargetPlatform.iOS;
+
   void loadBannerAd(BuildContext context) async {
+    if (!_isMobile) return;
     // Get an AnchoredAdaptiveBannerAdSize before loading the ad.
     final size = await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
       MediaQuery.sizeOf(context).width.truncate(),
@@ -38,6 +44,7 @@ class AdService extends ChangeNotifier {
   }
 
   void loadInterstitial({Function(LoadAdError)? onAdFailedToLoad}) {
+    if (!_isMobile) return;
     InterstitialAd.load(
       adUnitId: "ca-app-pub-3940256099942544/1033173712",
       request: const AdRequest(),
