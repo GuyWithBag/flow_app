@@ -89,6 +89,7 @@ void main() {
         presetProvider: presetProvider,
         sessionProvider: sessionProvider,
         timerProvider: timerProvider,
+        purchaseProvider: PurchaseProvider(),
       ),
     );
     await tester.pumpAndSettle();

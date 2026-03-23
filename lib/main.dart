@@ -53,9 +53,13 @@ void main() async {
   sessionProvider.loadSessions();
 
   final timerProvider = TimerProvider();
+
+  // Initialize ads and RevenueCat on mobile only
+  final purchaseProvider = PurchaseProvider();
   if (defaultTargetPlatform == TargetPlatform.android ||
       defaultTargetPlatform == TargetPlatform.iOS) {
     await MobileAds.instance.initialize();
+    await purchaseProvider.initialize();
   }
 
   // Wire notification action buttons to timer controls
@@ -96,6 +100,7 @@ void main() async {
       presetProvider: presetProvider,
       sessionProvider: sessionProvider,
       timerProvider: timerProvider,
+      purchaseProvider: purchaseProvider,
     ),
   );
 }

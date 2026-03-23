@@ -12,12 +12,14 @@ class App extends StatefulWidget {
     required this.presetProvider,
     required this.sessionProvider,
     required this.timerProvider,
+    required this.purchaseProvider,
   });
 
   final ThemeProvider themeProvider;
   final PresetProvider presetProvider;
   final SessionProvider sessionProvider;
   final TimerProvider timerProvider;
+  final PurchaseProvider purchaseProvider;
 
   @override
   State<App> createState() => _AppState();
@@ -57,6 +59,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         ChangeNotifierProvider(create: (_) => AdService()),
         ChangeNotifierProvider(create: (_) => widget.sessionProvider),
         ChangeNotifierProvider(create: (_) => widget.presetProvider),
+        ChangeNotifierProvider(create: (_) => widget.purchaseProvider),
       ],
       // Only watch ThemeProvider - not TimerProvider
       child: Consumer<ThemeProvider>(

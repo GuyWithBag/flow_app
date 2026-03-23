@@ -156,7 +156,9 @@ class TimerBottomControls extends StatelessWidget {
         BouncingButton(
           child: IconButton(
             onPressed: () {
-              adService.iAd!.show();
+              if (!context.read<PurchaseProvider>().isNoAds) {
+                adService.iAd?.show();
+              }
               _showSettingsSheet(context, timerProvider);
             },
             icon: const Icon(Icons.tune),

@@ -1,3 +1,4 @@
+import 'package:flow_app/providers/providers.barrel.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -15,6 +16,9 @@ class BannerAdWidget extends HookWidget {
   @override
   Widget build(BuildContext context) {
     if (!_isMobile) return const SizedBox.shrink();
+
+    final purchaseProvider = context.watch<PurchaseProvider>();
+    if (purchaseProvider.isNoAds) return const SizedBox.shrink();
 
     final AdService adService = context.watch<AdService>();
     if (adService.bAd == null) {

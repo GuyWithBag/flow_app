@@ -6,6 +6,7 @@ import 'package:flow_app/widgets/widgets.barrel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:provider/provider.dart';
+import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 
 class AccountPage extends HookWidget {
   const AccountPage({super.key});
@@ -14,6 +15,7 @@ class AccountPage extends HookWidget {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final purchaseProvider = context.watch<PurchaseProvider>();
     final showPlannedMessage = useState(false);
     final AdService adService = context.watch<AdService>();
 
@@ -37,19 +39,26 @@ class AccountPage extends HookWidget {
           const SizedBox(height: 16),
           _buildThemeSelector(context, themeProvider),
           _buildSettingsTile(context, 'Settings', Icons.settings, () {
-            adService.iAd!.show();
+            if (!purchaseProvider.isNoAds) adService.iAd?.show();
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const SettingsPage()),
             );
           }),
           _buildSettingsTile(context, 'Presets', Icons.bookmark, () {
-            adService.iAd!.show();
+            if (!purchaseProvider.isNoAds) adService.iAd?.show();
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const PresetsPage()),
             );
           }),
+          if (purchaseProvider.isNoAds)
+            _buildSettingsTile(
+              context,
+              'Manage Subscription',
+              Icons.receipt_long,
+              () => RevenueCatUI.presentCustomerCenter(),
+            ),
           const SizedBox(height: 24),
           if (authProvider.isAuthenticated) ...[
             ElevatedButton(
@@ -92,8 +101,7 @@ class AccountPage extends HookWidget {
                 ),
               ),
             const SizedBox(height: 16),
-            // TODO: Replace with real in-app purchase when ready
-            _buildRemoveAdsCard(context),
+            if (!purchaseProvider.isNoAds) _buildUpgradeCard(context),
           ],
         ],
       ),
@@ -223,12 +231,7 @@ class AccountPage extends HookWidget {
     );
   }
 
-  Widget _buildRemoveAdsCard(BuildContext context) {
-    // TODO: Replace with actual in-app purchase logic
-    // Check purchase status from PurchaseProvider
-    // final purchaseProvider = Provider.of<PurchaseProvider>(context);
-    // if (purchaseProvider.isAdFree) return const SizedBox.shrink();
-
+  Widget _buildUpgradeCard(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -251,25 +254,8 @@ class AccountPage extends HookWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {
-            // TODO: Implement in-app purchase flow
-            showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text('Remove Ads'),
-                content: const Text(
-                  'In-app purchase to remove ads will be available soon!\n\n'
-                  'This feature is currently under development.',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('OK'),
-                  ),
-                ],
-              ),
-            );
-          },
+          onTap: () =>
+              RevenueCatUI.presentPaywall(),
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(20),
@@ -308,7 +294,7 @@ class AccountPage extends HookWidget {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        'Remove ads & unlock features',
+                        'Remove ads Forever with One Time Purchase',
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.white,
@@ -319,7 +305,10 @@ class AccountPage extends HookWidget {
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),

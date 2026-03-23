@@ -18,7 +18,9 @@ class PresetSelector extends HookWidget {
 
     return InkWell(
       onTap: () {
-        adService.iAd?.show();
+        if (!context.read<PurchaseProvider>().isNoAds) {
+          adService.iAd?.show();
+        }
         _showPresetSelector(context, presetProvider, timerProvider, isActive);
       },
       borderRadius: BorderRadius.circular(8),

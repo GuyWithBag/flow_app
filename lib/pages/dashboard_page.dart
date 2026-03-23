@@ -39,7 +39,9 @@ class DashboardPage extends HookWidget {
         IconButton(
           icon: const Icon(Icons.history),
           onPressed: () {
-            adService.iAd!.show();
+            if (!context.read<PurchaseProvider>().isNoAds) {
+              adService.iAd?.show();
+            }
             // todo: Gotta change navigation
             Navigator.push(
               context,
