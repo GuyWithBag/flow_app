@@ -61,6 +61,8 @@ dependencies {
     val billing_version = "8.3.0"
 
     implementation("com.android.billingclient:billing-ktx:$billing_version")
+    implementation("androidx.window:window:1.0.0")
+    implementation("androidx.window:window-java:1.0.0")
 }
 
 flutter {
