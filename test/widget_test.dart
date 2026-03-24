@@ -6,7 +6,7 @@
 // tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:flow_app/app.dart';
-import 'package:flow_app/hive/hive.barrel.dart';
+import 'package:flow_app/hive/hive_registrar.g.dart';
 import 'package:flow_app/models/models.barrel.dart';
 import 'package:flow_app/providers/providers.barrel.dart';
 import 'package:flow_app/services/services.barrel.dart';
