@@ -1,3 +1,4 @@
+import 'package:flow_app/widgets/widgets.barrel.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -110,13 +111,13 @@ class PlayPauseButton extends StatelessWidget {
     final sessionProvider = context.watch<SessionProvider>();
     final presetProvider = context.read<PresetProvider>();
 
-    final screenHeight = MediaQuery.of(context).size.height;
-    final isCompact = screenHeight < 700;
-    final buttonSize = isCompact ? 72.0 : 100.0;
-    final iconSize = isCompact ? 38.0 : 52.0;
+    // final screenHeight = MediaQuery.of(context).size.height;
+    // final isCompact = screenHeight < 700;
+    // final buttonSize = isCompact ? 72.0 : 100.0;
+    // final iconSize = isCompact ? 38.0 : 52.0;
 
-    return IconButton.filled(
-      onPressed: () {
+    return ShadowIconButton(
+      onTap: () {
         if (timerProvider.isRunning) {
           // Pause the timer
           timerProvider.pauseTimer();
@@ -147,12 +148,10 @@ class PlayPauseButton extends StatelessWidget {
           }
         }
       },
-      constraints: BoxConstraints.expand(width: buttonSize, height: buttonSize),
-      icon: Icon(
-        timerProvider.isRunning ? Icons.pause : Icons.play_arrow_rounded,
-        size: iconSize,
-        color: Colors.white,
-      ),
+      // constraints: BoxConstraints.expand(width: buttonSize, height: buttonSize),
+      icon: timerProvider.isRunning
+          ? Icons.pause_rounded
+          : Icons.play_arrow_rounded,
     );
   }
 }
