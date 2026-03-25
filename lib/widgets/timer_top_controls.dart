@@ -26,10 +26,12 @@ class TimerTopControls extends StatelessWidget {
           children: [
             Text(
               'Flow',
-              style: GoogleFonts.dynaPuff(
-                // fontWeight: FontWeight.bold,
-                fontSize: textTheme.headlineMedium!.fontSize,
-              ),
+              // style: GoogleFonts.dynaPuff(
+              //   // fontWeight: FontWeight.bold,
+              //   fontSize: textTheme.headlineMedium!.fontSize,
+              // ),
+              style: textTheme.headlineMedium!.copyWith(fontFamily: 'DynaPuff'),
+              // style: TextStyle(fontFamily: 'DynaPuff')
             ),
             Row(
               spacing: 8,

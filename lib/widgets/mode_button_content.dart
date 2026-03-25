@@ -25,7 +25,8 @@ class ModeButtonContent extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.titleMedium!.copyWith(
-          fontWeight: FontWeight.bold,
+          fontFamily: 'DynaPuff',
+          // fontWeight: FontWeight.bold,
           color: isSelected ? Theme.of(context).colorScheme.onPrimary : null,
         ),
       ),
