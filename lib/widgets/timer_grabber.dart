@@ -9,6 +9,8 @@ class TimerGrabber extends StatelessWidget {
   final double size;
   final double strokeWidth;
   final double knobRadius;
+  final double minProgress;
+  final double maxProgress;
   final ValueChanged<Offset>? onDragStart;
   final ValueChanged<Offset>? onDragUpdate;
   final VoidCallback? onDragEnd;
@@ -20,6 +22,8 @@ class TimerGrabber extends StatelessWidget {
     required this.size,
     required this.strokeWidth,
     required this.knobRadius,
+    this.minProgress = 0.0,
+    this.maxProgress = 1.0,
     this.onDragStart,
     this.onDragUpdate,
     this.onDragEnd,
@@ -27,9 +31,10 @@ class TimerGrabber extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final clampedProgress = progress.clamp(minProgress, maxProgress);
     final center = Offset(size / 2, size / 2);
     final radius = size / 2;
-    final knobAngle = -math.pi / 2 + (2 * math.pi * progress);
+    final knobAngle = -math.pi / 2 + (2 * math.pi * clampedProgress);
 
     final knobCenter = Offset(
       center.dx + radius * math.cos(knobAngle),

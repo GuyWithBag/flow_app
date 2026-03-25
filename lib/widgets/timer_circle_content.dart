@@ -35,9 +35,10 @@ class TimerCircleContent extends StatelessWidget {
             isRunning
                 ? (controlsVisible ? "Running" : "Tap for controls")
                 : "Tap to Edit",
-            style: GoogleFonts.dynaPuff(
+            style: TextStyle(
               fontSize: 14,
               color: isDark ? Colors.grey.shade400 : Colors.black54,
+              fontFamily: 'DynaPuff',
               fontWeight: FontWeight.w600,
             ),
           ),

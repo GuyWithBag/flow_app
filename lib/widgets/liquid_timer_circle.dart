@@ -165,6 +165,7 @@ class LiquidTimerCircle extends HookWidget {
                         size: size,
                         strokeWidth: size * 0.086,
                         knobRadius: size * 0.05,
+                        minProgress: maxDuration > 0 ? 1 / maxDuration : 0.0,
                         onDragStart: isLocked
                             ? null
                             : (globalPosition) {
@@ -231,6 +232,7 @@ class LiquidTimerCircle extends HookWidget {
     if (percent > 0.98) percent = 1.0;
     if (percent < 0.01) percent = 0.0;
     int newSeconds = (percent * maxDuration).round();
+    if (newSeconds < 1) newSeconds = 1;
     provider.setCustomDuration(newSeconds);
   }
 
