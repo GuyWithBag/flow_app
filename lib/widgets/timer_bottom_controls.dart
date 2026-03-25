@@ -117,52 +117,75 @@ class TimerBottomControls extends StatelessWidget {
     final iconSize = isCompact ? 20.0 : 24.0;
 
     final filledFlatButton = IconButton.styleFrom(
-      backgroundColor: Theme.of(context).colorScheme.onPrimary,
+      // backgroundColor: Theme.of(context).colorScheme.onPrimary,
+      // backgroundColor: Colors.transparent,
       foregroundColor: Theme.of(context).colorScheme.inverseSurface,
       minimumSize: Size(btnSize, btnSize),
       maximumSize: Size(btnSize, btnSize),
       iconSize: iconSize,
+      elevation: 0,
     );
     final adService = context.watch<AdService>();
+    final sideButtonsSize = 30.0;
 
     return Row(
       children: [
         BouncingButton(
-          child: IconButton(
-            onPressed: resetLoop,
-            icon: const Icon(Icons.refresh),
-            style: filledFlatButton,
+          child: ShadowIconButton(
+            onTap: resetLoop,
+            icon: Icons.refresh_rounded,
+            size: sideButtonsSize,
           ),
         ),
         const Spacer(flex: 3),
+        // BouncingButton(
+        //   child: IconButton.filled(
+        //     onPressed: sessionProvider.isSessionActive ? finishSession : null,
+        //     icon: const Icon(Icons.stop),
+        //     style: filledFlatButton,
+        //   ),
+        // ),
         BouncingButton(
-          child: IconButton.filled(
-            onPressed: sessionProvider.isSessionActive ? finishSession : null,
-            icon: const Icon(Icons.stop),
-            style: filledFlatButton,
+          child: ShadowIconButton(
+            onTap: sessionProvider.isSessionActive ? finishSession : null,
+            icon: Icons.stop_rounded,
           ),
         ),
         const Spacer(flex: 1),
         BouncingButton(child: PlayPauseButton()),
         const Spacer(flex: 1),
         BouncingButton(
-          child: IconButton(
-            onPressed: skipCycle,
-            icon: const Icon(Icons.skip_next),
-            style: filledFlatButton,
+          // child: IconButton(
+          //   onPressed: skipCycle,
+          //   icon: const Icon(Icons.skip_next),
+          //   style: filledFlatButton,
+          // ),
+          child: ShadowIconButton(
+            icon: Icons.skip_next_rounded,
+            onTap: skipCycle,
           ),
         ),
         const Spacer(flex: 3),
         BouncingButton(
-          child: IconButton(
-            onPressed: () {
+          // child: IconButton(
+          //   onPressed: () {
+          //     if (!context.read<PurchaseProvider>().isNoAds) {
+          //       adService.iAd?.show();
+          //     }
+          //     _showSettingsSheet(context, timerProvider);
+          //   },
+          //   icon: const Icon(Icons.tune),
+          //   style: filledFlatButton,
+          // ),
+          child: ShadowIconButton(
+            onTap: () {
               if (!context.read<PurchaseProvider>().isNoAds) {
                 adService.iAd?.show();
               }
               _showSettingsSheet(context, timerProvider);
             },
-            icon: const Icon(Icons.tune),
-            style: filledFlatButton,
+            icon: Icons.tune_rounded,
+            size: sideButtonsSize,
           ),
         ),
       ],
