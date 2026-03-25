@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:provider/provider.dart';
 import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AccountPage extends HookWidget {
   const AccountPage({super.key});
@@ -50,6 +51,20 @@ class AccountPage extends HookWidget {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const PresetsPage()),
+            );
+          }),
+          _buildSettingsTile(context, 'Privacy Policy', Icons.bookmark, () {
+            launchUrl(
+              Uri.parse(
+                'https://doc-hosting.flycricket.io/flow-comfy-pomodoro-app-privacy-policy/0af4297c-6d8c-4f2f-a9b7-a8222962649d/privacy',
+              ),
+            );
+          }),
+          _buildSettingsTile(context, 'Terms Of Service', Icons.bookmark, () {
+            launchUrl(
+              Uri.parse(
+                'https://doc-hosting.flycricket.io/flow-comfy-pomodoro-app-privacy-policy/0af4297c-6d8c-4f2f-a9b7-a8222962649d/termsy',
+              ),
             );
           }),
           if (purchaseProvider.isNoAds)
