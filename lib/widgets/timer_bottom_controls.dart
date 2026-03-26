@@ -21,6 +21,10 @@ class TimerBottomControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Watch directly so this widget rebuilds whenever session state changes,
+    // regardless of whether the parent has rebuilt yet.
+    final isSessionActive = context.watch<SessionProvider>().isSessionActive;
+
     void resetLoop() {
       timerProvider.resetTimerToPreset(presetProvider.selectedPreset);
     }
@@ -58,31 +62,56 @@ class TimerBottomControls extends StatelessWidget {
     }
 
     void skipCycle() {
+      final themeProvider = context.read<ThemeProvider>();
+
       // Complete current loop as skipped
       sessionProvider.completeCurrentLoop(skipped: true);
       timerProvider.resetTimerToPreset(presetProvider.selectedPreset);
 
       if (timerProvider.currentType == TimerType.focus) {
-        // After skipping focus, go to break
-        timerProvider.setTimerType(TimerType.breakTime);
-        final preset = presetProvider.selectedPreset;
-        sessionProvider.startLoop(
-          type: TimerType.breakTime,
-          duration: preset.breakDuration,
-        );
-        if (timerProvider.autoStartBreak) {
-          timerProvider.startTimer();
+        // Check if this was the last focus loop
+        if (timerProvider.currentLoop >= timerProvider.targetLoops) {
+          sessionProvider.finishSession(context);
+          timerProvider.resetLoop();
+          timerProvider.resetTimerToPreset(presetProvider.selectedPreset);
+          showDialog(
+            context: context,
+            builder: (_) => AlertDialog(
+              title: const Text("Great Flow!"),
+              content: Text(
+                "You completed ${timerProvider.targetLoops} focus sessions!",
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Finish"),
+                ),
+              ],
+            ),
+          );
+        } else {
+          // Go to break
+          timerProvider.setTimerType(TimerType.breakTime);
+          themeProvider.updateTimerType(TimerType.breakTime);
+          final preset = presetProvider.selectedPreset;
+          sessionProvider.startLoop(
+            type: TimerType.breakTime,
+            duration: preset.breakDuration,
+          );
+          if (timerProvider.autoStartBreak) {
+            timerProvider.startTimer();
+          }
         }
       } else {
         // After skipping break, go to next focus
         timerProvider.incrementLoop();
         timerProvider.setTimerType(TimerType.focus);
+        themeProvider.updateTimerType(TimerType.focus);
 
-        // Check if we've completed all loops
         if (timerProvider.currentLoop > timerProvider.targetLoops) {
           sessionProvider.finishSession(context);
           timerProvider.resetLoop();
-          // Show completion dialog
+          timerProvider.resetTimerToPreset(presetProvider.selectedPreset);
           showDialog(
             context: context,
             builder: (_) => AlertDialog(
@@ -111,20 +140,6 @@ class TimerBottomControls extends StatelessWidget {
       }
     }
 
-    final screenHeight = MediaQuery.of(context).size.height;
-    final isCompact = screenHeight < 700;
-    final btnSize = isCompact ? 36.0 : 48.0;
-    final iconSize = isCompact ? 20.0 : 24.0;
-
-    final filledFlatButton = IconButton.styleFrom(
-      // backgroundColor: Theme.of(context).colorScheme.onPrimary,
-      // backgroundColor: Colors.transparent,
-      foregroundColor: Theme.of(context).colorScheme.inverseSurface,
-      minimumSize: Size(btnSize, btnSize),
-      maximumSize: Size(btnSize, btnSize),
-      iconSize: iconSize,
-      elevation: 0,
-    );
     final adService = context.watch<AdService>();
     final sideButtonsSize = 30.0;
 
@@ -147,7 +162,7 @@ class TimerBottomControls extends StatelessWidget {
         // ),
         BouncingButton(
           child: ShadowIconButton(
-            onTap: sessionProvider.isSessionActive ? finishSession : null,
+            onTap: isSessionActive ? finishSession : null,
             icon: Icons.stop_rounded,
           ),
         ),

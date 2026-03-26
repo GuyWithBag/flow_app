@@ -2,6 +2,7 @@ import 'package:flow_app/models/models.barrel.dart';
 import 'package:flow_app/pages/pages.barrel.dart';
 import 'package:flow_app/providers/providers.barrel.dart';
 import 'package:flow_app/services/services.barrel.dart';
+import 'package:flow_app/shared/format_duration.dart';
 import 'package:flow_app/widgets/widgets.barrel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -35,7 +36,7 @@ class AccountPage extends HookWidget {
             _buildGuestHeader(themeProvider),
           ],
           const SizedBox(height: 24),
-          _buildGoalsCard(),
+          _buildGoalsCard(context.watch<SessionProvider>(), themeProvider),
 
           const SizedBox(height: 16),
           _buildThemeSelector(context, themeProvider),
@@ -53,14 +54,14 @@ class AccountPage extends HookWidget {
               MaterialPageRoute(builder: (_) => const PresetsPage()),
             );
           }),
-          _buildSettingsTile(context, 'Privacy Policy', Icons.bookmark, () {
+          _buildSettingsTile(context, 'Privacy Policy', Icons.privacy_tip, () {
             launchUrl(
               Uri.parse(
                 'https://doc-hosting.flycricket.io/flow-comfy-pomodoro-app-privacy-policy/0af4297c-6d8c-4f2f-a9b7-a8222962649d/privacy',
               ),
             );
           }),
-          _buildSettingsTile(context, 'Terms Of Service', Icons.bookmark, () {
+          _buildSettingsTile(context, 'Terms Of Service', Icons.people, () {
             launchUrl(
               Uri.parse(
                 'https://doc-hosting.flycricket.io/flow-comfy-pomodoro-app-privacy-policy/0af4297c-6d8c-4f2f-a9b7-a8222962649d/termsy',
@@ -213,8 +214,17 @@ class AccountPage extends HookWidget {
     );
   }
 
-  Widget _buildGoalsCard() {
-    // TODO: Hook this up to real progress and the configurable daily goal.
+  Widget _buildGoalsCard(
+    SessionProvider sessionProvider,
+    ThemeProvider themeProvider,
+  ) {
+    final goalSeconds = themeProvider.dailyGoalMinutes * 60;
+    final currentSeconds = sessionProvider.todayFocusSeconds;
+    final progress = goalSeconds > 0
+        ? (currentSeconds / goalSeconds).clamp(0.0, 1.0)
+        : 0.0;
+    final focusColor = themeProvider.getAccentColorFor(TimerType.focus);
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -229,15 +239,15 @@ class AccountPage extends HookWidget {
             ),
             const SizedBox(height: 12),
             LinearProgressIndicator(
-              value: 0.65, // TODO: Calculate from actual sessions
+              value: progress,
               backgroundColor: Colors.grey.shade200,
-              valueColor: const AlwaysStoppedAnimation(Color(0xFF66BB6A)),
+              valueColor: AlwaysStoppedAnimation(focusColor),
               minHeight: 8,
               borderRadius: BorderRadius.circular(4),
             ),
             const SizedBox(height: 8),
             Text(
-              '78 / 120 minutes',
+              '${formatDuration(currentSeconds)} / ${formatDuration(goalSeconds)}',
               style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             ),
           ],
@@ -269,8 +279,7 @@ class AccountPage extends HookWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () =>
-              RevenueCatUI.presentPaywall(),
+          onTap: () => RevenueCatUI.presentPaywall(),
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(20),

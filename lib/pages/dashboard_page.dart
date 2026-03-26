@@ -262,8 +262,8 @@ class DashboardPage extends HookWidget {
     Color focusColor,
   ) {
     final data = showMonthly.value
-        ? provider.monthlyFocusMinutes
-        : provider.weeklyFocusMinutes;
+        ? provider.monthlyFocusSeconds
+        : provider.weeklyFocusSeconds;
     final entries = data.entries.toList();
     final maxY = entries.fold<int>(
       0,
@@ -300,12 +300,12 @@ class DashboardPage extends HookWidget {
               : BarChart(
                   BarChartData(
                     alignment: BarChartAlignment.spaceAround,
-                    maxY: (maxY + 10).toDouble(),
+                    maxY: (maxY * 1.2).clamp(60.0, double.infinity),
                     barTouchData: BarTouchData(
                       touchTooltipData: BarTouchTooltipData(
                         getTooltipItem: (group, groupIndex, rod, rodIndex) {
                           return BarTooltipItem(
-                            formatDuration(rod.toY.round() * 60),
+                            formatDuration(rod.toY.round()),
                             const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -326,10 +326,16 @@ class DashboardPage extends HookWidget {
                       leftTitles: AxisTitles(
                         sideTitles: SideTitles(
                           showTitles: true,
-                          reservedSize: 32,
+                          reservedSize: 36,
                           getTitlesWidget: (value, meta) {
+                            final secs = value.round();
+                            final label = secs == 0
+                                ? '0'
+                                : secs < 60
+                                ? '${secs}s'
+                                : '${secs ~/ 60}m';
                             return Text(
-                              '${value.toInt()}',
+                              label,
                               style: TextStyle(
                                 fontSize: 10,
                                 color: Colors.grey.shade600,
@@ -443,7 +449,7 @@ class DashboardPage extends HookWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: entries.asMap().entries.map((entry) {
                   final color = _presetColors[entry.key % _presetColors.length];
-                  final minutes = entry.value.value;
+                  final seconds = entry.value.value;
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 3),
                     child: Row(
@@ -459,7 +465,7 @@ class DashboardPage extends HookWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '${entry.value.key} (${formatDuration(minutes * 60)})',
+                          '${entry.value.key} (${formatDuration(seconds)})',
                           style: const TextStyle(fontSize: 12),
                         ),
                       ],

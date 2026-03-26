@@ -19,11 +19,11 @@ class Loop {
     this.skipped = false,
   });
 
-  Loop copyWith({DateTime? endTime, bool? completed, bool? skipped}) {
+  Loop copyWith({DateTime? endTime, bool? completed, bool? skipped, int? duration}) {
     return Loop(
       id: id,
       type: type,
-      duration: duration,
+      duration: duration ?? this.duration,
       startTime: startTime,
       endTime: endTime ?? this.endTime,
       completed: completed ?? this.completed,

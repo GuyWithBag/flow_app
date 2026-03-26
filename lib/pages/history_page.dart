@@ -15,7 +15,9 @@ class HistoryPage extends HookWidget {
     final sessionProvider = context.watch<SessionProvider>();
 
     useEffect(() {
-      sessionProvider.loadSessions();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        sessionProvider.loadSessions();
+      });
       return null;
     }, const []);
 
@@ -25,6 +27,15 @@ class HistoryPage extends HookWidget {
 
     return MenuScaffold(
       title: 'History',
+      actions: completedSessions.isNotEmpty
+          ? [
+              IconButton(
+                icon: const Icon(Icons.delete_sweep_outlined),
+                tooltip: 'Clear history',
+                onPressed: () => _confirmClearAll(context, sessionProvider),
+              ),
+            ]
+          : null,
       body: sessionProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : completedSessions.isEmpty
@@ -160,6 +171,32 @@ class HistoryPage extends HookWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _confirmClearAll(BuildContext context, SessionProvider provider) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Clear History'),
+        content: const Text(
+          'This will permanently delete all session history. This cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              provider.clearAllSessions();
+              Navigator.pop(ctx);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Clear All'),
+          ),
+        ],
       ),
     );
   }

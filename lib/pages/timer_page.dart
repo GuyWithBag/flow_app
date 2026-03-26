@@ -83,6 +83,9 @@ class TimerPage extends HookWidget {
                 TextButton(
                   onPressed: () {
                     timerProvider.resetLoop();
+                    timerProvider.resetTimerToPreset(
+                      presetProvider.selectedPreset,
+                    );
                     Navigator.pop(ctx);
                   },
                   child: const Text("Finish"),
@@ -93,6 +96,7 @@ class TimerPage extends HookWidget {
         } else {
           // Start Break
           timerProvider.setTimerType(TimerType.breakTime);
+          themeProvider.updateTimerType(TimerType.breakTime);
           final preset = presetProvider.selectedPreset;
 
           sessionProvider.startLoop(
@@ -102,13 +106,13 @@ class TimerPage extends HookWidget {
 
           if (timerProvider.autoStartBreak) {
             timerProvider.startTimer();
-            themeProvider.updateTimerType(TimerType.breakTime);
           }
         }
       } else {
         // Break Finished
         timerProvider.incrementLoop();
         timerProvider.setTimerType(TimerType.focus);
+        themeProvider.updateTimerType(TimerType.focus);
         final preset = presetProvider.selectedPreset;
 
         sessionProvider.startLoop(
@@ -118,7 +122,6 @@ class TimerPage extends HookWidget {
 
         if (timerProvider.autoStartFocus) {
           timerProvider.startTimer();
-          themeProvider.updateTimerType(TimerType.focus);
         }
       }
     }

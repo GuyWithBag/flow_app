@@ -106,7 +106,8 @@ class SessionProvider extends ChangeNotifier {
     return totalSeconds / completedSessions.length;
   }
 
-  Map<DateTime, int> get weeklyFocusMinutes {
+  // Returns total focus seconds per day for the last 7 days.
+  Map<DateTime, int> get weeklyFocusSeconds {
     final now = DateTime.now();
     final result = <DateTime, int>{};
     for (int i = 6; i >= 0; i--) {
@@ -115,12 +116,13 @@ class SessionProvider extends ChangeNotifier {
         now.month,
         now.day,
       ).subtract(Duration(days: i));
-      result[day] = _focusMinutesForDate(day);
+      result[day] = _focusSecondsForDate(day);
     }
     return result;
   }
 
-  Map<DateTime, int> get monthlyFocusMinutes {
+  // Returns total focus seconds per day for the last 30 days.
+  Map<DateTime, int> get monthlyFocusSeconds {
     final now = DateTime.now();
     final result = <DateTime, int>{};
     for (int i = 29; i >= 0; i--) {
@@ -129,31 +131,31 @@ class SessionProvider extends ChangeNotifier {
         now.month,
         now.day,
       ).subtract(Duration(days: i));
-      result[day] = _focusMinutesForDate(day);
+      result[day] = _focusSecondsForDate(day);
     }
     return result;
   }
 
+  // Returns total focus seconds per preset name.
   Map<String, int> get presetBreakdown {
     final result = <String, int>{};
     for (final s in _sessions.where((s) => s.completed)) {
       final name = s.presetName ?? 'Unknown';
-      result[name] = (result[name] ?? 0) + (s.focusDuration ~/ 60);
+      result[name] = (result[name] ?? 0) + s.focusDuration;
     }
     return result;
   }
 
   int currentStreak(int dailyGoalMinutes) {
     final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final goalSeconds = dailyGoalMinutes * 60;
     int streak = 0;
-    // Start from yesterday (today is still in progress)
-    for (int i = 1; i <= 365; i++) {
-      final day = DateTime(
-        now.year,
-        now.month,
-        now.day,
-      ).subtract(Duration(days: i));
-      if (_focusMinutesForDate(day) >= dailyGoalMinutes) {
+    // If today's goal is already met, count from today; otherwise from yesterday
+    final startOffset = _focusSecondsForDate(today) >= goalSeconds ? 0 : 1;
+    for (int i = startOffset; i <= 365; i++) {
+      final day = today.subtract(Duration(days: i));
+      if (_focusSecondsForDate(day) >= goalSeconds) {
         streak++;
       } else {
         break;
@@ -162,7 +164,7 @@ class SessionProvider extends ChangeNotifier {
     return streak;
   }
 
-  int _focusMinutesForDate(DateTime date) {
+  int _focusSecondsForDate(DateTime date) {
     final nextDay = date.add(const Duration(days: 1));
     return _sessions
         .where(
@@ -171,7 +173,7 @@ class SessionProvider extends ChangeNotifier {
               s.startTime.isAfter(date) &&
               s.startTime.isBefore(nextDay),
         )
-        .fold<int>(0, (sum, s) => sum + (s.focusDuration ~/ 60));
+        .fold<int>(0, (sum, s) => sum + s.focusDuration);
   }
 
   void loadSessions() {
@@ -242,11 +244,16 @@ class SessionProvider extends ChangeNotifier {
     final currentIndex = _currentSession!.currentLoopIndex;
     if (currentIndex >= _currentSession!.loops.length) return;
 
+    final now = DateTime.now();
+    final loop = _currentSession!.loops[currentIndex];
+    final elapsed = now.difference(loop.startTime).inSeconds;
+
     final updatedLoops = List<Loop>.from(_currentSession!.loops);
-    updatedLoops[currentIndex] = updatedLoops[currentIndex].copyWith(
-      endTime: DateTime.now(),
+    updatedLoops[currentIndex] = loop.copyWith(
+      endTime: now,
       completed: true,
       skipped: skipped,
+      duration: elapsed.clamp(0, loop.duration),
     );
 
     _currentSession = _currentSession!.copyWith(loops: updatedLoops);
@@ -256,8 +263,24 @@ class SessionProvider extends ChangeNotifier {
   // Finish the entire session (mark as complete and save)
   void finishSession([BuildContext? context]) {
     if (_currentSession != null) {
+      final now = DateTime.now();
+
+      // Complete any loops that are still active, recording actual elapsed time
+      final updatedLoops = _currentSession!.loops.map((loop) {
+        if (!loop.completed) {
+          final elapsed = now.difference(loop.startTime).inSeconds;
+          return loop.copyWith(
+            endTime: now,
+            completed: true,
+            duration: elapsed.clamp(0, loop.duration),
+          );
+        }
+        return loop;
+      }).toList();
+
       _currentSession = _currentSession!.copyWith(
-        endTime: DateTime.now(),
+        loops: updatedLoops,
+        endTime: now,
         completed: true,
       );
       // Add to sessions list and persist
@@ -266,14 +289,21 @@ class SessionProvider extends ChangeNotifier {
       // Clear current session
       _currentSession = null;
 
-      if (context == null) return;
-      // Show confetti celebration
-      Confetti.launch(
-        context,
-        options: const ConfettiOptions(particleCount: 100, spread: 70, y: 0.6),
-      );
+      if (context != null) {
+        // Show confetti celebration
+        Confetti.launch(
+          context,
+          options: const ConfettiOptions(particleCount: 100, spread: 70, y: 0.6),
+        );
+      }
       notifyListeners();
     }
+  }
+
+  Future<void> clearAllSessions() async {
+    await _box.clear();
+    _sessions.clear();
+    notifyListeners();
   }
 
   // Cancel the session without saving

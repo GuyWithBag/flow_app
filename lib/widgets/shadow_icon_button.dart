@@ -21,7 +21,9 @@ class ShadowIconButton extends StatelessWidget {
       child: Icon(
         icon,
         fill: 1,
-        color: color ?? Theme.of(context).colorScheme.surface,
+        color: onTap == null
+            ? Colors.grey.shade200
+            : color ?? Theme.of(context).colorScheme.surface,
         size: size,
         fontWeight: FontWeight.w900,
 
