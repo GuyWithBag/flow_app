@@ -58,8 +58,12 @@ void main() async {
   final purchaseProvider = PurchaseProvider();
   if (defaultTargetPlatform == TargetPlatform.android ||
       defaultTargetPlatform == TargetPlatform.iOS) {
-    await MobileAds.instance.initialize();
-    await purchaseProvider.initialize();
+    try {
+      await MobileAds.instance.initialize();
+      await purchaseProvider.initialize();
+    } catch (e) {
+      debugPrint('Ad/Purchase init error: $e');
+    }
   }
 
   // Wire notification action buttons to timer controls
