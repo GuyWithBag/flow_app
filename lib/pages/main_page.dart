@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flow_app/pages/pages.barrel.dart';
 import 'package:flow_app/services/services.barrel.dart';
 import 'package:flow_app/widgets/widgets.barrel.dart';
@@ -18,8 +16,13 @@ class MainPage extends HookWidget {
     final pageController = usePageController(initialPage: 1);
     final themeProvider = Provider.of<ThemeProvider>(context);
 
+    final timerProvider = Provider.of<TimerProvider>(context);
     final currentAccent = Theme.of(context).colorScheme.primary;
     final adService = context.read<AdService>();
+
+    // Hide navbar when on the timer tab and controls are hidden
+    final showNavBar =
+        currentIndex.value != 1 || timerProvider.uiControlsVisible;
 
     useEffect(() {
       adService.loadInterstitial();
@@ -51,37 +54,51 @@ class MainPage extends HookWidget {
           ),
         ],
       ),
-      bottomNavigationBar: ClipRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-          child: BottomNavigationBar(
-            backgroundColor: Theme.of(context).cardColor.withAlpha(100),
-            currentIndex: currentIndex.value,
-            onTap: (index) {
-              currentIndex.value = index;
-              pageController.animateToPage(
-                index,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-              );
-            },
-            selectedItemColor: currentAccent,
-            type: BottomNavigationBarType.fixed,
-            elevation: 0,
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.dashboard_outlined),
-                label: 'Dashboard',
+      bottomNavigationBar: IgnorePointer(
+        ignoring: !showNavBar,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          opacity: showNavBar ? 1.0 : 0.0,
+          child: AnimatedScale(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            scale: showNavBar ? 1.0 : 0.85,
+            alignment: Alignment.bottomCenter,
+            child: AnimatedSlide(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              offset: showNavBar ? Offset.zero : const Offset(0, 0.3),
+              child: BottomNavigationBar(
+                backgroundColor: Colors.transparent,
+                currentIndex: currentIndex.value,
+                onTap: (index) {
+                  currentIndex.value = index;
+                  pageController.animateToPage(
+                    index,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                },
+                selectedItemColor: currentAccent,
+                type: BottomNavigationBarType.fixed,
+                elevation: 0,
+                items: const [
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.dashboard_rounded),
+                    label: 'Dashboard',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.timer_rounded),
+                    label: 'Timer',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.person_rounded),
+                    label: 'Account',
+                  ),
+                ],
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.timer_outlined),
-                label: 'Timer',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.person_outline),
-                label: 'Account',
-              ),
-            ],
+            ),
           ),
         ),
       ),

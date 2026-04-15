@@ -30,12 +30,13 @@ class TimerPage extends HookWidget {
     final controlsVisible = useState(true);
     final autoHideTimer = useRef<Timer?>(null);
 
-    // Track previous running state to detect completion edge case
-    final wasRunning = useRef(false);
+    // --- SHOWCASE REGISTRATION ---
+    // Must be synchronous (useMemoized, not useEffect) so the scope exists
+    // before Showcase.initState() calls getScope() during the widget mount.
+    final showcaseView = useMemoized(ShowcaseView.register);
 
-    // --- EFFECT: REGISTER SHOWCASE + START AFTER ONBOARDING ---
+    // --- EFFECT: START SHOWCASE AFTER ONBOARDING + CLEANUP ---
     useEffect(() {
-      final showcaseView = ShowcaseView.register();
       final box = Hive.box('settings');
       if (box.get('shouldStartShowcase', defaultValue: false) == true) {
         box.put('shouldStartShowcase', false);
@@ -194,18 +195,26 @@ class TimerPage extends HookWidget {
       }
     }
 
-    // --- EFFECT: WATCH TIMER COMPLETION ---
+    // --- EFFECT: SYNC CONTROLS VISIBILITY TO PROVIDER (for MainPage navbar) ---
     useEffect(() {
-      if (wasRunning.value &&
-          !timerProvider.isRunning &&
-          timerProvider.remainingSeconds == 0) {
+      timerProvider.setUiControlsVisible(controlsVisible.value);
+      return null;
+    }, [controlsVisible.value]);
+
+    // --- EFFECT: WATCH TIMER COMPLETION ---
+    // Uses a one-shot event flag instead of checking remainingSeconds == 0,
+    // because when autoStartBreak/autoStartFocus is ON the provider has already
+    // switched type and restarted the timer before this widget rebuilds,
+    // so remainingSeconds is never 0 at rebuild time.
+    useEffect(() {
+      if (timerProvider.sessionCompletedEvent) {
+        timerProvider.consumeSessionCompletedEvent();
         WidgetsBinding.instance.addPostFrameCallback((_) {
           handleSessionComplete(context);
         });
       }
-      wasRunning.value = timerProvider.isRunning;
       return null;
-    }, [timerProvider.isRunning, timerProvider.remainingSeconds]);
+    }, [timerProvider.sessionCompletedEvent]);
 
     // --- EFFECT: AUTO-HIDE CONTROLS ---
     useEffect(() {
@@ -293,10 +302,7 @@ class TimerPage extends HookWidget {
           // 2. MAIN CONTENT
           SafeArea(
             child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: 15.w,
-                vertical: 15.h,
-              ),
+              padding: EdgeInsets.symmetric(horizontal: 30.w, vertical: 20.h),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -337,7 +343,7 @@ class TimerPage extends HookWidget {
                         child: AnimatedScale(
                           duration: const Duration(milliseconds: 500),
                           curve: Curves.easeInOutCubic,
-                          scale: controlsVisible.value ? 0.9 : 1.05,
+                          scale: controlsVisible.value ? 0.85.w : 0.90.w,
                           child: LiquidTimerCircle(
                             color: currentColor,
                             maxDuration: currentMaxDuration,

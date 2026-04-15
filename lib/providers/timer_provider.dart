@@ -25,6 +25,16 @@ class TimerProvider extends ChangeNotifier {
   // even when the provider already auto-switched in the background).
   TimerType _lastCompletedType = TimerType.focus;
 
+  // One-shot event flag: set true when a timer completes, consumed by the UI
+  // via consumeSessionCompletedEvent(). Using a flag avoids the race where
+  // remainingSeconds is no longer 0 by the time the widget rebuilds because
+  // the provider already auto-switched and restarted the next timer.
+  bool _sessionCompletedEvent = false;
+
+  // UI-only state (not persisted): whether the timer controls are currently
+  // visible. MainPage reads this to hide the bottom navbar in sync.
+  bool _uiControlsVisible = true;
+
   final Map<TimerType, int> _defaultDurations = {
     TimerType.focus: 1500,
     TimerType.breakTime: 300,
@@ -159,6 +169,19 @@ class TimerProvider extends ChangeNotifier {
   int get completedCycles => _completedCycles;
   bool get isLongDuration => _isLongDuration;
   TimerType get lastCompletedType => _lastCompletedType;
+  bool get sessionCompletedEvent => _sessionCompletedEvent;
+  bool get uiControlsVisible => _uiControlsVisible;
+
+  void consumeSessionCompletedEvent() {
+    _sessionCompletedEvent = false;
+    // No notifyListeners — consuming the event should not trigger another rebuild.
+  }
+
+  void setUiControlsVisible(bool value) {
+    if (_uiControlsVisible == value) return;
+    _uiControlsVisible = value;
+    notifyListeners();
+  }
   double get progress => _totalSeconds > 0
       ? (_totalSeconds - _remainingSeconds) / _totalSeconds
       : 0;
@@ -425,6 +448,10 @@ class TimerProvider extends ChangeNotifier {
       _completedCycles++;
       _saveToStorage();
     }
+
+    // Signal the UI that a session just completed. Must be set before
+    // notifyListeners() so the widget's useEffect sees it on the same rebuild.
+    _sessionCompletedEvent = true;
 
     // Auto-switch and start the next session — this runs even when the app is
     // in the background, ensuring the break/focus timer starts without the user
