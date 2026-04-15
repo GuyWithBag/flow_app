@@ -106,33 +106,80 @@ class TimerSettingsMenu extends HookWidget {
           const SizedBox(height: 16),
           const MenuSubsectionTitle(title: "Sound"),
 
-          DropdownButtonFormField<SoundType>(
-            initialValue: timerProvider.selectedSound,
-            decoration: const InputDecoration(border: OutlineInputBorder()),
-            items: SoundType.values.map((s) {
-              String label = s.toString().split('.').last.toUpperCase();
-              if (s == SoundType.custom &&
-                  timerProvider.customSoundPath != null) {
-                final fileName = timerProvider.customSoundPath!.split('/').last;
-                label = 'CUSTOM ($fileName)';
+          const Padding(
+            padding: EdgeInsets.only(bottom: 6),
+            child: Text("Focus Complete Sound"),
+          ),
+          _SoundDropdown(
+            value: timerProvider.focusCompleteSound,
+            customPath: timerProvider.focusCustomSoundPath,
+            onChanged: (val, customPath) {
+              if (customPath != null) {
+                timerProvider.setFocusCustomSoundPath(customPath);
               }
-              return DropdownMenuItem(value: s, child: Text(label));
-            }).toList(),
-            onChanged: (val) async {
-              if (val == null) return;
-
-              if (val == SoundType.custom) {
-                final result = await FilePicker.platform.pickFiles(
-                  type: FileType.audio,
-                );
-                if (result != null && result.files.single.path != null) {
-                  timerProvider.setCustomSoundPath(result.files.single.path!);
-                  timerProvider.setSelectedSound(SoundType.custom);
-                }
-              } else {
-                timerProvider.setSelectedSound(val);
-              }
+              timerProvider.setFocusCompleteSound(val);
             },
+          ),
+
+          const SizedBox(height: 12),
+          const Padding(
+            padding: EdgeInsets.only(bottom: 6),
+            child: Text("Break Complete Sound"),
+          ),
+          _SoundDropdown(
+            value: timerProvider.breakCompleteSound,
+            customPath: timerProvider.breakCustomSoundPath,
+            onChanged: (val, customPath) {
+              if (customPath != null) {
+                timerProvider.setBreakCustomSoundPath(customPath);
+              }
+              timerProvider.setBreakCompleteSound(val);
+            },
+          ),
+
+          ListTile(
+            title: const Text("Sound Repeats"),
+            subtitle: Text(
+              timerProvider.soundLoops == 1
+                  ? "Play once"
+                  : "Play ${timerProvider.soundLoops} times",
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  style: iconButtonStyle,
+                  icon: const Icon(Icons.remove_circle_outline),
+                  onPressed: timerProvider.soundLoops > 1
+                      ? () =>
+                            timerProvider.setSoundLoops(timerProvider.soundLoops - 1)
+                      : null,
+                ),
+                Text(
+                  "${timerProvider.soundLoops}",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                IconButton(
+                  style: iconButtonStyle,
+                  icon: const Icon(Icons.add_circle_outline),
+                  onPressed: timerProvider.soundLoops < 10
+                      ? () =>
+                            timerProvider.setSoundLoops(timerProvider.soundLoops + 1)
+                      : null,
+                ),
+              ],
+            ),
+          ),
+
+          SwitchListTile(
+            title: const Text("Play Sound in Silent/Vibrate Mode"),
+            subtitle: const Text("Override device silent mode for timer alerts"),
+            value: timerProvider.playSoundInSilentMode,
+            onChanged: (val) => timerProvider.setPlaySoundInSilentMode(val),
+            activeThumbColor: accentColor,
           ),
 
           SwitchListTile(
@@ -182,6 +229,14 @@ class TimerSettingsMenu extends HookWidget {
             activeThumbColor: accentColor,
           ),
 
+          SwitchListTile(
+            title: const Text("Hide Circle When Controls Hidden"),
+            subtitle: const Text("Show only the timer label when controls are hidden"),
+            value: timerProvider.hideCircleWithControls,
+            onChanged: (val) => timerProvider.setHideCircleWithControls(val),
+            activeThumbColor: accentColor,
+          ),
+
           const SizedBox(height: 10),
           Text("Set Max Scale of Timer", style: theme.textTheme.titleMedium),
           const SizedBox(height: 10),
@@ -190,6 +245,12 @@ class TimerSettingsMenu extends HookWidget {
             spacing: 10,
             runSpacing: 10,
             children: [
+              ScaleChip(
+                seconds: 60,
+                label: "1m",
+                isSelected: timerProvider.fixedScaleDuration == 60,
+                onSelected: () => timerProvider.setFixedScaleDuration(60),
+              ),
               ScaleChip(
                 seconds: 900,
                 label: "15m",
@@ -280,3 +341,45 @@ class TimerSettingsMenu extends HookWidget {
     );
   }
 }
+
+class _SoundDropdown extends StatelessWidget {
+  const _SoundDropdown({
+    required this.value,
+    required this.customPath,
+    required this.onChanged,
+  });
+
+  final SoundType value;
+  final String? customPath;
+  final void Function(SoundType value, String? customPath) onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<SoundType>(
+      initialValue: value,
+      decoration: const InputDecoration(border: OutlineInputBorder()),
+      items: SoundType.values.map((s) {
+        String label = s.name.toUpperCase();
+        if (s == SoundType.custom && customPath != null) {
+          final fileName = customPath!.split('/').last;
+          label = 'CUSTOM ($fileName)';
+        }
+        return DropdownMenuItem(value: s, child: Text(label));
+      }).toList(),
+      onChanged: (val) async {
+        if (val == null) return;
+        if (val == SoundType.custom) {
+          final result = await FilePicker.platform.pickFiles(
+            type: FileType.audio,
+          );
+          if (result != null && result.files.single.path != null) {
+            onChanged(SoundType.custom, result.files.single.path!);
+          }
+        } else {
+          onChanged(val, null);
+        }
+      },
+    );
+  }
+}
+

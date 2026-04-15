@@ -21,6 +21,10 @@ class TimerProvider extends ChangeNotifier {
   int _completedCycles = 0;
   bool _isLongDuration = false;
 
+  // Tracks what type completed last (used by UI to handle session bookkeeping
+  // even when the provider already auto-switched in the background).
+  TimerType _lastCompletedType = TimerType.focus;
+
   final Map<TimerType, int> _defaultDurations = {
     TimerType.focus: 1500,
     TimerType.breakTime: 300,
@@ -31,16 +35,25 @@ class TimerProvider extends ChangeNotifier {
   bool _autoStartFocus = false;
   int _targetLoops = 4;
   int _currentLoop = 1;
-  SoundType _selectedSound = SoundType.bell;
+
+  // Separate sounds for focus and break completion
+  SoundType _focusCompleteSound = SoundType.terminer;
+  SoundType _breakCompleteSound = SoundType.terminer;
+  String? _focusCustomSoundPath;
+  String? _breakCustomSoundPath;
+
+  bool _playDefaultSound = false;
+  bool _playSoundInSilentMode = true;
+  int _soundLoops = 1;
+
   int _fixedScaleDuration = 3600;
   bool _useDynamicScale = false;
   double _waveContrast = 0.8;
   bool _showInnerLiquid = true;
   bool _showBackgroundLiquid = true;
   bool _autoHideControls = true;
+  bool _hideCircleWithControls = false;
   bool _autoNameSessions = true;
-  String? _customSoundPath;
-  bool _playDefaultSound = false;
 
   void _loadFromStorage() {
     final box = Hive.box('settings');
@@ -62,10 +75,30 @@ class TimerProvider extends ChangeNotifier {
     _autoStartBreak = box.get('timer_auto_start_break', defaultValue: true);
     _autoStartFocus = box.get('timer_auto_start_focus', defaultValue: false);
     _targetLoops = box.get('timer_target_loops', defaultValue: 4);
-    _selectedSound = box.get(
-      'timer_selected_sound',
-      defaultValue: SoundType.bell,
+
+    // Sounds — migrate legacy single-sound setting if present
+    final legacySound = box.get('timer_selected_sound');
+    final defaultSound = legacySound ?? SoundType.terminer;
+    _focusCompleteSound = box.get(
+      'timer_focus_complete_sound',
+      defaultValue: defaultSound,
     );
+    _breakCompleteSound = box.get(
+      'timer_break_complete_sound',
+      defaultValue: defaultSound,
+    );
+    _focusCustomSoundPath = box.get('timer_focus_custom_sound_path');
+    _breakCustomSoundPath = box.get('timer_break_custom_sound_path');
+    _playDefaultSound = box.get(
+      'timer_play_default_sound',
+      defaultValue: false,
+    );
+    _playSoundInSilentMode = box.get(
+      'timer_play_sound_in_silent_mode',
+      defaultValue: true,
+    );
+    _soundLoops = box.get('timer_sound_loops', defaultValue: 1);
+
     _fixedScaleDuration = box.get(
       'timer_fixed_scale_duration',
       defaultValue: 3600,
@@ -78,12 +111,11 @@ class TimerProvider extends ChangeNotifier {
       defaultValue: true,
     );
     _autoHideControls = box.get('timer_auto_hide_controls', defaultValue: true);
-    _autoNameSessions = box.get('timer_auto_name_sessions', defaultValue: true);
-    _customSoundPath = box.get('timer_custom_sound_path');
-    _playDefaultSound = box.get(
-      'timer_play_default_sound',
+    _hideCircleWithControls = box.get(
+      'timer_hide_circle_with_controls',
       defaultValue: false,
     );
+    _autoNameSessions = box.get('timer_auto_name_sessions', defaultValue: true);
   }
 
   void _saveToStorage() {
@@ -98,18 +130,25 @@ class TimerProvider extends ChangeNotifier {
     box.put('timer_auto_start_break', _autoStartBreak);
     box.put('timer_auto_start_focus', _autoStartFocus);
     box.put('timer_target_loops', _targetLoops);
-    box.put('timer_selected_sound', _selectedSound);
+    box.put('timer_focus_complete_sound', _focusCompleteSound);
+    box.put('timer_break_complete_sound', _breakCompleteSound);
+    if (_focusCustomSoundPath != null) {
+      box.put('timer_focus_custom_sound_path', _focusCustomSoundPath);
+    }
+    if (_breakCustomSoundPath != null) {
+      box.put('timer_break_custom_sound_path', _breakCustomSoundPath);
+    }
+    box.put('timer_play_default_sound', _playDefaultSound);
+    box.put('timer_play_sound_in_silent_mode', _playSoundInSilentMode);
+    box.put('timer_sound_loops', _soundLoops);
     box.put('timer_fixed_scale_duration', _fixedScaleDuration);
     box.put('timer_use_dynamic_scale', _useDynamicScale);
     box.put('timer_wave_contrast', _waveContrast);
     box.put('timer_show_inner_liquid', _showInnerLiquid);
     box.put('timer_show_background_liquid', _showBackgroundLiquid);
     box.put('timer_auto_hide_controls', _autoHideControls);
+    box.put('timer_hide_circle_with_controls', _hideCircleWithControls);
     box.put('timer_auto_name_sessions', _autoNameSessions);
-    if (_customSoundPath != null) {
-      box.put('timer_custom_sound_path', _customSoundPath);
-    }
-    box.put('timer_play_default_sound', _playDefaultSound);
   }
 
   // --- TIMER GETTERS ---
@@ -119,6 +158,7 @@ class TimerProvider extends ChangeNotifier {
   TimerType get currentType => _currentType;
   int get completedCycles => _completedCycles;
   bool get isLongDuration => _isLongDuration;
+  TimerType get lastCompletedType => _lastCompletedType;
   double get progress => _totalSeconds > 0
       ? (_totalSeconds - _remainingSeconds) / _totalSeconds
       : 0;
@@ -128,16 +168,21 @@ class TimerProvider extends ChangeNotifier {
   bool get autoStartFocus => _autoStartFocus;
   int get targetLoops => _targetLoops;
   int get currentLoop => _currentLoop;
-  SoundType get selectedSound => _selectedSound;
+  SoundType get focusCompleteSound => _focusCompleteSound;
+  SoundType get breakCompleteSound => _breakCompleteSound;
+  String? get focusCustomSoundPath => _focusCustomSoundPath;
+  String? get breakCustomSoundPath => _breakCustomSoundPath;
+  bool get playDefaultSound => _playDefaultSound;
+  bool get playSoundInSilentMode => _playSoundInSilentMode;
+  int get soundLoops => _soundLoops;
   int get fixedScaleDuration => _fixedScaleDuration;
   bool get useDynamicScale => _useDynamicScale;
   double get waveContrast => _waveContrast;
   bool get showInnerLiquid => _showInnerLiquid;
   bool get showBackgroundLiquid => _showBackgroundLiquid;
   bool get autoHideControls => _autoHideControls;
+  bool get hideCircleWithControls => _hideCircleWithControls;
   bool get autoNameSessions => _autoNameSessions;
-  String? get customSoundPath => _customSoundPath;
-  bool get playDefaultSound => _playDefaultSound;
 
   // --- CONFIG SETTERS ---
   void setAutoStartBreak(bool value) {
@@ -173,8 +218,44 @@ class TimerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setSelectedSound(SoundType value) {
-    _selectedSound = value;
+  void setFocusCompleteSound(SoundType value) {
+    _focusCompleteSound = value;
+    notifyListeners();
+    _saveToStorage();
+  }
+
+  void setBreakCompleteSound(SoundType value) {
+    _breakCompleteSound = value;
+    notifyListeners();
+    _saveToStorage();
+  }
+
+  void setFocusCustomSoundPath(String? path) {
+    _focusCustomSoundPath = path;
+    notifyListeners();
+    _saveToStorage();
+  }
+
+  void setBreakCustomSoundPath(String? path) {
+    _breakCustomSoundPath = path;
+    notifyListeners();
+    _saveToStorage();
+  }
+
+  void setPlayDefaultSound(bool value) {
+    _playDefaultSound = value;
+    notifyListeners();
+    _saveToStorage();
+  }
+
+  void setSoundLoops(int value) {
+    _soundLoops = value.clamp(1, 10);
+    notifyListeners();
+    _saveToStorage();
+  }
+
+  void setPlaySoundInSilentMode(bool value) {
+    _playSoundInSilentMode = value;
     notifyListeners();
     _saveToStorage();
   }
@@ -215,20 +296,14 @@ class TimerProvider extends ChangeNotifier {
     _saveToStorage();
   }
 
+  void setHideCircleWithControls(bool value) {
+    _hideCircleWithControls = value;
+    notifyListeners();
+    _saveToStorage();
+  }
+
   void setAutoNameSessions(bool value) {
     _autoNameSessions = value;
-    notifyListeners();
-    _saveToStorage();
-  }
-
-  void setCustomSoundPath(String? path) {
-    _customSoundPath = path;
-    notifyListeners();
-    _saveToStorage();
-  }
-
-  void setPlayDefaultSound(bool value) {
-    _playDefaultSound = value;
     notifyListeners();
     _saveToStorage();
   }
@@ -315,10 +390,22 @@ class TimerProvider extends ChangeNotifier {
     _timer?.cancel();
     _isRunning = false;
 
-    // Play completion sound
+    // Record what just completed before potentially switching type
+    _lastCompletedType = _currentType;
+
+    // Play the appropriate completion sound for this session type
+    final soundToPlay = _currentType == TimerType.focus
+        ? _focusCompleteSound
+        : _breakCompleteSound;
+    final customPath = _currentType == TimerType.focus
+        ? _focusCustomSoundPath
+        : _breakCustomSoundPath;
+
     NotificationService.instance.playCompletionSound(
-      _selectedSound,
-      customSoundPath: _customSoundPath,
+      soundToPlay,
+      customSoundPath: customPath,
+      playSoundInSilentMode: _playSoundInSilentMode,
+      loops: _soundLoops,
     );
 
     // Show completion notification
@@ -339,7 +426,24 @@ class TimerProvider extends ChangeNotifier {
       _saveToStorage();
     }
 
-    notifyListeners();
+    // Auto-switch and start the next session — this runs even when the app is
+    // in the background, ensuring the break/focus timer starts without the user
+    // needing to open the app.
+    if (_currentType == TimerType.focus && _autoStartBreak) {
+      _currentType = TimerType.breakTime;
+      _remainingSeconds = _defaultDurations[TimerType.breakTime]!;
+      _totalSeconds = _remainingSeconds;
+      notifyListeners();
+      startTimer();
+    } else if (_currentType == TimerType.breakTime && _autoStartFocus) {
+      _currentType = TimerType.focus;
+      _remainingSeconds = _defaultDurations[TimerType.focus]!;
+      _totalSeconds = _remainingSeconds;
+      notifyListeners();
+      startTimer();
+    } else {
+      notifyListeners();
+    }
   }
 
   // --- NOTIFICATION HELPERS ---

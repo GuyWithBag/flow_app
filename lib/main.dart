@@ -38,9 +38,8 @@ void main() async {
   //   anonKey: 'YOUR_SUPABASE_ANON_KEY',
   // );
 
-  // Initialize notifications
+  // Initialize notifications (permission is requested in onboarding/settings)
   await NotificationService.instance.initialize();
-  await NotificationService.instance.requestPermissions();
 
   // Load persisted state from Hive
   final themeProvider = ThemeProvider();

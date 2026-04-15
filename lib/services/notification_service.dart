@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:audioplayers/audioplayers.dart';
@@ -15,6 +16,13 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
   final AudioPlayer _audioPlayer = AudioPlayer();
+
+  // Loop playback state
+  int _remainingLoops = 0;
+  SoundType _loopSound = SoundType.none;
+  String? _loopCustomPath;
+  bool _loopSilentMode = false;
+  StreamSubscription<void>? _loopSubscription;
 
   /// Set this from the widget layer so notification actions can control the timer.
   NotificationActionCallback? onActionReceived;
@@ -39,7 +47,7 @@ class NotificationService {
 
   Future<void> initialize() async {
     const androidSettings = AndroidInitializationSettings(
-      '@mipmap/ic_launcher',
+      '@drawable/ic_notification',
     );
 
     const linuxSettings = LinuxInitializationSettings(
@@ -55,6 +63,14 @@ class NotificationService {
       settings: initSettings,
       onDidReceiveNotificationResponse: _handleNotificationResponse,
     );
+
+    // Replay sound when a loop finishes
+    _loopSubscription = _audioPlayer.onPlayerComplete.listen((_) async {
+      if (_remainingLoops > 0) {
+        _remainingLoops--;
+        await _playAudio(_loopSound, _loopCustomPath, _loopSilentMode);
+      }
+    });
   }
 
   Future<bool> requestPermissions() async {
@@ -64,6 +80,15 @@ class NotificationService {
         >();
     final granted = await androidPlugin?.requestNotificationsPermission();
     return granted ?? false;
+  }
+
+  Future<bool> areNotificationsEnabled() async {
+    final androidPlugin = _notifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    final enabled = await androidPlugin?.areNotificationsEnabled();
+    return enabled ?? false;
   }
 
   void _handleNotificationResponse(NotificationResponse response) {
@@ -80,10 +105,53 @@ class NotificationService {
   Future<void> playCompletionSound(
     SoundType sound, {
     String? customSoundPath,
+    bool playSoundInSilentMode = false,
+    int loops = 1,
   }) async {
     if (sound == SoundType.none) return;
 
+    // Store loop state so the onPlayerComplete listener can replay
+    _loopSound = sound;
+    _loopCustomPath = customSoundPath;
+    _loopSilentMode = playSoundInSilentMode;
+    _remainingLoops = (loops - 1).clamp(0, 9);
+
+    await _playAudio(sound, customSoundPath, playSoundInSilentMode);
+  }
+
+  Future<void> _playAudio(
+    SoundType sound,
+    String? customSoundPath,
+    bool playSoundInSilentMode,
+  ) async {
+    if (sound == SoundType.none) return;
     try {
+      if (playSoundInSilentMode) {
+        await _audioPlayer.setAudioContext(
+          const AudioContext(
+            android: AudioContextAndroid(
+              isSpeakerphoneOn: false,
+              stayAwake: false,
+              contentType: AndroidContentType.music,
+              usageType: AndroidUsageType.alarm,
+              audioFocus: AndroidAudioFocus.gain,
+            ),
+          ),
+        );
+      } else {
+        await _audioPlayer.setAudioContext(
+          const AudioContext(
+            android: AudioContextAndroid(
+              isSpeakerphoneOn: false,
+              stayAwake: false,
+              contentType: AndroidContentType.music,
+              usageType: AndroidUsageType.notificationRingtone,
+              audioFocus: AndroidAudioFocus.gain,
+            ),
+          ),
+        );
+      }
+
       if (sound == SoundType.custom && customSoundPath != null) {
         await _audioPlayer.play(DeviceFileSource(customSoundPath));
       } else {
@@ -99,6 +167,8 @@ class NotificationService {
 
   String? _assetForSound(SoundType sound) {
     switch (sound) {
+      case SoundType.terminer:
+        return 'sounds/terminer.mp3';
       case SoundType.bell:
         return 'sounds/bell.mp3';
       case SoundType.digital:
@@ -180,6 +250,7 @@ class NotificationService {
   }
 
   void dispose() {
+    _loopSubscription?.cancel();
     _audioPlayer.dispose();
   }
 }

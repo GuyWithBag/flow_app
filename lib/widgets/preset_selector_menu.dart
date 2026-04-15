@@ -125,13 +125,18 @@ class PresetSelectorMenu extends StatelessWidget {
   }
 
   void _showAddPresetDialog(BuildContext context) {
-    showDialog(
+    showDialog<bool>(
       context: context,
-      builder: (context) => AddPresetDialog(
+      builder: (_) => AddPresetDialog(
         presetProvider: presetProvider,
         timerProvider: timerProvider,
       ),
-    );
+    ).then((created) {
+      // Close the bottom sheet too so the stale context isn't left open
+      if (created == true && context.mounted) {
+        Navigator.pop(context);
+      }
+    });
   }
 
   void _showEditPresetDialog(BuildContext context, PomodoroPreset preset) {

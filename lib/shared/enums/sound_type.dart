@@ -1,1 +1,1 @@
-enum SoundType { bell, digital, bird, custom, none }
+enum SoundType { terminer, bell, digital, bird, custom, none }

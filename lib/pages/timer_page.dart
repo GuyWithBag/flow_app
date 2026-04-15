@@ -3,11 +3,14 @@ import 'dart:async';
 import 'package:flow_app/models/models.barrel.dart';
 import 'package:flow_app/painters/painters.barrel.dart';
 import 'package:flow_app/providers/providers.barrel.dart';
+import 'package:flow_app/shared/showcase_keys.dart';
 import 'package:flow_app/widgets/widgets.barrel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_confetti/flutter_confetti.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:showcaseview/showcaseview.dart' show ShowcaseView, Showcase;
 import 'package:vibration/vibration.dart';
 
 class TimerPage extends HookWidget {
@@ -28,6 +31,20 @@ class TimerPage extends HookWidget {
 
     // Track previous running state to detect completion edge case
     final wasRunning = useRef(false);
+
+    // --- EFFECT: REGISTER SHOWCASE + START AFTER ONBOARDING ---
+    useEffect(() {
+      final showcaseView = ShowcaseView.register();
+      final box = Hive.box('settings');
+      if (box.get('shouldStartShowcase', defaultValue: false) == true) {
+        box.put('shouldStartShowcase', false);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          controlsVisible.value = true;
+          showcaseView.startShowCase(ShowcaseKeys.all);
+        });
+      }
+      return showcaseView.unregister;
+    }, const []);
 
     // --- LOGIC: HELPER FUNCTIONS ---
 
@@ -56,7 +73,11 @@ class TimerPage extends HookWidget {
       // Complete the current loop
       sessionProvider.completeCurrentLoop(skipped: false);
 
-      if (timerProvider.currentType == TimerType.focus) {
+      // Use lastCompletedType (not currentType) because the provider may have
+      // already auto-switched the timer type in the background.
+      final completedType = timerProvider.lastCompletedType;
+
+      if (completedType == TimerType.focus) {
         // Focus Finished
         if (timerProvider.currentLoop >= timerProvider.targetLoops) {
           // All Loops Done — finish session
@@ -94,34 +115,80 @@ class TimerPage extends HookWidget {
             ),
           );
         } else {
-          // Start Break
-          timerProvider.setTimerType(TimerType.breakTime);
+          // Start Break — update theme and session tracking.
+          // If the provider already auto-started the break (timer running),
+          // skip the timer calls; just do the session bookkeeping.
           themeProvider.updateTimerType(TimerType.breakTime);
           final preset = presetProvider.selectedPreset;
-
           sessionProvider.startLoop(
             type: TimerType.breakTime,
             duration: preset.breakDuration,
           );
-
-          if (timerProvider.autoStartBreak) {
-            timerProvider.startTimer();
+          if (!timerProvider.isRunning) {
+            timerProvider.setTimerType(TimerType.breakTime);
+            if (timerProvider.autoStartBreak) {
+              timerProvider.startTimer();
+            } else {
+              showDialog(
+                context: ctx,
+                barrierDismissible: false,
+                builder: (_) => AlertDialog(
+                  title: const Text('Focus Complete'),
+                  content: const Text('Ready to start your break?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('Not Yet'),
+                    ),
+                    FilledButton(
+                      onPressed: () {
+                        timerProvider.startTimer();
+                        Navigator.pop(ctx);
+                      },
+                      child: const Text('Start Break'),
+                    ),
+                  ],
+                ),
+              );
+            }
           }
         }
       } else {
         // Break Finished
         timerProvider.incrementLoop();
-        timerProvider.setTimerType(TimerType.focus);
         themeProvider.updateTimerType(TimerType.focus);
         final preset = presetProvider.selectedPreset;
-
         sessionProvider.startLoop(
           type: TimerType.focus,
           duration: preset.focusDuration,
         );
-
-        if (timerProvider.autoStartFocus) {
-          timerProvider.startTimer();
+        if (!timerProvider.isRunning) {
+          timerProvider.setTimerType(TimerType.focus);
+          if (timerProvider.autoStartFocus) {
+            timerProvider.startTimer();
+          } else {
+            showDialog(
+              context: ctx,
+              barrierDismissible: false,
+              builder: (_) => AlertDialog(
+                title: const Text('Break Complete'),
+                content: const Text('Ready to start your focus session?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Not Yet'),
+                  ),
+                  FilledButton(
+                    onPressed: () {
+                      timerProvider.startTimer();
+                      Navigator.pop(ctx);
+                    },
+                    child: const Text('Start Focus'),
+                  ),
+                ],
+              ),
+            );
+          }
         }
       }
     }
@@ -236,38 +303,58 @@ class TimerPage extends HookWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   // TOP CONTROLS
-                  AnimatedVisibility(
-                    visible: controlsVisible.value,
-                    child: TimerTopControls(
-                      timerProvider: timerProvider,
-                      showPresetSelector: true,
+                  Showcase(
+                    key: ShowcaseKeys.topControls,
+                    title: 'Presets & Loops',
+                    description:
+                        'Select your Pomodoro preset and set how many focus loops you want to complete.',
+                    child: AnimatedVisibility(
+                      visible: controlsVisible.value,
+                      child: TimerTopControls(
+                        timerProvider: timerProvider,
+                        showPresetSelector: true,
+                      ),
                     ),
                   ),
                   Spacer(),
-                  AnimatedVisibility(
-                    visible: controlsVisible.value,
-                    child: ModeToggle(),
+                  Showcase(
+                    key: ShowcaseKeys.modeToggle,
+                    title: 'Focus & Break',
+                    description:
+                        'Switch between focus and break modes. Flow handles transitions automatically when the timer ends.',
+                    child: AnimatedVisibility(
+                      visible: controlsVisible.value,
+                      child: ModeToggle(),
+                    ),
                   ),
                   // TIMER CIRCLE
                   Expanded(
                     flex: 6,
                     child: Center(
-                      child: AnimatedScale(
-                        duration: const Duration(milliseconds: 500),
-                        curve: Curves.easeInOutCubic,
-                        scale: controlsVisible.value ? 0.9 : 1.05,
-                        child: LiquidTimerCircle(
-                          color: currentColor,
-                          maxDuration: currentMaxDuration,
-                          fillPercent: fillPercent,
-                          waveController: waveController,
-                          isDragging: isDragging,
-                          contrast: timerProvider.waveContrast,
-                          animDuration: animDuration,
-                          animCurve: animCurve,
-                          showInnerLiquid: timerProvider.showInnerLiquid,
-                          controlsVisible: controlsVisible.value,
-                          onCircleTap: toggleControls,
+                      child: Showcase(
+                        key: ShowcaseKeys.timerCircle,
+                        title: 'Your Timer',
+                        description:
+                            'Tap the circle to show or hide controls. The liquid fills as your session progresses.',
+                        child: AnimatedScale(
+                          duration: const Duration(milliseconds: 500),
+                          curve: Curves.easeInOutCubic,
+                          scale: controlsVisible.value ? 0.9 : 1.05,
+                          child: LiquidTimerCircle(
+                            color: currentColor,
+                            maxDuration: currentMaxDuration,
+                            fillPercent: fillPercent,
+                            waveController: waveController,
+                            isDragging: isDragging,
+                            contrast: timerProvider.waveContrast,
+                            animDuration: animDuration,
+                            animCurve: animCurve,
+                            showInnerLiquid: timerProvider.showInnerLiquid,
+                            controlsVisible: controlsVisible.value,
+                            hideCircleWithControls:
+                                timerProvider.hideCircleWithControls,
+                            onCircleTap: toggleControls,
+                          ),
                         ),
                       ),
                     ),
@@ -376,13 +463,19 @@ class TimerPage extends HookWidget {
                   ),
                   Spacer(),
                   // BOTTOM CONTROLS
-                  AnimatedVisibility(
-                    visible: controlsVisible.value,
-                    child: TimerBottomControls(
-                      timerProvider: timerProvider,
-                      presetProvider: presetProvider,
-                      sessionProvider: sessionProvider,
-                      currentColor: currentColor,
+                  Showcase(
+                    key: ShowcaseKeys.bottomControls,
+                    title: 'Timer Controls',
+                    description:
+                        'Play, pause, skip cycles, stop your session, or open timer settings.',
+                    child: AnimatedVisibility(
+                      visible: controlsVisible.value,
+                      child: TimerBottomControls(
+                        timerProvider: timerProvider,
+                        presetProvider: presetProvider,
+                        sessionProvider: sessionProvider,
+                        currentColor: currentColor,
+                      ),
                     ),
                   ),
                 ],

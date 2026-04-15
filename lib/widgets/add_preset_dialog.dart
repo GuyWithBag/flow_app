@@ -28,13 +28,10 @@ class AddPresetDialog extends HookWidget {
     final longBreakSecondsController = useTextEditingController(text: '0');
 
     void createPreset() {
-      final name = nameController.text.trim();
-      if (name.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please enter a preset name')),
-        );
-        return;
-      }
+      // Fall back to the hint text if the user left the name blank
+      final name = nameController.text.trim().isEmpty
+          ? 'My Custom Preset'
+          : nameController.text.trim();
 
       final focusMinutes = int.tryParse(focusMinutesController.text) ?? 0;
       final focusSeconds = int.tryParse(focusSecondsController.text) ?? 0;
@@ -82,8 +79,11 @@ class AddPresetDialog extends HookWidget {
         timerProvider.setCustomDuration(breakDuration);
       }
 
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
+      // Capture messenger before popping so the snackbar shows correctly
+      final messenger = ScaffoldMessenger.of(context);
+      // Return true so the caller knows a preset was created
+      Navigator.pop(context, true);
+      messenger.showSnackBar(
         SnackBar(content: Text('Preset "$name" created and selected')),
       );
     }

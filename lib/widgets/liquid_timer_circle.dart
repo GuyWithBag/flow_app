@@ -20,6 +20,7 @@ class LiquidTimerCircle extends HookWidget {
   final Curve animCurve;
   final bool showInnerLiquid;
   final bool controlsVisible;
+  final bool hideCircleWithControls;
   final VoidCallback onCircleTap;
 
   const LiquidTimerCircle({
@@ -34,6 +35,7 @@ class LiquidTimerCircle extends HookWidget {
     required this.animCurve,
     required this.showInnerLiquid,
     required this.controlsVisible,
+    required this.hideCircleWithControls,
     required this.onCircleTap,
   });
 
@@ -103,62 +105,67 @@ class LiquidTimerCircle extends HookWidget {
                   alignment: Alignment.center,
                   clipBehavior: Clip.none,
                   children: [
-                    // 1. Shadow
-                    Container(
-                      width: size,
-                      height: size,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: color.withValues(alpha: 0.3),
-                            blurRadius: currentBlur,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // 2. INNER LIQUID
-                    if (showInnerLiquid)
-                      ClipOval(
-                        child: SizedBox(
-                          width: size - 10,
-                          height: size - 10,
-                          child: AnimatedBuilder(
-                            animation: waveController,
-                            builder: (context, child) {
-                              return CustomPaint(
-                                painter: LiquidWavePainter(
-                                  waveValue: waveController.value,
-                                  fillPercent: animatedProgress,
-                                  color: color.withValues(alpha: contrast),
-                                  waveHeight: 12.0,
-                                  waveFrequency: 2.0,
-                                ),
-                              );
-                            },
-                          ),
+                    // When hideCircleWithControls is on and controls are hidden,
+                    // we only render the timer text (elements 1–4 are skipped).
+                    if (!hideCircleWithControls || controlsVisible) ...[
+                      // 1. Shadow
+                      Container(
+                        width: size,
+                        height: size,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: color.withValues(alpha: 0.3),
+                              blurRadius: currentBlur,
+                              spreadRadius: 2,
+                            ),
+                          ],
                         ),
                       ),
 
-                    // 3. Ring - CircularProgressIndicator
-                    SizedBox(
-                      width: size,
-                      height: size,
-                      child: CircularProgressIndicator(
-                        value: animatedProgress,
-                        strokeWidth: size * 0.086,
-                        valueColor: AlwaysStoppedAnimation<Color>(color),
-                        backgroundColor: isDark
-                            ? Colors.grey.shade800
-                            : Colors.grey.shade100,
-                        strokeCap: StrokeCap.round,
-                      ),
-                    ),
+                      // 2. INNER LIQUID
+                      if (showInnerLiquid)
+                        ClipOval(
+                          child: SizedBox(
+                            width: size - 10,
+                            height: size - 10,
+                            child: AnimatedBuilder(
+                              animation: waveController,
+                              builder: (context, child) {
+                                return CustomPaint(
+                                  painter: LiquidWavePainter(
+                                    waveValue: waveController.value,
+                                    fillPercent: animatedProgress,
+                                    color: color.withValues(alpha: contrast),
+                                    waveHeight: 12.0,
+                                    waveFrequency: 2.0,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
 
-                    // 4. Custom grabber knob
-                    if (animatedProgress > 0)
+                      // 3. Ring - CircularProgressIndicator
+                      SizedBox(
+                        width: size,
+                        height: size,
+                        child: CircularProgressIndicator(
+                          value: animatedProgress,
+                          strokeWidth: size * 0.086,
+                          valueColor: AlwaysStoppedAnimation<Color>(color),
+                          backgroundColor: isDark
+                              ? Colors.grey.shade800
+                              : Colors.grey.shade100,
+                          strokeCap: StrokeCap.round,
+                        ),
+                      ),
+                    ],
+
+                    // 4. Custom grabber knob (only when circle is visible)
+                    if (animatedProgress > 0 &&
+                        (!hideCircleWithControls || controlsVisible))
                       TimerGrabber(
                         progress: animatedProgress,
                         color: color,

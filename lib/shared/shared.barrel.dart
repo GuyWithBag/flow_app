@@ -4,4 +4,5 @@
 export 'enums/enums.barrel.dart';
 // Other files
 export 'format_duration.dart';
+export 'showcase_keys.dart';
 export 'theme.dart';

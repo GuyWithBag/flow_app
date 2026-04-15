@@ -2,6 +2,7 @@
 
 // Other files
 export 'account_page.dart';
+export 'onboarding_page.dart';
 export 'dashboard_page.dart';
 export 'history_page.dart';
 export 'login_page.dart';
