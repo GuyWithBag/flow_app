@@ -194,10 +194,10 @@ class TimerBottomControls extends StatelessWidget {
           // ),
           child: ShadowIconButton(
             onTap: () {
+              _showSettingsSheet(context, timerProvider);
               if (!context.read<PurchaseProvider>().isNoAds) {
                 adService.iAd?.show();
               }
-              _showSettingsSheet(context, timerProvider);
             },
             icon: Icons.tune_rounded,
             size: sideButtonsSize,

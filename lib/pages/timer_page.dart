@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_confetti/flutter_confetti.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart' show ShowcaseView, Showcase;
 import 'package:vibration/vibration.dart';
@@ -252,9 +253,6 @@ class TimerPage extends HookWidget {
       foregroundColor: Theme.of(context).colorScheme.inverseSurface,
     );
 
-    final screenHeight = MediaQuery.of(context).size.height;
-    final isCompact = screenHeight < 1000;
-
     return Scaffold(
       backgroundColor: Colors.transparent,
       resizeToAvoidBottomInset: false,
@@ -296,8 +294,8 @@ class TimerPage extends HookWidget {
           SafeArea(
             child: Padding(
               padding: EdgeInsets.symmetric(
-                horizontal: isCompact ? 15.0 : 20.0,
-                vertical: isCompact ? 15 : 20,
+                horizontal: 15.w,
+                vertical: 15.h,
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -362,7 +360,7 @@ class TimerPage extends HookWidget {
                   AnimatedVisibility(
                     visible: controlsVisible.value,
                     child: Column(
-                      spacing: isCompact ? 4 : 10,
+                      spacing: 8.h,
                       children: [
                         Row(
                           spacing: 10,

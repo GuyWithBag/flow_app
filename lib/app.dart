@@ -1,5 +1,7 @@
 import 'package:flow_app/services/services.barrel.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'package:provider/provider.dart';
 
 import 'pages/pages.barrel.dart';
@@ -64,11 +66,21 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       // Only watch ThemeProvider - not TimerProvider
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {
-          return MaterialApp(
-            title: 'Flow',
-            debugShowCheckedModeBanner: false,
-            theme: themeProvider.currentTheme,
-            home: const MainPage(),
+          final hasSeenOnboarding =
+              Hive.box('settings').get('hasSeenOnboarding', defaultValue: false)
+                  as bool;
+          return ScreenUtilInit(
+            designSize: const Size(390, 844),
+            minTextAdapt: true,
+            splitScreenMode: true,
+            builder: (context, _) => MaterialApp(
+              title: 'Flow',
+              debugShowCheckedModeBanner: false,
+              theme: themeProvider.currentTheme,
+              home: hasSeenOnboarding
+                  ? const MainPage()
+                  : const OnboardingPage(),
+            ),
           );
         },
       ),

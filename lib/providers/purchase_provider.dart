@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
 class PurchaseProvider extends ChangeNotifier {
-  static const String _apiKey = 'test_JeVPpLYxXOmwZtFYmyeQHogMMqf';
+  static const String _debugApiKey = 'test_JeVPpLYxXOmwZtFYmyeQHogMMqf';
+  static const String _releaseApiKey = 'goog_jQGTphAhvTManzYmseaemWJVjcj';
+  static String get _apiKey => kDebugMode ? _debugApiKey : _releaseApiKey;
   static const String noAdsEntitlementId = 'one-time-remove-ads-tier';
 
   CustomerInfo? _customerInfo;
