@@ -12,6 +12,7 @@ class OnboardingPage extends HookWidget {
   static const _contentSteps = [
     _OnboardingStep(
       icon: Icons.water_outlined,
+      image: 'assets/notification_icon.png',
       title: 'Welcome to Flow',
       description:
           'A beautiful Pomodoro timer built to help you stay focused and track your progress.',
@@ -179,9 +180,9 @@ class _PermissionsStepView extends HookWidget {
           const SizedBox(height: 36),
           Text(
             'Enable Notifications',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -237,17 +238,19 @@ class _StepView extends StatelessWidget {
             width: 100,
             height: 100,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
+              color: color.withValues(alpha: step.image != null ? 255 : 0.12),
               shape: BoxShape.circle,
             ),
-            child: Icon(step.icon, size: 48, color: color),
+            child: step.image != null
+                ? Image.asset(step.image!)
+                : Icon(step.icon, size: 48, color: color),
           ),
           const SizedBox(height: 36),
           Text(
             step.title,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -272,9 +275,11 @@ class _OnboardingStep {
     required this.icon,
     required this.title,
     required this.description,
+    this.image,
   });
 
   final IconData icon;
+  final String? image;
   final String title;
   final String description;
 }
