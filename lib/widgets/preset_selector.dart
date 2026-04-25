@@ -20,7 +20,7 @@ class PresetSelector extends HookWidget {
       onTap: () {
         _showPresetSelector(context, presetProvider, timerProvider, isActive);
         if (!context.read<PurchaseProvider>().isNoAds) {
-          adService.iAd?.show();
+          adService.maybeShowInterstitial(frequency: 4);
         }
       },
       borderRadius: BorderRadius.circular(8),

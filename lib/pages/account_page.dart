@@ -41,14 +41,18 @@ class AccountPage extends HookWidget {
           const SizedBox(height: 16),
           _buildThemeSelector(context, themeProvider),
           _buildSettingsTile(context, 'Settings', Icons.settings, () {
-            if (!purchaseProvider.isNoAds) adService.iAd?.show();
+            if (!purchaseProvider.isNoAds) {
+              adService.maybeShowInterstitial(frequency: 3);
+            }
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const SettingsPage()),
             );
           }),
           _buildSettingsTile(context, 'Presets', Icons.bookmark, () {
-            if (!purchaseProvider.isNoAds) adService.iAd?.show();
+            if (!purchaseProvider.isNoAds) {
+              adService.maybeShowInterstitial(frequency: 4);
+            }
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const PresetsPage()),

@@ -5,6 +5,18 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 class AdService extends ChangeNotifier {
   InterstitialAd? iAd;
   BannerAd? bAd;
+  int _interstitialCallCount = 0;
+
+  /// Shows the interstitial ad based on frequency.
+  /// [showAtFirst] — if true, shows on the first call; otherwise skips it.
+  /// [frequency] — show the ad every N calls.
+  void maybeShowInterstitial({bool showAtFirst = false, int frequency = 1}) {
+    _interstitialCallCount++;
+    final bool shouldShow = showAtFirst
+        ? (_interstitialCallCount - 1) % frequency == 0
+        : _interstitialCallCount % frequency == 0;
+    if (shouldShow) iAd?.show();
+  }
 
   static bool get _isMobile =>
       defaultTargetPlatform == TargetPlatform.android ||
@@ -23,7 +35,7 @@ class AdService extends ChangeNotifier {
     }
 
     await BannerAd(
-      adUnitId: "ca-app-pub-3940256099942544/9214589741",
+      adUnitId: "ca-app-pub-7340092341275453/7352345203",
       request: const AdRequest(),
       size: size,
       listener: BannerAdListener(
@@ -46,7 +58,7 @@ class AdService extends ChangeNotifier {
   void loadInterstitial({Function(LoadAdError)? onAdFailedToLoad}) {
     if (!_isMobile) return;
     InterstitialAd.load(
-      adUnitId: "ca-app-pub-3940256099942544/1033173712",
+      adUnitId: "ca-app-pub-7340092341275453/5646405502",
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (InterstitialAd ad) {

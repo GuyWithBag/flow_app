@@ -196,7 +196,7 @@ class TimerBottomControls extends StatelessWidget {
             onTap: () {
               _showSettingsSheet(context, timerProvider);
               if (!context.read<PurchaseProvider>().isNoAds) {
-                adService.iAd?.show();
+                adService.maybeShowInterstitial(frequency: 3);
               }
             },
             icon: Icons.tune_rounded,
