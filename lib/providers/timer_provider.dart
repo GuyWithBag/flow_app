@@ -56,7 +56,7 @@ class TimerProvider extends ChangeNotifier {
   bool _playSoundInSilentMode = true;
   int _soundLoops = 1;
 
-  int _fixedScaleDuration = 3600;
+  int _fixedScaleDuration = 1800;
   bool _useDynamicScale = false;
   double _waveContrast = 0.8;
   bool _showInnerLiquid = true;
@@ -182,6 +182,7 @@ class TimerProvider extends ChangeNotifier {
     _uiControlsVisible = value;
     notifyListeners();
   }
+
   double get progress => _totalSeconds > 0
       ? (_totalSeconds - _remainingSeconds) / _totalSeconds
       : 0;
