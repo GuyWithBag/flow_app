@@ -50,7 +50,79 @@ class TimerSettingsMenu extends HookWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 20),
+          const MenuSubsectionTitle(title: "Visuals"),
+
+          SwitchListTile(
+            title: const Text("Show Background Liquid"),
+            value: timerProvider.showBackgroundLiquid,
+            onChanged: (val) => timerProvider.setShowBackgroundLiquid(val),
+            activeThumbColor: accentColor,
+          ),
+
+          SwitchListTile(
+            title: const Text("Show Circle Liquid"),
+            value: timerProvider.showInnerLiquid,
+            onChanged: (val) => timerProvider.setShowInnerLiquid(val),
+            activeThumbColor: accentColor,
+          ),
+
+          SwitchListTile(
+            title: const Text("Hide Circle When Controls Hidden"),
+            subtitle: const Text(
+              "Show only the timer label when controls are hidden",
+            ),
+            value: timerProvider.hideCircleWithControls,
+            onChanged: (val) => timerProvider.setHideCircleWithControls(val),
+            activeThumbColor: accentColor,
+          ),
+
+          const SizedBox(height: 10),
+          Text("Set Max Scale of Timer", style: theme.textTheme.titleMedium),
+          const SizedBox(height: 10),
+
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              ScaleChip(
+                seconds: 60,
+                label: "1m",
+                isSelected: timerProvider.fixedScaleDuration == 60,
+                onSelected: () => timerProvider.setFixedScaleDuration(60),
+              ),
+              ScaleChip(
+                seconds: 900,
+                label: "15m",
+                isSelected: timerProvider.fixedScaleDuration == 900,
+                onSelected: () => timerProvider.setFixedScaleDuration(900),
+              ),
+              ScaleChip(
+                seconds: 1500,
+                label: "25m",
+                isSelected: timerProvider.fixedScaleDuration == 1500,
+                onSelected: () => timerProvider.setFixedScaleDuration(1500),
+              ),
+              ScaleChip(
+                seconds: 1800,
+                label: "30m",
+                isSelected: timerProvider.fixedScaleDuration == 1800,
+                onSelected: () => timerProvider.setFixedScaleDuration(1800),
+              ),
+              ScaleChip(
+                seconds: 3600,
+                label: "60m",
+                isSelected: timerProvider.fixedScaleDuration == 3600,
+                onSelected: () => timerProvider.setFixedScaleDuration(3600),
+              ),
+              ActionChip(
+                label: const Text("Custom Scale"),
+                onPressed: () =>
+                    _showCustomScalePicker(context, timerProvider, accentColor),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
 
           const MenuSubsectionTitle(title: "Cycle Configuration"),
 
@@ -151,8 +223,9 @@ class TimerSettingsMenu extends HookWidget {
                   style: iconButtonStyle,
                   icon: const Icon(Icons.remove_circle_outline),
                   onPressed: timerProvider.soundLoops > 1
-                      ? () =>
-                            timerProvider.setSoundLoops(timerProvider.soundLoops - 1)
+                      ? () => timerProvider.setSoundLoops(
+                          timerProvider.soundLoops - 1,
+                        )
                       : null,
                 ),
                 Text(
@@ -166,8 +239,9 @@ class TimerSettingsMenu extends HookWidget {
                   style: iconButtonStyle,
                   icon: const Icon(Icons.add_circle_outline),
                   onPressed: timerProvider.soundLoops < 10
-                      ? () =>
-                            timerProvider.setSoundLoops(timerProvider.soundLoops + 1)
+                      ? () => timerProvider.setSoundLoops(
+                          timerProvider.soundLoops + 1,
+                        )
                       : null,
                 ),
               ],
@@ -176,7 +250,9 @@ class TimerSettingsMenu extends HookWidget {
 
           SwitchListTile(
             title: const Text("Play Sound in Silent/Vibrate Mode"),
-            subtitle: const Text("Override device silent mode for timer alerts"),
+            subtitle: const Text(
+              "Override device silent mode for timer alerts",
+            ),
             value: timerProvider.playSoundInSilentMode,
             onChanged: (val) => timerProvider.setPlaySoundInSilentMode(val),
             activeThumbColor: accentColor,
@@ -213,75 +289,6 @@ class TimerSettingsMenu extends HookWidget {
           ),
 
           const SizedBox(height: 16),
-          const MenuSubsectionTitle(title: "Visuals"),
-
-          SwitchListTile(
-            title: const Text("Show Background Liquid"),
-            value: timerProvider.showBackgroundLiquid,
-            onChanged: (val) => timerProvider.setShowBackgroundLiquid(val),
-            activeThumbColor: accentColor,
-          ),
-
-          SwitchListTile(
-            title: const Text("Show Circle Liquid"),
-            value: timerProvider.showInnerLiquid,
-            onChanged: (val) => timerProvider.setShowInnerLiquid(val),
-            activeThumbColor: accentColor,
-          ),
-
-          SwitchListTile(
-            title: const Text("Hide Circle When Controls Hidden"),
-            subtitle: const Text("Show only the timer label when controls are hidden"),
-            value: timerProvider.hideCircleWithControls,
-            onChanged: (val) => timerProvider.setHideCircleWithControls(val),
-            activeThumbColor: accentColor,
-          ),
-
-          const SizedBox(height: 10),
-          Text("Set Max Scale of Timer", style: theme.textTheme.titleMedium),
-          const SizedBox(height: 10),
-
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              ScaleChip(
-                seconds: 60,
-                label: "1m",
-                isSelected: timerProvider.fixedScaleDuration == 60,
-                onSelected: () => timerProvider.setFixedScaleDuration(60),
-              ),
-              ScaleChip(
-                seconds: 900,
-                label: "15m",
-                isSelected: timerProvider.fixedScaleDuration == 900,
-                onSelected: () => timerProvider.setFixedScaleDuration(900),
-              ),
-              ScaleChip(
-                seconds: 1500,
-                label: "25m",
-                isSelected: timerProvider.fixedScaleDuration == 1500,
-                onSelected: () => timerProvider.setFixedScaleDuration(1500),
-              ),
-              ScaleChip(
-                seconds: 1800,
-                label: "30m",
-                isSelected: timerProvider.fixedScaleDuration == 1800,
-                onSelected: () => timerProvider.setFixedScaleDuration(1800),
-              ),
-              ScaleChip(
-                seconds: 3600,
-                label: "60m",
-                isSelected: timerProvider.fixedScaleDuration == 3600,
-                onSelected: () => timerProvider.setFixedScaleDuration(3600),
-              ),
-              ActionChip(
-                label: const Text("Custom Scale"),
-                onPressed: () =>
-                    _showCustomScalePicker(context, timerProvider, accentColor),
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -382,4 +389,3 @@ class _SoundDropdown extends StatelessWidget {
     );
   }
 }
-
