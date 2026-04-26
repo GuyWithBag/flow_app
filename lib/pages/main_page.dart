@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flow_app/pages/pages.barrel.dart';
 import 'package:flow_app/services/services.barrel.dart';
 import 'package:flow_app/widgets/widgets.barrel.dart';
@@ -27,8 +29,11 @@ class MainPage extends HookWidget {
     useEffect(() {
       adService.loadInterstitial();
       adService.loadBannerAd(context);
+      // log(
+      //   '==================================================================================================================================RENDERED=====================================================',
+      // );
       return null;
-    });
+    }, []);
 
     return Scaffold(
       extendBody: true,

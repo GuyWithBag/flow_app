@@ -40,7 +40,7 @@ class DashboardPage extends HookWidget {
           icon: const Icon(Icons.history),
           onPressed: () {
             if (!context.read<PurchaseProvider>().isNoAds) {
-              adService.maybeShowInterstitial(frequency: 5);
+              adService.maybeShowInterstitial(id: 'history', frequency: 5);
             }
             // todo: Gotta change navigation
             Navigator.push(

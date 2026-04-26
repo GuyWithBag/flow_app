@@ -42,7 +42,10 @@ class AccountPage extends HookWidget {
           _buildThemeSelector(context, themeProvider),
           _buildSettingsTile(context, 'Settings', Icons.settings, () {
             if (!purchaseProvider.isNoAds) {
-              adService.maybeShowInterstitial(frequency: 3);
+              adService.maybeShowInterstitial(
+                id: 'timer_settings',
+                frequency: 3,
+              );
             }
             Navigator.push(
               context,
@@ -51,7 +54,7 @@ class AccountPage extends HookWidget {
           }),
           _buildSettingsTile(context, 'Presets', Icons.bookmark, () {
             if (!purchaseProvider.isNoAds) {
-              adService.maybeShowInterstitial(frequency: 4);
+              adService.maybeShowInterstitial(id: 'presets', frequency: 4);
             }
             Navigator.push(
               context,
