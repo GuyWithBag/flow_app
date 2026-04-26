@@ -343,7 +343,7 @@ class TimerPage extends HookWidget {
                         child: AnimatedScale(
                           duration: const Duration(milliseconds: 500),
                           curve: Curves.easeInOutCubic,
-                          scale: controlsVisible.value ? 0.85.w : 0.90.w,
+                          scale: controlsVisible.value ? 0.85 : 0.90,
                           child: LiquidTimerCircle(
                             color: currentColor,
                             maxDuration: currentMaxDuration,

@@ -14,26 +14,39 @@ class ShadowIconButton extends StatelessWidget {
   final double size;
   final Color? color;
 
+  Color _disabledColor(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return isDark ? Colors.grey.shade900 : Colors.grey.shade300;
+  }
+
+  Color _shadowColor(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return isDark
+        ? Colors.black.withAlpha(200)
+        : Colors.grey.shade700.withAlpha(200);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
       child: Icon(
         icon,
         fill: 1,
         color: onTap == null
-            ? Colors.grey.shade200
-            : color ?? Theme.of(context).colorScheme.surface,
+            ? _disabledColor(context)
+            : color ??
+                  (isDark == true
+                      ? Colors.grey.shade800
+                      : Theme.of(context).colorScheme.surface),
         size: size,
         fontWeight: FontWeight.w900,
-
         shadows: [
           Shadow(
-            offset: Offset(1, 1), // X and Y offset
-            blurRadius: 3.0, // Blur radius
-            color: Colors.grey.shade700.withAlpha(
-              200,
-            ), // Shadow color and opacity
+            offset: Offset(1, 1),
+            blurRadius: 3.0,
+            color: _shadowColor(context),
           ),
         ],
       ),

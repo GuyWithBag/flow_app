@@ -43,7 +43,7 @@ class TimerGrabber extends StatelessWidget {
 
     // Hit area is larger than the visual knob for easier grabbing
     final hitRadius = knobRadius + 12;
-
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SizedBox(
       width: size,
       height: size,
@@ -71,9 +71,11 @@ class TimerGrabber extends StatelessWidget {
             child: Container(
               width: knobRadius * 2,
               height: knobRadius * 2,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white,
+                color: isDark == true
+                    ? Colors.grey.shade900
+                    : Theme.of(context).colorScheme.surface,
               ),
             ),
           ),
