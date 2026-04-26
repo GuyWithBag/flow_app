@@ -29,9 +29,7 @@ class MainPage extends HookWidget {
     useEffect(() {
       adService.loadInterstitial();
       adService.loadBannerAd(context);
-      // log(
-      //   '==================================================================================================================================RENDERED=====================================================',
-      // );
+
       return null;
     }, []);
 
